@@ -3,8 +3,8 @@ package jp.ddo.kingdragon;
 import java.util.ArrayList;
 
 /***
- * 学生1人分のデータに対応するクラス
- * 
+ * 学生1人分のデータを管理するクラス
+ *
  * @author 杉本祐介
  */
 public class Student {
@@ -29,13 +29,13 @@ public class Student {
      * カナ
      */
     private String ruby;
-    
+
     // リストの宣言
     /***
      * NFCタグのIDのリスト
      */
     private ArrayList<String> nfcIds;
-    
+
     // コンストラクタ
     /***
      * 学籍番号およびNFCタグのIDが未設定のインスタンスを生成する
@@ -45,7 +45,7 @@ public class Student {
     }
     /***
      * 学籍番号がセットされたインスタンスを生成する
-     * 
+     *
      * @param studentNo
      *     学籍番号
      */
@@ -54,7 +54,7 @@ public class Student {
     }
     /***
      * 学籍番号とNFCタグのIDがセットされたインスタンスを生成する
-     * 
+     *
      * @param studentNo
      *     学籍番号
      * @param nfcIds
@@ -65,7 +65,7 @@ public class Student {
     }
     /***
      * 学籍番号、連番、所属、氏名、カナ、NFCタグのIDがセットされたインスタンスを生成する
-     * 
+     *
      * @param studentNo
      *     学籍番号
      * @param num
@@ -92,11 +92,11 @@ public class Student {
             }
         }
     }
-    
+
     // アクセッサ
     /***
      * 学籍番号をセットする
-     * 
+     *
      * @param studentNo
      *     学籍番号
      */
@@ -105,15 +105,24 @@ public class Student {
     }
     /***
      * 学籍番号を返す
-     * 
+     *
      * @return 学籍番号
      */
     public String getStudentNo() {
         return(studentNo);
     }
     /***
+     * 連番をセットする
+     *
+     * @param num
+     *     連番
+     */
+    public void setNum(int num) {
+        this.num = num;
+    }
+    /***
      * NFCタグのIDを追加する
-     * 
+     *
      * @param id
      *     NFCタグのID
      */
@@ -125,7 +134,7 @@ public class Student {
     }
     /***
      * NFCタグのIDの配列を返す
-     * 
+     *
      * @return NFCタグの配列
      */
     public String[] getNfcIds() {
@@ -133,21 +142,21 @@ public class Student {
     }
     /***
      * 学籍番号とNFCタグのIDが揃ったかどうかを調べる
-     * 
+     *
      * @return 揃っていればtrue、揃っていなければfalseを返す
      */
     public boolean isDataPrepared() {
         return(studentNo.length() != 0 && !nfcIds.isEmpty());
     }
-    
+
     /***
-     * 学生のデータをCSV形式で出力する
-     * 
+     * 学生データをCSV形式で出力する
+     *
      * @return CSV形式にした学生データ
      */
     public String toCsvRecord() {
         StringBuilder csvRecord = new StringBuilder();
-        
+
         if(num != -1) {
             csvRecord.append(num);
         }
@@ -155,7 +164,7 @@ public class Student {
         for(String nfcId : nfcIds) {
             csvRecord.append("," + nfcId);
         }
-        
+
         return(csvRecord.toString());
     }
 }

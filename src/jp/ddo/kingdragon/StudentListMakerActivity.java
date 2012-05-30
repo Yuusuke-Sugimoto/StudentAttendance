@@ -16,13 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 
 /***
  * メイン画面
@@ -40,7 +34,7 @@ public class StudentListMakerActivity extends Activity {
      */
     private StringBuilder studentNo;
     /***
-     * 現在扱っている学生のデータ
+     * 現在扱っている学生データ
      */
     private Student currentStudent;
     /***
@@ -51,16 +45,11 @@ public class StudentListMakerActivity extends Activity {
      * 現在編集しているテキストビュー
      */
     private TextView currentText;
-    
     /***
-     * 科目
+     * 現在編集しているシート
      */
-    private String subject;
-    /***
-     * 授業時間
-     */
-    private String time;
-    
+    private Sheet mSheet;
+
     /***
      * NFCタグの読み取りに使用
      */
@@ -79,12 +68,6 @@ public class StudentListMakerActivity extends Activity {
      * 対応させるタグの一覧
      */
     private String[][] techs;
-    
-    // リストの宣言
-    /***
-     * 現在管理している学生データのリスト
-     */
-    private ArrayList<Student> students;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -93,14 +76,12 @@ public class StudentListMakerActivity extends Activity {
 
         studentNo = new StringBuilder();
         currentStudent = new Student();
-        students = new ArrayList<Student>();
-        subject = "test";
-        time = "";
-        
+        mSheet = new Sheet();
+
         base = (LinearLayout)findViewById(R.id.base);
         currentText = new TextView(StudentListMakerActivity.this);
         base.addView(currentText);
-        
+
         // 保存用ディレクトリの作成
         baseDir = new File(Environment.getExternalStorageDirectory(), "");
         try {
@@ -156,11 +137,9 @@ public class StudentListMakerActivity extends Activity {
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        boolean retBool = super.onCreateOptionsMenu(menu);
-
         getMenuInflater().inflate(R.menu.menu, menu);
 
-        return(retBool);
+        return(true);
     }
 
     /***
@@ -168,19 +147,23 @@ public class StudentListMakerActivity extends Activity {
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        boolean retBool = super.onOptionsItemSelected(item);
+        boolean retBool = false;
 
         switch(item.getItemId()) {
         case R.id.menu_open:
-            openCsvFile();
-            
+            mSheet = new Sheet(new File(baseDir, "test.csv"), "Shift_JIS");
+
+            retBool = true;
+
             break;
         case R.id.menu_save:
-            if(currentStudent.isDataPrepared() && students.indexOf(currentStudent) == -1) {
-                students.add(currentStudent);
+            if(currentStudent.isDataPrepared() && mSheet.searchByStudentNo(currentStudent.getStudentNo()) == -1) {
+                mSheet.add(currentStudent);
             }
-            saveCsvFile();
-            
+            mSheet.saveCsvFile(new File(baseDir, "temp.csv"), "Shift_JIS");
+
+            retBool = true;
+
             break;
         }
 
@@ -189,7 +172,7 @@ public class StudentListMakerActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        boolean retBool = true;
+        boolean retBool;
 
         if(event.isPrintingKey()) {
             /***
@@ -198,9 +181,10 @@ public class StudentListMakerActivity extends Activity {
              *      http://falco.sakura.ne.jp/tech/2011/09/android-onkey-時に-keycode-を文字に変えるには？/
              */
             onCharTyped((char)event.getUnicodeChar());
+
+            retBool = true;
         }
         else {
-            // それ以外の場合は処理を投げる
             retBool = super.onKeyDown(keyCode, event);
         }
 
@@ -249,20 +233,26 @@ public class StudentListMakerActivity extends Activity {
      */
     public void onCharTyped(char c) {
         if(currentStudent.isDataPrepared()) {
-            if(students.indexOf(currentStudent) == -1) {
-                students.add(currentStudent);
+            if(mSheet.searchByStudentNo(currentStudent.getStudentNo()) == -1) {
+                mSheet.add(currentStudent);
             }
             currentStudent = new Student();
             currentText = new TextView(StudentListMakerActivity.this);
             base.addView(currentText);
         }
-        
+
         if(Character.isLetter(c)) {
             studentNo.delete(0, studentNo.length());
             c = Character.toUpperCase(c);
         }
         studentNo.append(c);
-        currentStudent.setStudentNo(studentNo.toString());
+        int index = mSheet.searchByStudentNo(studentNo.toString());
+        if(index != -1) {
+            currentStudent = mSheet.get(index);
+        }
+        else {
+            currentStudent.setStudentNo(studentNo.toString());
+        }
         currentText.setText(studentNo.toString());
     }
 
@@ -286,96 +276,6 @@ public class StudentListMakerActivity extends Activity {
             TextView mTextView = new TextView(StudentListMakerActivity.this);
             mTextView.setText(id);
             base.addView(mTextView);
-        }
-    }
-    
-    /***
-     * CSVファイルから学生データを読み込む
-     */
-    public void openCsvFile() {
-        File mFile = new File(baseDir, "test.csv");
-        try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(mFile), "Shift_JIS"));
-            students = new ArrayList<Student>();
-            boolean isSubjectRecord = false;
-            boolean isStudentRecord = false;
-            String line;
-            while((line = br.readLine()) != null) {
-                String[] splittedLine = line.split(",");
-                
-                if(isSubjectRecord) {
-                    subject = splittedLine[0];
-                    time = splittedLine[1];
-                    isSubjectRecord = false;
-                }
-                else if(isStudentRecord) {
-                    String[] nfcIds;
-                    if(splittedLine.length == 6) {
-                        // NFCのタグのIDが1つ
-                        nfcIds = new String[] {splittedLine[5]};
-                    }
-                    else if(splittedLine.length > 6) {
-                        // NFCタグのIDが複数セットされている場合は配列に直す
-                        ArrayList<String> temp = new ArrayList<String>();
-                        for(int i = 5; i < splittedLine.length; i++) {
-                            temp.add(splittedLine[i]);
-                        }
-                        nfcIds = temp.toArray(new String[0]);
-                    }
-                    else {
-                        // NFCのタグのIDが未登録
-                        nfcIds = new String[0];
-                    }
-                    int num;
-                    if(splittedLine[0].length() != 0) {
-                        // 連番が設定されている場合
-                        try {
-                            num = Integer.parseInt(splittedLine[0]);
-                        }
-                        catch(Exception ex) {
-                            num = -1;
-                        }
-                    }
-                    else {
-                        num = -1;
-                    }
-                    students.add(new Student(splittedLine[2], num,
-                                             splittedLine[1], splittedLine[3], splittedLine[4],
-                                             nfcIds));
-                }
-                
-                if(splittedLine[0].equals("科目")) {
-                    isSubjectRecord = true;
-                }
-                else if(splittedLine[1].equals("所属")) {
-                    isStudentRecord = true;
-                }
-            }
-            br.close();
-        }
-        catch(Exception e) {
-            Log.e("openCsvFile", e.getMessage(), e);
-        }
-    }
-    
-    /***
-     * 学生のデータをCSVファイルに保存する
-     */
-    public void saveCsvFile() {
-        File mFile = new File(baseDir, "temp.csv");
-        try {
-            OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(mFile), "Shift_JIS");
-            osw.write("科目,授業時間,受講者数\n");
-            osw.write(subject + "," + time + "," + students.size() + "\n");
-            osw.write(",所属,学籍番号,氏名,カナ\n");
-            for(Student mStudent : students) {
-                osw.write(mStudent.toCsvRecord() + "\n");
-            }
-            osw.flush();
-            osw.close();
-        }
-        catch(Exception e) {
-            Log.e("saveCsvFile", e.getMessage(), e);
         }
     }
 }
