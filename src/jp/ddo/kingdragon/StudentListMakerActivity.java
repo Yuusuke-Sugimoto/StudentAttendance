@@ -157,7 +157,7 @@ public class StudentListMakerActivity extends Activity {
 
             break;
         case R.id.menu_save:
-            if(currentStudent.isDataPrepared() && mSheet.searchByStudentNo(currentStudent.getStudentNo()) == -1) {
+            if(currentStudent.isDataPrepared() && !mSheet.searchByStudentNo(currentStudent.getStudentNo())) {
                 mSheet.add(currentStudent);
             }
             mSheet.saveCsvFile(new File(baseDir, "temp.csv"), "Shift_JIS");
@@ -233,7 +233,7 @@ public class StudentListMakerActivity extends Activity {
      */
     public void onCharTyped(char c) {
         if(currentStudent.isDataPrepared()) {
-            if(mSheet.searchByStudentNo(currentStudent.getStudentNo()) == -1) {
+            if(!mSheet.searchByStudentNo(currentStudent.getStudentNo())) {
                 mSheet.add(currentStudent);
             }
             currentStudent = new Student();
@@ -246,9 +246,8 @@ public class StudentListMakerActivity extends Activity {
             c = Character.toUpperCase(c);
         }
         studentNo.append(c);
-        int index = mSheet.searchByStudentNo(studentNo.toString());
-        if(index != -1) {
-            currentStudent = mSheet.get(index);
+        if(mSheet.searchByStudentNo(studentNo.toString())) {
+            currentStudent = mSheet.get(studentNo.toString());
         }
         else {
             currentStudent.setStudentNo(studentNo.toString());

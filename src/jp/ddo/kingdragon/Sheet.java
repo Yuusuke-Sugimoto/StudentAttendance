@@ -9,6 +9,8 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Set;
 
 /***
  * 1つのシートを管理するクラス
@@ -28,7 +30,7 @@ public class Sheet {
     /***
      * 現在管理している学生データのリスト
      */
-    private StudentList students;
+    private LinkedHashMap<String, Student> students;
 
     // コンストラクタ
     /***
@@ -37,7 +39,7 @@ public class Sheet {
     public Sheet() {
         subject = "";
         time = "";
-        students = new StudentList();
+        students = new LinkedHashMap<String, Student>();
     }
     /***
      * CSVファイルからシートを生成する
@@ -50,7 +52,7 @@ public class Sheet {
     public Sheet(File csvFile, String encode) {
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
-            students = new StudentList();
+            students = new LinkedHashMap<String, Student>();
             boolean isSubjectRecord = false;
             boolean isStudentRecord = false;
             String line;
@@ -93,8 +95,8 @@ public class Sheet {
                     else {
                         num = -1;
                     }
-                    students.add(new Student(splittedLine[2], num, splittedLine[1],
-                                             splittedLine[3], splittedLine[4], nfcIds));
+                    students.put(splittedLine[2], new Student(splittedLine[2], num, splittedLine[1],
+                                                              splittedLine[3], splittedLine[4], nfcIds));
                 }
 
                 if(splittedLine[0].equals("科目")) {
@@ -138,18 +140,19 @@ public class Sheet {
      *     追加する学生データ
      */
     public void add(Student inStudent) {
-        students.add(inStudent);
+        inStudent.setNum(students.size() + 1);
+        students.put(inStudent.getStudentNo(), inStudent);
     }
 
     /***
-     * 引数で渡された添字の学生データを取得する
+     * 引数で渡された学籍番号を持つ学生データを取得する
      *
-     * @param index
-     *     添字
-     * @return 添字の位置の学生データ
+     * @param studentNo
+     *     学籍番号
+     * @return 学生データ
      */
-    public Student get(int index) {
-        return(students.get(index));
+    public Student get(String studentNo) {
+        return(students.get(studentNo));
     }
 
     /***
@@ -162,14 +165,14 @@ public class Sheet {
     }
 
     /***
-     * 引数で渡された学籍番号をもつ学生データの添字を調べる
+     * 引数で渡された学籍番号をもつ学生データが存在するかどうかを調べる
      *
      * @param studentNo
      *     学籍番号
-     * @return 存在したならばその学生データの添字、存在しなければ-1を返す
+     * @return 存在したならばtrue、存在しなければfalse
      */
-    public int searchByStudentNo(String studentNo) {
-        return(students.searchByStudentNo(studentNo));
+    public boolean searchByStudentNo(String studentNo) {
+        return(students.containsKey(studentNo));
     }
 
     /***
@@ -186,8 +189,9 @@ public class Sheet {
             osw.write("科目,授業時間,受講者数\n");
             osw.write(subject + "," + time + "," + students.size() + "\n");
             osw.write(",所属,学籍番号,氏名,カナ\n");
-            for(Student mStudent : students) {
-                osw.write(mStudent.toCsvRecord() + "\n");
+            Set<String> keySet = students.keySet();
+            for(String key : keySet) {
+                osw.write(students.get(key).toCsvRecord() + "\n");
             }
             osw.flush();
             osw.close();
