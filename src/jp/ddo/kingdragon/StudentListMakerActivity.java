@@ -7,8 +7,22 @@ import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.nfc.tech.TagTechnology;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 
 /***
  * メイン画面
@@ -16,21 +30,92 @@ import android.widget.TextView;
  * @author 杉本祐介
  */
 public class StudentListMakerActivity extends Activity {
-    TextView mTextView;
-    StringBuilder studentId;
-    NfcAdapter adapter;
-    PendingIntent mPendingIntent;
+    // 変数の宣言
+    /***
+     * 保存用ディレクトリ
+     */
+    private File baseDir;
+    /***
+     * 学籍番号
+     */
+    private StringBuilder studentNo;
+    /***
+     * 現在扱っている学生のデータ
+     */
+    private Student currentStudent;
+    /***
+     * ベースレイアウト
+     */
+    private LinearLayout base;
+    /***
+     * 現在編集しているテキストビュー
+     */
+    private TextView currentText;
+    
+    /***
+     * 科目
+     */
+    private String subject;
+    /***
+     * 授業時間
+     */
+    private String time;
+    
+    /***
+     * NFCタグの読み取りに使用
+     */
+    private NfcAdapter adapter;
+    /***
+     * NFCタグの読み取りに使用
+     */
+    private PendingIntent mPendingIntent;
 
-    IntentFilter[] filters;
-    String[][] techs;
+    // 配列の宣言
+    /***
+     * 対応するインテントの種類
+     */
+    private IntentFilter[] filters;
+    /***
+     * 対応させるタグの一覧
+     */
+    private String[][] techs;
+    
+    // リストの宣言
+    /***
+     * 現在管理している学生データのリスト
+     */
+    private ArrayList<Student> students;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        mTextView = (TextView)findViewById(R.id.text);
-        studentId = new StringBuilder();
+        studentNo = new StringBuilder();
+        currentStudent = new Student();
+        students = new ArrayList<Student>();
+        subject = "test";
+        time = "";
+        
+        base = (LinearLayout)findViewById(R.id.base);
+        currentText = new TextView(StudentListMakerActivity.this);
+        base.addView(currentText);
+        
+        // 保存用ディレクトリの作成
+        baseDir = new File(Environment.getExternalStorageDirectory(), "");
+        try {
+            if(!baseDir.exists() && !baseDir.mkdirs()) {
+                Toast.makeText(StudentListMakerActivity.this, R.string.error_make_directory_failed, Toast.LENGTH_SHORT).show();
+
+                finish();
+            }
+        }
+        catch(Exception e) {
+            Toast.makeText(StudentListMakerActivity.this, R.string.error_make_directory_failed, Toast.LENGTH_SHORT).show();
+            Log.e("onCreate", e.getMessage(), e);
+
+            finish();
+        }
 
         /***
          * NFCタグの情報を読み取る
@@ -39,7 +124,8 @@ public class StudentListMakerActivity extends Activity {
          */
         adapter = NfcAdapter.getDefaultAdapter(StudentListMakerActivity.this);
         mPendingIntent = PendingIntent.getActivity(StudentListMakerActivity.this, 0,
-                                                   new Intent(StudentListMakerActivity.this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
+                                                   new Intent(StudentListMakerActivity.this, getClass())
+                                                   .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
         // NfcAdapter.ACTION_NDEF_DISCOVEREDだと拾えない
         IntentFilter mFilter = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
         filters = new IntentFilter[] {mFilter};
@@ -65,6 +151,42 @@ public class StudentListMakerActivity extends Activity {
         }
     }
 
+    /***
+     * オプションメニューを作成
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        boolean retBool = super.onCreateOptionsMenu(menu);
+
+        getMenuInflater().inflate(R.menu.menu, menu);
+
+        return(retBool);
+    }
+
+    /***
+     * オプションメニューの項目が選択された際の動作を設定
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        boolean retBool = super.onOptionsItemSelected(item);
+
+        switch(item.getItemId()) {
+        case R.id.menu_open:
+            openCsvFile();
+            
+            break;
+        case R.id.menu_save:
+            if(currentStudent.isDataPrepared() && students.indexOf(currentStudent) == -1) {
+                students.add(currentStudent);
+            }
+            saveCsvFile();
+            
+            break;
+        }
+
+        return(retBool);
+    }
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         boolean retBool = true;
@@ -75,7 +197,7 @@ public class StudentListMakerActivity extends Activity {
              * 参考:Android onKey 時に KeyCode を文字に変えるには？ >> Tech Blog
              *      http://falco.sakura.ne.jp/tech/2011/09/android-onkey-時に-keycode-を文字に変えるには？/
              */
-            onCharDetected((char)event.getUnicodeChar());
+            onCharTyped((char)event.getUnicodeChar());
         }
         else {
             // それ以外の場合は処理を投げる
@@ -90,8 +212,7 @@ public class StudentListMakerActivity extends Activity {
         String action = intent.getAction();
         if(action.equals(NfcAdapter.ACTION_TAG_DISCOVERED)) {
             // NFCタグの読み取りで発生したインテントである場合
-            byte[] id = intent.getByteArrayExtra(NfcAdapter.EXTRA_ID);
-            onNfcReaded(byteArrayToHexString(id));
+            onNfcTagReaded(intent);
         }
     }
 
@@ -114,34 +235,147 @@ public class StudentListMakerActivity extends Activity {
                 // 10未満の場合は0を付加
                 hexString.append("0");
             }
-            hexString.append(Integer.toHexString(temp));
+            hexString.append(Integer.toHexString(temp).toUpperCase());
         }
 
         return(hexString.toString());
     }
 
     /***
-     * 文字を検出した時に呼び出される
+     * 文字が入力された際に呼び出される
      *
      * @param c
-     *     検出された文字
+     *     入力された文字
      */
-    public void onCharDetected(char c) {
+    public void onCharTyped(char c) {
+        if(currentStudent.isDataPrepared()) {
+            if(students.indexOf(currentStudent) == -1) {
+                students.add(currentStudent);
+            }
+            currentStudent = new Student();
+            currentText = new TextView(StudentListMakerActivity.this);
+            base.addView(currentText);
+        }
+        
         if(Character.isLetter(c)) {
-            studentId.delete(0, studentId.length());
+            studentNo.delete(0, studentNo.length());
             c = Character.toUpperCase(c);
         }
-        studentId.append(c);
-        mTextView.setText(studentId.toString());
+        studentNo.append(c);
+        currentStudent.setStudentNo(studentNo.toString());
+        currentText.setText(studentNo.toString());
     }
 
     /***
      * NFCタグを読み取った際に呼び出される
      *
-     * @param id
-     *     読み取ったNFCタグのID
+     * @param inIntent
+     *     NFCタグを読み取った際に発生したインテント
      */
-    public void onNfcReaded(String id) {
-        mTextView.setText(id);
+    public void onNfcTagReaded(Intent inIntent) {
+        if(studentNo.length() != 0) {
+            String id = byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID));
+            if(id.length() < 16) {
+                StringBuilder temp = new StringBuilder();
+                for(int i = 0; i < 16 - id.length(); i++) {
+                    temp.append("0");
+                }
+                id += temp.toString();
+            }
+            currentStudent.addNfcId(id);
+            TextView mTextView = new TextView(StudentListMakerActivity.this);
+            mTextView.setText(id);
+            base.addView(mTextView);
+        }
+    }
+    
+    /***
+     * CSVファイルから学生データを読み込む
+     */
+    public void openCsvFile() {
+        File mFile = new File(baseDir, "test.csv");
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(mFile), "Shift_JIS"));
+            students = new ArrayList<Student>();
+            boolean isSubjectRecord = false;
+            boolean isStudentRecord = false;
+            String line;
+            while((line = br.readLine()) != null) {
+                String[] splittedLine = line.split(",");
+                
+                if(isSubjectRecord) {
+                    subject = splittedLine[0];
+                    time = splittedLine[1];
+                    isSubjectRecord = false;
+                }
+                else if(isStudentRecord) {
+                    String[] nfcIds;
+                    if(splittedLine.length == 6) {
+                        // NFCのタグのIDが1つ
+                        nfcIds = new String[] {splittedLine[5]};
+                    }
+                    else if(splittedLine.length > 6) {
+                        // NFCタグのIDが複数セットされている場合は配列に直す
+                        ArrayList<String> temp = new ArrayList<String>();
+                        for(int i = 5; i < splittedLine.length; i++) {
+                            temp.add(splittedLine[i]);
+                        }
+                        nfcIds = temp.toArray(new String[0]);
+                    }
+                    else {
+                        // NFCのタグのIDが未登録
+                        nfcIds = new String[0];
+                    }
+                    int num;
+                    if(splittedLine[0].length() != 0) {
+                        // 連番が設定されている場合
+                        try {
+                            num = Integer.parseInt(splittedLine[0]);
+                        }
+                        catch(Exception ex) {
+                            num = -1;
+                        }
+                    }
+                    else {
+                        num = -1;
+                    }
+                    students.add(new Student(splittedLine[2], num,
+                                             splittedLine[1], splittedLine[3], splittedLine[4],
+                                             nfcIds));
+                }
+                
+                if(splittedLine[0].equals("科目")) {
+                    isSubjectRecord = true;
+                }
+                else if(splittedLine[1].equals("所属")) {
+                    isStudentRecord = true;
+                }
+            }
+            br.close();
+        }
+        catch(Exception e) {
+            Log.e("openCsvFile", e.getMessage(), e);
+        }
+    }
+    
+    /***
+     * 学生のデータをCSVファイルに保存する
+     */
+    public void saveCsvFile() {
+        File mFile = new File(baseDir, "temp.csv");
+        try {
+            OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(mFile), "Shift_JIS");
+            osw.write("科目,授業時間,受講者数\n");
+            osw.write(subject + "," + time + "," + students.size() + "\n");
+            osw.write(",所属,学籍番号,氏名,カナ\n");
+            for(Student mStudent : students) {
+                osw.write(mStudent.toCsvRecord() + "\n");
+            }
+            osw.flush();
+            osw.close();
+        }
+        catch(Exception e) {
+            Log.e("saveCsvFile", e.getMessage(), e);
+        }
     }
 }
