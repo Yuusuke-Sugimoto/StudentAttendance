@@ -2,11 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     <item android:id="@+id/menu_set_subject"
           android:title="@string/menu_set_subject"
-          android:icon="@android:drawable/ic_menu_set_as"
+          android:icon="@android:drawable/ic_menu_edit"
           android:numericShortcut="1" />
     <item android:id="@+id/menu_set_time"
           android:title="@string/menu_set_time"
-          android:icon="@android:drawable/ic_menu_set_as"
+          android:icon="@android:drawable/ic_menu_my_calendar"
           android:numericShortcut="2" />
     <item android:id="@+id/menu_open"
           android:title="@string/menu_open"
