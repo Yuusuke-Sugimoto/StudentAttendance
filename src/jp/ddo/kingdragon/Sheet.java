@@ -5,16 +5,17 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.Set;
 
 /***
  * 1つのシートを管理するクラス
- *
  * @author 杉本祐介
  */
 public class Sheet {
@@ -43,21 +44,19 @@ public class Sheet {
     }
     /***
      * CSVファイルからシートを生成する
-     *
-     * @param csvFile
-     *     CSVファイルのインスタンス
-     * @param encode
-     *     CSVファイルの文字コード
+     * @param csvFile CSVファイルのインスタンス
+     * @param encode CSVファイルの文字コード
      */
     public Sheet(File csvFile, String encode) {
+        BufferedReader br = null;
         try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
+            br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
             students = new LinkedHashMap<String, Student>();
             boolean isSubjectRecord = false;
             boolean isStudentRecord = false;
             String line;
             while((line = br.readLine()) != null) {
-                String[] splittedLine = line.split(",");
+                String[] splittedLine = line.replace("\"", "").split(",");
 
                 if(isSubjectRecord) {
                     subject = splittedLine[0];
@@ -76,7 +75,7 @@ public class Sheet {
                         for(int i = 5; i < splittedLine.length; i++) {
                             temp.add(splittedLine[i]);
                         }
-                        nfcIds = temp.toArray(new String[0]);
+                        nfcIds = temp.toArray(new String[temp.size()]);
                     }
                     else {
                         // NFCのタグのIDが未登録
@@ -106,98 +105,134 @@ public class Sheet {
                     isStudentRecord = true;
                 }
             }
-            br.close();
         }
-        catch(Exception e) {
-            Log.e("openCsvFile", e.getMessage(), e);
+        catch (UnsupportedEncodingException e) {
+            Log.e("Sheet Constructor", e.getMessage(), e);
+        }
+        catch (FileNotFoundException e) {
+            Log.e("Sheet Constructor", e.getMessage(), e);
+        }
+        catch (IOException e) {
+            Log.e("Sheet Constructor", e.getMessage(), e);
+        }
+        finally {
+            try {
+                br.close();
+            }
+            catch (IOException e) {
+                Log.e("Sheet Constructor", e.getMessage(), e);
+            }
         }
     }
 
     // アクセッサ
     /***
      * 科目名をセットする
-     *
-     * @param subject
-     *     科目名
+     * @param subject 科目名
      */
     public void setSubject(String subject) {
         this.subject = subject;
     }
     /***
+     * 科目名を返す
+     * @return 科目名
+     */
+    public String getSubject() {
+        return subject;
+    }
+    /***
      * 授業時間をセットする
-     *
-     * @param time
-     *     授業時間
+     * @param time 授業時間
      */
     public void setTime(String time) {
         this.time = time;
     }
+    /***
+     * 授業時間を返す
+     * @return 授業時間
+     */
+    public String getTime() {
+        return time;
+    }
+    /***
+     * 学生データのリストを返す
+     * @return 学生データのリスト
+     */
+    public ArrayList<Student> getStudentList() {
+        return new ArrayList<Student>(students.values());
+    }
 
     /***
-     * 学生データを追加する
-     *
-     * @param inStudent
-     *     追加する学生データ
+     * 学生データを追加する<br />
+     * 既に追加されている場合は追加しない。
+     * @param inStudent 追加する学生データ
      */
     public void add(Student inStudent) {
-        inStudent.setNum(students.size() + 1);
-        students.put(inStudent.getStudentNo(), inStudent);
+        if(!students.containsKey(inStudent.getStudentNo())) {
+            inStudent.setStudentNum(students.size() + 1);
+            students.put(inStudent.getStudentNo(), inStudent);
+        }
     }
 
     /***
      * 引数で渡された学籍番号を持つ学生データを取得する
-     *
-     * @param studentNo
-     *     学籍番号
+     * @param studentNo 学籍番号
      * @return 学生データ
      */
     public Student get(String studentNo) {
-        return(students.get(studentNo));
+        return students.get(studentNo);
     }
 
     /***
      * 現在の学生データの数を返す
-     *
      * @return 現在の学生データの数
      */
     public int size() {
-        return(students.size());
+        return students.size();
     }
 
     /***
      * 引数で渡された学籍番号をもつ学生データが存在するかどうかを調べる
-     *
-     * @param studentNo
-     *     学籍番号
+     * @param studentNo 学籍番号
      * @return 存在したならばtrue、存在しなければfalse
      */
-    public boolean searchByStudentNo(String studentNo) {
-        return(students.containsKey(studentNo));
+    public boolean hasStudentNo(String studentNo) {
+        return students.containsKey(studentNo);
     }
 
     /***
      * 学生データをCSV形式で保存する
-     *
-     * @param csvFile
-     *     保存先のインスタンス
-     * @param encode
-     *     書き込む際に使用する文字コード
+     * @param csvFile 保存先のインスタンス
+     * @param encode 書き込む際に使用する文字コード
      */
     public void saveCsvFile(File csvFile, String encode) {
+        OutputStreamWriter osw = null;
         try {
-            OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(csvFile), encode);
+            osw = new OutputStreamWriter(new FileOutputStream(csvFile), encode);
             osw.write("科目,授業時間,受講者数\n");
             osw.write(subject + "," + time + "," + students.size() + "\n");
             osw.write(",所属,学籍番号,氏名,カナ\n");
-            Set<String> keySet = students.keySet();
-            for(String key : keySet) {
+            for(String key : students.keySet()) {
                 osw.write(students.get(key).toCsvRecord() + "\n");
             }
             osw.flush();
-            osw.close();
         }
-        catch(Exception e) {
+        catch (UnsupportedEncodingException e) {
             Log.e("saveCsvFile", e.getMessage(), e);
+        }
+        catch (FileNotFoundException e) {
+            Log.e("saveCsvFile", e.getMessage(), e);
+        }
+        catch (IOException e) {
+            Log.e("saveCsvFile", e.getMessage(), e);
+        }
+        finally {
+            try {
+                osw.close();
+            }
+            catch (IOException e) {
+                Log.e("saveCsvFile", e.getMessage(), e);
+            }
         }
     }
 }
