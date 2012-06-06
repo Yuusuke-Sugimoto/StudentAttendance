@@ -1,6 +1,5 @@
 package jp.ddo.kingdragon;
 
-import android.R.drawable;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;

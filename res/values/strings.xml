@@ -4,7 +4,7 @@
 
     <string name="file_choose_title">ファイルを選択する</string>
     <string name="file_choose_icon">ファイルアイコン</string>
-    <string name="file_choose_parent">[上のフォルダへ]</string>
+    <string name="file_choose_parent">[上のディレクトリへ]</string>
 
     <string name="header_student_num">連番</string>
     <string name="header_student_no">学籍番号</string>
