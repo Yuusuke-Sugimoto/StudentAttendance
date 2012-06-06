@@ -28,6 +28,8 @@ public class Sheet {
      * 授業時間
      */
     private String time;
+
+    // コレクションの宣言
     /***
      * 現在管理している学生データのリスト
      */

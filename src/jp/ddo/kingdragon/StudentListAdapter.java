@@ -11,13 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /***
- * 学生リストの表示を行うアダプタクラス
+ * 学生の一覧を表示するアダプタクラス
  * @author 杉本祐介
  */
 public class StudentListAdapter extends ArrayAdapter<Student> {
+    // 変数の宣言
     private LayoutInflater inflater;
     private ViewHolder holder;
 
+    // コンストラクタ
     public StudentListAdapter(Context context, int textViewResourceId) {
         this(context, textViewResourceId, new ArrayList<Student>());
     }

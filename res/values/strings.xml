@@ -2,6 +2,15 @@
 <resources>
     <string name="app_name">StudentListMaker</string>
 
+    <string name="file_choose_title">ファイルを選択する</string>
+    <string name="file_choose_icon">ファイルアイコン</string>
+    <string name="file_choose_parent">[上のフォルダへ]</string>
+
+    <string name="header_student_num">連番</string>
+    <string name="header_student_no">学籍番号</string>
+    <string name="header_student_name">氏名</string>
+    <string name="header_student_num_of_nfc_id">数</string>
+
     <string name="menu_set_subject">科目名を設定する</string>
     <string name="menu_set_time">授業時間を設定する</string>
     <string name="menu_open">CSVファイルを開く</string>
@@ -9,6 +18,9 @@
 
     <string name="dialog_set_subject_hint">科目名を入力</string>
     <string name="dialog_set_time_hint">授業時間を入力</string>
+
+    <string name="notice_csv_file_opened">を開きました</string>
+    <string name="notice_csv_file_saved">CSVファイルに保存しました</string>
 
     <string name="error_make_directory_failed">保存用ディレクトリの作成に失敗しました</string>
 </resources>

@@ -26,6 +26,9 @@ import java.io.File;
  */
 public class StudentListMakerActivity extends Activity {
     // 定数の宣言
+    // リクエストコード
+    public static final int REQUEST_CHOOSE_OPEN_FILE = 0;
+    public static final int REQUEST_CHOOSE_SAVE_FILE = 1;
     // ダイアログのID
     public static final int DIALOG_SET_SUBJECT = 0;
     public static final int DIALOG_SET_TIME    = 1;
@@ -44,11 +47,11 @@ public class StudentListMakerActivity extends Activity {
      */
     private Student currentStudent;
     /***
-     * 学生リストの表示を行うビュー
+     * 学生の一覧を表示するビュー
      */
     private ListView studentListView;
     /***
-     * 学生リストの表示を行うアダプタ
+     * 学生の一覧を表示するアダプタ
      */
     private StudentListAdapter mStudentListAdapter;
     /***
@@ -138,6 +141,27 @@ public class StudentListMakerActivity extends Activity {
         }
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch(requestCode) {
+        case StudentListMakerActivity.REQUEST_CHOOSE_OPEN_FILE:
+            if(resultCode == Activity.RESULT_OK) {
+                String fileName = data.getStringExtra("fileName");
+                String filePath = data.getStringExtra("filePath");
+                mSheet = new Sheet(new File(filePath), "Shift_JIS");
+                mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mSheet.getStudentList());
+                studentListView.setAdapter(mStudentListAdapter);
+                Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
+            }
+
+            break;
+        case StudentListMakerActivity.REQUEST_CHOOSE_SAVE_FILE:
+            break;
+        default:
+            break;
+        }
+    }
+
     /***
      * オプションメニューを作成
      */
@@ -169,15 +193,17 @@ public class StudentListMakerActivity extends Activity {
 
             break;
         case R.id.menu_open:
-            mSheet = new Sheet(new File(baseDir, "test.csv"), "Shift_JIS");
-            mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mSheet.getStudentList());
-            studentListView.setAdapter(mStudentListAdapter);
+            Intent mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
+            mIntent.putExtra("initDirPath", baseDir.getAbsolutePath());
+            mIntent.putExtra("filter", ".*\\.csv");
+            startActivityForResult(mIntent, StudentListMakerActivity.REQUEST_CHOOSE_OPEN_FILE);
 
             retBool = true;
 
             break;
         case R.id.menu_save:
-            mSheet.saveCsvFile(new File(baseDir, "temp.csv"), "Shift_JIS");
+            mSheet.saveCsvFile(new File(baseDir, "out.csv"), "Shift_JIS");
+            Toast.makeText(StudentListMakerActivity.this, R.string.notice_csv_file_saved, Toast.LENGTH_SHORT).show();
 
             retBool = true;
 
@@ -329,12 +355,18 @@ public class StudentListMakerActivity extends Activity {
      */
     public void onStudentNoReaded(String studentNo) {
         if(mSheet.hasStudentNo(studentNo)) {
+            // 既に学籍番号に対応するデータが存在する場合はそのデータを取り出す
             currentStudent = mSheet.get(studentNo);
+            // 対象の行を選択する
+            studentListView.setSelection(mStudentListAdapter.getPosition(currentStudent));
         }
         else {
+            // 存在しない場合は追加する
             currentStudent.setStudentNo(studentNo);
+            mSheet.add(currentStudent);
+            mStudentListAdapter.add(currentStudent);
+            studentListView.setSelection(mStudentListAdapter.getCount() - 1);
         }
-        mStudentListAdapter.add(currentStudent);
     }
 
     /***
@@ -348,8 +380,6 @@ public class StudentListMakerActivity extends Activity {
                 id.append("0");
             }
             currentStudent.addNfcId(id.toString());
-
-            mSheet.add(currentStudent);
             studentListView.invalidateViews();
         }
     }

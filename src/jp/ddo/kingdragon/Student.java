@@ -29,7 +29,7 @@ public class Student {
      */
     private String studentRuby;
 
-    // リストの宣言
+    // コレクションの宣言
     /***
      * NFCタグのIDのリスト
      */
