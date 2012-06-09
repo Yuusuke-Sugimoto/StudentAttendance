@@ -23,8 +23,13 @@
     <string name="dialog_new_file_hint">ファイル名を入力</string>
 
     <string name="notice_new_sheet_created">新規シートを作成しました</string>
-    <string name="notice_csv_file_opened">を開きました</string>
-    <string name="notice_csv_file_saved">に保存しました</string>
+    <string name="notice_csv_file_was_opened">を開きました</string>
+    <string name="notice_csv_file_was_saved">に保存しました</string>
 
+    <string name="error">エラー</string>
     <string name="error_make_directory_failed">保存用ディレクトリの作成に失敗しました</string>
+    <string name="error_file_already_exists">既に同名のファイルが存在します。</string>
+    <string name="error_file_create_failed">ファイルの作成に失敗しました。</string>
+    <string name="error_illegal_file_name">ファイル名に使用できない文字が含まれています。</string>
+    <string name="error_file_name_is_null">ファイル名が入力されていません。</string>
 </resources>

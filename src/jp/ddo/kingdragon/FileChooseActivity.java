@@ -15,7 +15,6 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +27,11 @@ import java.util.Stack;
 public class FileChooseActivity extends Activity {
     // 定数の宣言
     // ダイアログのID
-    public static final int DIALOG_NEW_FILE           = 0;
-    public static final int DIALOG_FILE_CREATE_FAILED = 1;
+    public static final int DIALOG_NEW_FILE            = 0;
+    public static final int DIALOG_FILE_ALREADY_EXISTS = 1;
+    public static final int DIALOG_FILE_CREATE_FAILED  = 2;
+    public static final int DIALOG_ILLEGAL_FILE_NAME   = 3;
+    public static final int DIALOG_FILE_NAME_IS_NULL   = 4;
 
     // 変数の宣言
     /***
@@ -121,7 +123,7 @@ public class FileChooseActivity extends Activity {
     }
 
     @Override
-    public Dialog onCreateDialog(final int id) {
+    public Dialog onCreateDialog(int id) {
         Dialog retDialog = null;
 
         AlertDialog.Builder builder;
@@ -155,31 +157,38 @@ public class FileChooseActivity extends Activity {
                                     showFileList(currentDir);
                                 }
                                 else {
-                                    Toast.makeText(FileChooseActivity.this, "既に同名のファイルが存在します", Toast.LENGTH_SHORT).show();
+                                    showDialog(FileChooseActivity.DIALOG_FILE_ALREADY_EXISTS);
                                 }
                             }
                             catch (IOException e) {
-                                Toast.makeText(FileChooseActivity.this, "ファイルの作成に失敗しました", Toast.LENGTH_SHORT).show();
+                                showDialog(FileChooseActivity.DIALOG_FILE_CREATE_FAILED);
                                 Log.e("onCreateDialog", e.getMessage(), e);
                             }
                         }
                         else {
-                            Toast.makeText(FileChooseActivity.this, "ファイル名に使用できない文字が含まれています", Toast.LENGTH_SHORT).show();
+                            showDialog(FileChooseActivity.DIALOG_ILLEGAL_FILE_NAME);
                         }
                     }
                     else {
-                        Toast.makeText(FileChooseActivity.this, "ファイル名が入力されていません", Toast.LENGTH_SHORT).show();
+                        showDialog(FileChooseActivity.DIALOG_FILE_NAME_IS_NULL);
                     }
                 }
             });
             builder.setNegativeButton(android.R.string.cancel, null);
+            builder.setCancelable(true);
             retDialog = builder.create();
 
             break;
+        case FileChooseActivity.DIALOG_FILE_ALREADY_EXISTS:
         case FileChooseActivity.DIALOG_FILE_CREATE_FAILED:
+        case FileChooseActivity.DIALOG_ILLEGAL_FILE_NAME:
+        case FileChooseActivity.DIALOG_FILE_NAME_IS_NULL:
             builder = new AlertDialog.Builder(FileChooseActivity.this);
-            builder.setTitle("");
+            builder.setTitle(R.string.error);
+            builder.setMessage("");
+            builder.setIcon(android.R.drawable.ic_dialog_alert);
             builder.setPositiveButton(android.R.string.ok, null);
+            builder.setCancelable(true);
             retDialog = builder.create();
             retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
@@ -187,19 +196,36 @@ public class FileChooseActivity extends Activity {
                     showDialog(FileChooseActivity.DIALOG_NEW_FILE);
                 }
             });
-            
+
             break;
         }
 
         return retDialog;
     }
-    
+
     @Override
     public void onPrepareDialog(int id, Dialog dialog) {
+        AlertDialog mAlertDialog = null;
+        if(dialog instanceof AlertDialog) {
+            mAlertDialog = (AlertDialog)dialog;
+        }
+
         switch(id) {
+        case FileChooseActivity.DIALOG_FILE_ALREADY_EXISTS:
+            mAlertDialog.setMessage(getString(R.string.error_file_already_exists));
+
+            break;
         case FileChooseActivity.DIALOG_FILE_CREATE_FAILED:
-            ((AlertDialog)dialog).setMessage("hoge");
-            
+            mAlertDialog.setMessage(getString(R.string.error_file_create_failed));
+
+            break;
+        case FileChooseActivity.DIALOG_ILLEGAL_FILE_NAME:
+            mAlertDialog.setMessage(getString(R.string.error_illegal_file_name));
+
+            break;
+        case FileChooseActivity.DIALOG_FILE_NAME_IS_NULL:
+            mAlertDialog.setMessage(getString(R.string.error_file_name_is_null));
+
             break;
         }
     }
@@ -215,6 +241,10 @@ public class FileChooseActivity extends Activity {
         }
     }
 
+    /***
+     * ファイルの一覧をListViewに表示する
+     * @param dir 対象となるディレクトリ
+     */
     public void showFileList(File dir) {
         mFileListAdapter = new FileListAdapter(FileChooseActivity.this, 0);
         fileListView.setAdapter(mFileListAdapter);
