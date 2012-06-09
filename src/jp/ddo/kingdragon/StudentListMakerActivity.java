@@ -11,6 +11,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.tech.TagTechnology;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.InputType;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -156,30 +157,40 @@ public class StudentListMakerActivity extends Activity {
 
             break;
         case StudentListMakerActivity.REQUEST_CHOOSE_SAVE_FILE:
-            break;
-        default:
+            if(resultCode == Activity.RESULT_OK) {
+                String fileName = data.getStringExtra("fileName");
+                String filePath = data.getStringExtra("filePath");
+                mSheet.saveCsvFile(new File(filePath), "Shift_JIS");
+                Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
+            }
+
             break;
         }
     }
 
-    /***
-     * オプションメニューを作成
-     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu, menu);
+        getMenuInflater().inflate(R.menu.student_list_menu, menu);
 
         return true;
     }
 
-    /***
-     * オプションメニューの項目が選択された際の動作を設定
-     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         boolean retBool = false;
 
+        Intent mIntent;
+
         switch(item.getItemId()) {
+        case R.id.menu_new_sheet:
+            mSheet = new Sheet();
+            mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
+            studentListView.setAdapter(mStudentListAdapter);
+            Toast.makeText(StudentListMakerActivity.this, R.string.notice_new_sheet_created, Toast.LENGTH_SHORT).show();
+
+            retBool = true;
+
+            break;
         case R.id.menu_set_subject:
             showDialog(StudentListMakerActivity.DIALOG_SET_SUBJECT);
 
@@ -193,7 +204,7 @@ public class StudentListMakerActivity extends Activity {
 
             break;
         case R.id.menu_open:
-            Intent mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
+            mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
             mIntent.putExtra("initDirPath", baseDir.getAbsolutePath());
             mIntent.putExtra("filter", ".*\\.csv");
             startActivityForResult(mIntent, StudentListMakerActivity.REQUEST_CHOOSE_OPEN_FILE);
@@ -202,8 +213,10 @@ public class StudentListMakerActivity extends Activity {
 
             break;
         case R.id.menu_save:
-            mSheet.saveCsvFile(new File(baseDir, "out.csv"), "Shift_JIS");
-            Toast.makeText(StudentListMakerActivity.this, R.string.notice_csv_file_saved, Toast.LENGTH_SHORT).show();
+            mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
+            mIntent.putExtra("initDirPath", baseDir.getAbsolutePath());
+            mIntent.putExtra("filter", ".*\\.csv");
+            startActivityForResult(mIntent, StudentListMakerActivity.REQUEST_CHOOSE_SAVE_FILE);
 
             retBool = true;
 
@@ -213,11 +226,8 @@ public class StudentListMakerActivity extends Activity {
         return retBool;
     }
 
-    /***
-     * ダイアログを生成する
-     */
     @Override
-    public Dialog onCreateDialog(int id) {
+    public Dialog onCreateDialog(final int id) {
         Dialog retDialog = null;
 
         AlertDialog.Builder builder;
@@ -228,6 +238,8 @@ public class StudentListMakerActivity extends Activity {
             builder = new AlertDialog.Builder(StudentListMakerActivity.this);
             builder.setTitle(R.string.menu_set_subject);
             mEditText = new EditText(StudentListMakerActivity.this);
+            mEditText.setInputType(InputType.TYPE_CLASS_TEXT);
+            mEditText.setMaxLines(1);
             mEditText.setHint(R.string.dialog_set_subject_hint);
             mEditText.setText(mSheet.getSubject());
             builder.setView(mEditText);
@@ -235,9 +247,7 @@ public class StudentListMakerActivity extends Activity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     String subject = mEditText.getEditableText().toString();
-                    if(subject.length() != 0) {
-                        mSheet.setSubject(subject);
-                    }
+                    mSheet.setSubject(subject);
                 }
             });
             builder.setNegativeButton(android.R.string.cancel, null);
@@ -245,7 +255,7 @@ public class StudentListMakerActivity extends Activity {
             retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    removeDialog(0);
+                    removeDialog(id);
                 }
             });
 
@@ -254,15 +264,16 @@ public class StudentListMakerActivity extends Activity {
             builder = new AlertDialog.Builder(StudentListMakerActivity.this);
             builder.setTitle(R.string.dialog_set_time_hint);
             mEditText = new EditText(StudentListMakerActivity.this);
+            mEditText.setInputType(InputType.TYPE_CLASS_TEXT);
+            mEditText.setMaxLines(1);
+            mEditText.setHint(R.string.dialog_set_time_hint);
             mEditText.setText(mSheet.getTime());
             builder.setView(mEditText);
             builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     String time = mEditText.getEditableText().toString();
-                    if(time.length() != 0) {
-                        mSheet.setTime(time);
-                    }
+                    mSheet.setTime(time);
                 }
             });
             builder.setNegativeButton(android.R.string.cancel, null);
@@ -270,7 +281,7 @@ public class StudentListMakerActivity extends Activity {
             retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    removeDialog(1);
+                    removeDialog(id);
                 }
             });
 

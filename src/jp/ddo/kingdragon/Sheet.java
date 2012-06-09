@@ -50,10 +50,11 @@ public class Sheet {
      * @param encode CSVファイルの文字コード
      */
     public Sheet(File csvFile, String encode) {
+        this();
+
         BufferedReader br = null;
         try {
             br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
-            students = new LinkedHashMap<String, Student>();
             boolean isSubjectRecord = false;
             boolean isStudentRecord = false;
             String line;
@@ -118,11 +119,13 @@ public class Sheet {
             Log.e("Sheet Constructor", e.getMessage(), e);
         }
         finally {
-            try {
-                br.close();
-            }
-            catch (IOException e) {
-                Log.e("Sheet Constructor", e.getMessage(), e);
+            if(br != null) {
+                try {
+                    br.close();
+                }
+                catch (IOException e) {
+                    Log.e("Sheet Constructor", e.getMessage(), e);
+                }
             }
         }
     }
@@ -229,11 +232,13 @@ public class Sheet {
             Log.e("saveCsvFile", e.getMessage(), e);
         }
         finally {
-            try {
-                osw.close();
-            }
-            catch (IOException e) {
-                Log.e("saveCsvFile", e.getMessage(), e);
+            if(osw != null) {
+                try {
+                    osw.close();
+                }
+                catch (IOException e) {
+                    Log.e("saveCsvFile", e.getMessage(), e);
+                }
             }
         }
     }

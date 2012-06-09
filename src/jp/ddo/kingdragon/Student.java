@@ -152,7 +152,8 @@ public class Student {
         return studentRuby;
     }
     /***
-     * NFCタグのIDを追加する
+     * NFCタグのIDを追加する<br />
+     * 既に同じタグが追加されている場合は追加しない。
      * @param id NFCタグのID
      */
     public void addNfcId(String id) {

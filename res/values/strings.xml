@@ -11,16 +11,20 @@
     <string name="header_student_name">氏名</string>
     <string name="header_student_num_of_nfc_id">数</string>
 
+    <string name="menu_new_sheet">新規シート</string>
     <string name="menu_set_subject">科目名を設定する</string>
     <string name="menu_set_time">授業時間を設定する</string>
     <string name="menu_open">CSVファイルを開く</string>
     <string name="menu_save">CSVファイルを保存する</string>
+    <string name="menu_new_file">新規ファイルを作成する</string>
 
     <string name="dialog_set_subject_hint">科目名を入力</string>
     <string name="dialog_set_time_hint">授業時間を入力</string>
+    <string name="dialog_new_file_hint">ファイル名を入力</string>
 
+    <string name="notice_new_sheet_created">新規シートを作成しました</string>
     <string name="notice_csv_file_opened">を開きました</string>
-    <string name="notice_csv_file_saved">CSVファイルに保存しました</string>
+    <string name="notice_csv_file_saved">に保存しました</string>
 
     <string name="error_make_directory_failed">保存用ディレクトリの作成に失敗しました</string>
 </resources>
