@@ -174,42 +174,34 @@ public class FileChooseActivity extends Activity {
             });
             builder.setNegativeButton(android.R.string.cancel, null);
             retDialog = builder.create();
-            retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    removeDialog(id);
-                }
-            });
 
             break;
-        }
-
-        return retDialog;
-    }
-
-    @Override
-    public Dialog onCreateDialog(final int id, Bundle args) {
-        Dialog retDialog = null;
-
-        AlertDialog.Builder builder;
-
-        switch(id) {
-        case FileChooseActivity.DIALOG_NEW_FILE:
+        case FileChooseActivity.DIALOG_FILE_CREATE_FAILED:
             builder = new AlertDialog.Builder(FileChooseActivity.this);
-            builder.setTitle(R.string.menu_new_file);
+            builder.setTitle("");
             builder.setPositiveButton(android.R.string.ok, null);
             retDialog = builder.create();
             retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    removeDialog(id);
+                    showDialog(FileChooseActivity.DIALOG_NEW_FILE);
                 }
             });
-
+            
             break;
         }
 
         return retDialog;
+    }
+    
+    @Override
+    public void onPrepareDialog(int id, Dialog dialog) {
+        switch(id) {
+        case FileChooseActivity.DIALOG_FILE_CREATE_FAILED:
+            ((AlertDialog)dialog).setMessage("hoge");
+            
+            break;
+        }
     }
 
     @Override
