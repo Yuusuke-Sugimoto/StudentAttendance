@@ -11,7 +11,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-/***
+/**
  * ファイルの一覧を表示するアダプタクラス
  * @author 杉本祐介
  */
@@ -38,7 +38,7 @@ public class FileListAdapter extends ArrayAdapter<File> {
     public View getView(int position, View convertView, ViewGroup parent) {
         File mFile = getItem(position);
 
-        if(convertView == null) {
+        if (convertView == null) {
             convertView = inflater.inflate(R.layout.file_view, null);
 
             holder = new ViewHolder();
@@ -50,8 +50,8 @@ public class FileListAdapter extends ArrayAdapter<File> {
             holder = (ViewHolder)convertView.getTag();
         }
 
-        if(mFile != parentDir) {
-            if(mFile.isFile()) {
+        if (mFile != parentDir) {
+            if (mFile.isFile()) {
                 holder.fileName.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_menu_compose, 0, 0, 0);
             }
             else {
@@ -71,15 +71,15 @@ public class FileListAdapter extends ArrayAdapter<File> {
     public void add(File inFile) {}
 
     public void add(File inFile, boolean isParent) {
-        if(getPosition(inFile) == -1) {
-            if(isParent) {
+        if (getPosition(inFile) == -1) {
+            if (isParent) {
                 parentDir = inFile;
             }
             super.add(inFile);
         }
     }
 
-    /***
+    /**
      * 作成済みのTextViewを保持するクラス
      * @author 杉本祐介
      */

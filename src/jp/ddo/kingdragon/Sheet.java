@@ -14,29 +14,29 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
-/***
+/**
  * 1つのシートを管理するクラス
  * @author 杉本祐介
  */
 public class Sheet {
     // 変数の宣言
-    /***
+    /**
      * 科目
      */
     private String subject;
-    /***
+    /**
      * 授業時間
      */
     private String time;
 
     // コレクションの宣言
-    /***
+    /**
      * 現在管理している学生データのリスト
      */
     private LinkedHashMap<String, Student> students;
 
     // コンストラクタ
-    /***
+    /**
      * 空のシートを生成する
      */
     public Sheet() {
@@ -44,7 +44,7 @@ public class Sheet {
         time = "";
         students = new LinkedHashMap<String, Student>();
     }
-    /***
+    /**
      * CSVファイルからシートを生成する
      * @param csvFile CSVファイルのインスタンス
      * @param encode CSVファイルの文字コード
@@ -58,24 +58,24 @@ public class Sheet {
             boolean isSubjectRecord = false;
             boolean isStudentRecord = false;
             String line;
-            while((line = br.readLine()) != null) {
+            while ((line = br.readLine()) != null) {
                 String[] splittedLine = line.replace("\"", "").split(",");
 
-                if(isSubjectRecord) {
+                if (isSubjectRecord) {
                     subject = splittedLine[0];
                     time = splittedLine[1];
                     isSubjectRecord = false;
                 }
-                else if(isStudentRecord) {
+                else if (isStudentRecord) {
                     String[] nfcIds;
-                    if(splittedLine.length == 6) {
+                    if (splittedLine.length == 6) {
                         // NFCのタグのIDが1つ
                         nfcIds = new String[] {splittedLine[5]};
                     }
-                    else if(splittedLine.length > 6) {
+                    else if (splittedLine.length > 6) {
                         // NFCタグのIDが複数セットされている場合は配列に直す
                         ArrayList<String> temp = new ArrayList<String>();
-                        for(int i = 5; i < splittedLine.length; i++) {
+                        for (int i = 5; i < splittedLine.length; i++) {
                             temp.add(splittedLine[i]);
                         }
                         nfcIds = temp.toArray(new String[temp.size()]);
@@ -85,12 +85,12 @@ public class Sheet {
                         nfcIds = new String[0];
                     }
                     int num;
-                    if(splittedLine[0].length() != 0) {
+                    if (splittedLine[0].length() != 0) {
                         // 連番が設定されている場合
                         try {
                             num = Integer.parseInt(splittedLine[0]);
                         }
-                        catch(Exception ex) {
+                        catch (Exception ex) {
                             num = -1;
                         }
                     }
@@ -101,10 +101,10 @@ public class Sheet {
                                                               splittedLine[3], splittedLine[4], nfcIds));
                 }
 
-                if(splittedLine[0].equals("科目")) {
+                if (splittedLine[0].equals("科目")) {
                     isSubjectRecord = true;
                 }
-                else if(splittedLine[1].equals("所属")) {
+                else if (splittedLine[1].equals("所属")) {
                     isStudentRecord = true;
                 }
             }
@@ -119,7 +119,7 @@ public class Sheet {
             Log.e("Sheet Constructor", e.getMessage(), e);
         }
         finally {
-            if(br != null) {
+            if (br != null) {
                 try {
                     br.close();
                 }
@@ -131,35 +131,35 @@ public class Sheet {
     }
 
     // アクセッサ
-    /***
+    /**
      * 科目名をセットする
      * @param subject 科目名
      */
     public void setSubject(String subject) {
         this.subject = subject;
     }
-    /***
+    /**
      * 科目名を返す
      * @return 科目名
      */
     public String getSubject() {
         return subject;
     }
-    /***
+    /**
      * 授業時間をセットする
      * @param time 授業時間
      */
     public void setTime(String time) {
         this.time = time;
     }
-    /***
+    /**
      * 授業時間を返す
      * @return 授業時間
      */
     public String getTime() {
         return time;
     }
-    /***
+    /**
      * 学生データのリストを返す
      * @return 学生データのリスト
      */
@@ -167,19 +167,19 @@ public class Sheet {
         return new ArrayList<Student>(students.values());
     }
 
-    /***
+    /**
      * 学生データを追加する<br />
      * 既に追加されている場合は追加しない。
      * @param inStudent 追加する学生データ
      */
     public void add(Student inStudent) {
-        if(!students.containsKey(inStudent.getStudentNo())) {
+        if (!students.containsKey(inStudent.getStudentNo())) {
             inStudent.setStudentNum(students.size() + 1);
             students.put(inStudent.getStudentNo(), inStudent);
         }
     }
 
-    /***
+    /**
      * 引数で渡された学籍番号を持つ学生データを取得する
      * @param studentNo 学籍番号
      * @return 学生データ
@@ -188,7 +188,7 @@ public class Sheet {
         return students.get(studentNo);
     }
 
-    /***
+    /**
      * 現在の学生データの数を返す
      * @return 現在の学生データの数
      */
@@ -196,7 +196,7 @@ public class Sheet {
         return students.size();
     }
 
-    /***
+    /**
      * 引数で渡された学籍番号をもつ学生データが存在するかどうかを調べる
      * @param studentNo 学籍番号
      * @return 存在したならばtrue、存在しなければfalse
@@ -205,22 +205,26 @@ public class Sheet {
         return students.containsKey(studentNo);
     }
 
-    /***
+    /**
      * 学生データをCSV形式で保存する
      * @param csvFile 保存先のインスタンス
      * @param encode 書き込む際に使用する文字コード
+     * @return 保存に成功したらtrue、失敗したらfalse
      */
-    public void saveCsvFile(File csvFile, String encode) {
+    public boolean saveCsvFile(File csvFile, String encode) {
+        boolean result = false;
+        
         OutputStreamWriter osw = null;
         try {
             osw = new OutputStreamWriter(new FileOutputStream(csvFile), encode);
             osw.write("科目,授業時間,受講者数\n");
             osw.write(subject + "," + time + "," + students.size() + "\n");
             osw.write(",所属,学籍番号,氏名,カナ\n");
-            for(String key : students.keySet()) {
+            for (String key : students.keySet()) {
                 osw.write(students.get(key).toCsvRecord() + "\n");
             }
             osw.flush();
+            result = true;
         }
         catch (UnsupportedEncodingException e) {
             Log.e("saveCsvFile", e.getMessage(), e);
@@ -232,7 +236,7 @@ public class Sheet {
             Log.e("saveCsvFile", e.getMessage(), e);
         }
         finally {
-            if(osw != null) {
+            if (osw != null) {
                 try {
                     osw.close();
                 }
@@ -241,5 +245,7 @@ public class Sheet {
                 }
             }
         }
+        
+        return result;
     }
 }

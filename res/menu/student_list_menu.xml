@@ -4,20 +4,16 @@
           android:title="@string/menu_new_sheet"
           android:icon="@drawable/ic_new_sheet"
           android:numericShortcut="1" />
-    <item android:id="@+id/menu_set_subject"
-          android:title="@string/menu_set_subject"
+    <item android:id="@+id/menu_edit_info"
+          android:title="@string/menu_edit_info"
           android:icon="@android:drawable/ic_menu_edit"
           android:numericShortcut="2" />
-    <item android:id="@+id/menu_set_time"
-          android:title="@string/menu_set_time"
-          android:icon="@android:drawable/ic_menu_my_calendar"
-          android:numericShortcut="3" />
     <item android:id="@+id/menu_open"
           android:title="@string/menu_open"
           android:icon="@android:drawable/ic_menu_set_as"
-          android:numericShortcut="4" />
+          android:numericShortcut="3" />
     <item android:id="@+id/menu_save"
           android:title="@string/menu_save"
           android:icon="@android:drawable/ic_menu_save"
-          android:numericShortcut="5" />
+          android:numericShortcut="4" />
 </menu>

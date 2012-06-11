@@ -10,7 +10,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-/***
+/**
  * 学生の一覧を表示するアダプタクラス
  * @author 杉本祐介
  */
@@ -34,7 +34,7 @@ public class StudentListAdapter extends ArrayAdapter<Student> {
     public View getView(int position, View convertView, ViewGroup parent) {
         Student mStudent = getItem(position);
 
-        if(convertView == null) {
+        if (convertView == null) {
             convertView = inflater.inflate(R.layout.student_view, null);
 
             holder = new ViewHolder();
@@ -59,12 +59,12 @@ public class StudentListAdapter extends ArrayAdapter<Student> {
 
     @Override
     public void add(Student inStudent) {
-        if(getPosition(inStudent) == -1) {
+        if (getPosition(inStudent) == -1) {
             super.add(inStudent);
         }
     }
 
-    /***
+    /**
      * 作成済みのTextViewを保持するクラス
      * @author 杉本祐介
      */

@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/menu_show_invisible_file"
+          android:title="@string/menu_show_invisible_file"
+          android:icon="@android:drawable/ic_menu_report_image"
+          android:numericShortcut="1" />
     <item android:id="@+id/menu_new_file"
           android:title="@string/menu_new_file"
           android:icon="@android:drawable/ic_menu_add"
-          android:numericShortcut="1" />
+          android:numericShortcut="2" />
 </menu>
