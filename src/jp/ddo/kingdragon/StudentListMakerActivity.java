@@ -166,7 +166,7 @@ public class StudentListMakerActivity extends Activity {
                 mSheet = new Sheet(new File(filePath), "Shift_JIS");
                 mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mSheet.getStudentList());
                 studentListView.setAdapter(mStudentListAdapter);
-                Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_was_opened), Toast.LENGTH_SHORT).show();
+                Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
             }
 
             break;
@@ -180,7 +180,7 @@ public class StudentListMakerActivity extends Activity {
                 }
                 else {
                     if(mSheet.saveCsvFile(saveFile, "Shift_JIS")) {
-                        Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_was_saved), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
                     }
                     else {
                         Toast.makeText(StudentListMakerActivity.this, R.string.error_saving_failed, Toast.LENGTH_SHORT).show();
@@ -298,7 +298,7 @@ public class StudentListMakerActivity extends Activity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     mSheet.saveCsvFile(saveFile, "Shift_JIS");
-                    Toast.makeText(StudentListMakerActivity.this, saveFile.getName() + getString(R.string.notice_csv_file_was_saved), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(StudentListMakerActivity.this, saveFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
                 }
             });
             builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {

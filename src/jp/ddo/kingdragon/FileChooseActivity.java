@@ -18,6 +18,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -223,6 +224,7 @@ public class FileChooseActivity extends Activity {
                             try {
                                 if (mFile.createNewFile()) {
                                     showFileList(currentDir);
+                                    Toast.makeText(FileChooseActivity.this, fileName + getString(R.string.notice_file_created), Toast.LENGTH_SHORT).show();
                                 }
                                 else {
                                     showDialog(FileChooseActivity.DIALOG_FILE_ALREADY_EXISTS);
@@ -302,7 +304,7 @@ public class FileChooseActivity extends Activity {
 
             break;
         case FileChooseActivity.DIALOG_FILE_NAME_IS_NULL:
-            mAlertDialog.setMessage(getString(R.string.error_file_name_is_null));
+            mAlertDialog.setMessage(getString(R.string.error_file_name_null));
 
             break;
         }
