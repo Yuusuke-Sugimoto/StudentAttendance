@@ -11,17 +11,19 @@ import android.nfc.NfcAdapter;
 import android.nfc.tech.TagTechnology;
 import android.os.Bundle;
 import android.os.Environment;
-import android.text.InputType;
+import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * メイン画面
@@ -33,8 +35,12 @@ public class StudentListMakerActivity extends Activity {
     private static final int REQUEST_CHOOSE_OPEN_FILE = 0;
     private static final int REQUEST_CHOOSE_SAVE_FILE = 1;
     // ダイアログのID
-    private static final int DIALOG_EDIT_INFO     = 0;
-    private static final int DIALOG_ASK_OVERWRITE = 1;
+    private static final int DIALOG_STUDENT_MENU       = 0;
+    private static final int DIALOG_EDIT_STUDENT       = 1;
+    private static final int DIALOG_ASK_REMOVE_NFC_ID  = 2;
+    private static final int DIALOG_ASK_REMOVE_STUDENT = 3;
+    private static final int DIALOG_EDIT_INFO          = 4;
+    private static final int DIALOG_ASK_OVERWRITE      = 5;
 
     // 変数の宣言
     /**
@@ -65,6 +71,26 @@ public class StudentListMakerActivity extends Activity {
      * 保存先のファイル
      */
     private File saveFile;
+    /**
+     * 連番用のEditText
+     */
+    private EditText editTextForStudentNum;
+    /**
+     * 学籍番号用のEditText
+     */
+    private EditText editTextForStudentNo;
+    /**
+     * 所属用のEditText
+     */
+    private EditText editTextForClassName;
+    /**
+     * 氏名用のEditText
+     */
+    private EditText editTextForStudentName;
+    /**
+     * カナ用のEditText
+     */
+    private EditText editTextForStudentRuby;
     /**
      * 科目名用のEditText
      */
@@ -111,8 +137,24 @@ public class StudentListMakerActivity extends Activity {
          *      http://developer.android.com/resources/samples/ApiDemos/src/com/example/android/apis/view/List14.html
          */
         studentListView = (ListView)findViewById(R.id.student_list);
+        studentListView.setSelector(R.drawable.list_selector_background);
         mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
         studentListView.setAdapter(mStudentListAdapter);
+        studentListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                currentStudent = (Student)parent.getItemAtPosition(position);
+            }
+        });
+        studentListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                currentStudent = (Student)parent.getItemAtPosition(position);
+                showDialog(StudentListMakerActivity.DIALOG_STUDENT_MENU);
+
+                return true;
+            }
+        });
 
         // 保存用ディレクトリの作成
         baseDir = new File(Environment.getExternalStorageDirectory(), "");
@@ -163,10 +205,16 @@ public class StudentListMakerActivity extends Activity {
             if (resultCode == Activity.RESULT_OK) {
                 String fileName = data.getStringExtra("fileName");
                 String filePath = data.getStringExtra("filePath");
-                mSheet = new Sheet(new File(filePath), "Shift_JIS");
-                mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mSheet.getStudentList());
-                studentListView.setAdapter(mStudentListAdapter);
-                Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
+                try {
+                    mSheet = new Sheet(new File(filePath), "Shift_JIS");
+                    mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mSheet.getStudentList());
+                    studentListView.setAdapter(mStudentListAdapter);
+                    Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
+                }
+                catch (IOException e) {
+                    Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.error_opening_failed), Toast.LENGTH_SHORT).show();
+
+                }
             }
 
             break;
@@ -179,11 +227,13 @@ public class StudentListMakerActivity extends Activity {
                     showDialog(StudentListMakerActivity.DIALOG_ASK_OVERWRITE);
                 }
                 else {
-                    if(mSheet.saveCsvFile(saveFile, "Shift_JIS")) {
+                    try {
+                        mSheet.saveCsvFile(saveFile, "Shift_JIS");
                         Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
                     }
-                    else {
-                        Toast.makeText(StudentListMakerActivity.this, R.string.error_saving_failed, Toast.LENGTH_SHORT).show();
+                    catch (IOException e) {
+                        Toast.makeText(StudentListMakerActivity.this, fileName + R.string.error_saving_failed, Toast.LENGTH_SHORT).show();
+                        Log.e("onActivityResult", e.getMessage(), e);
                     }
                 }
             }
@@ -241,36 +291,122 @@ public class StudentListMakerActivity extends Activity {
         Dialog retDialog = null;
 
         AlertDialog.Builder builder;
+        LayoutInflater inflater;
+        View mView;
 
         switch (id) {
+        case StudentListMakerActivity.DIALOG_STUDENT_MENU:
+            builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+            builder.setTitle(R.string.dialog_student_menu_title);
+            builder.setItems(R.array.dialog_student_menu, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    switch (which) {
+                    case 0:
+                        // 編集
+                        showDialog(StudentListMakerActivity.DIALOG_EDIT_STUDENT);
+
+                        break;
+                    case 1:
+                        // NFCタグを削除
+                        showDialog(StudentListMakerActivity.DIALOG_ASK_REMOVE_NFC_ID);
+
+                        break;
+                    case 2:
+                        // 削除
+                        showDialog(StudentListMakerActivity.DIALOG_ASK_REMOVE_STUDENT);
+
+                        break;
+                    }
+                }
+            });
+            builder.setCancelable(true);
+            retDialog = builder.create();
+
+            break;
+        case StudentListMakerActivity.DIALOG_EDIT_STUDENT:
+            builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+            builder.setTitle(R.string.dialog_edit_student_title);
+
+            inflater = LayoutInflater.from(StudentListMakerActivity.this);
+            mView = inflater.inflate(R.layout.dialog_edit_student, null);
+            editTextForStudentNum  = (EditText)mView.findViewById(R.id.dialog_student_num);
+            editTextForStudentNo   = (EditText)mView.findViewById(R.id.dialog_student_no);
+            editTextForClassName   = (EditText)mView.findViewById(R.id.dialog_class_name);
+            editTextForStudentName = (EditText)mView.findViewById(R.id.dialog_student_name);
+            editTextForStudentRuby = (EditText)mView.findViewById(R.id.dialog_student_ruby);
+
+            builder.setView(mView);
+            builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    String studentNum = editTextForStudentNum.getEditableText().toString();
+                    currentStudent.setStudentNum(Integer.parseInt(studentNum));
+                    String studentNo = editTextForStudentNo.getEditableText().toString();
+                    currentStudent.setStudentNo(studentNo);
+                    String className = editTextForClassName.getEditableText().toString();
+                    currentStudent.setClassName(className);
+                    String studentName = editTextForStudentName.getEditableText().toString();
+                    currentStudent.setStudentName(studentName);
+                    String studentRuby = editTextForStudentRuby.getEditableText().toString();
+                    currentStudent.setStudentRuby(studentRuby);
+                    studentListView.invalidateViews();
+                }
+            });
+            builder.setNegativeButton(android.R.string.cancel, null);
+            builder.setCancelable(true);
+            retDialog = builder.create();
+
+            break;
+        case StudentListMakerActivity.DIALOG_ASK_REMOVE_NFC_ID:
+            builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+            builder.setTitle(R.string.dialog_remove_nfc_id_title);
+            builder.setMessage("");
+            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    currentStudent.removeNfcIds();
+                    studentListView.invalidateViews();
+                    Toast.makeText(StudentListMakerActivity.this,
+                                   currentStudent.getStudentNo() + " " + currentStudent.getStudentName() + getString(R.string.notice_nfc_tag_removed),
+                                   Toast.LENGTH_SHORT).show();
+                }
+            });
+            builder.setNegativeButton(android.R.string.no, null);
+            builder.setCancelable(true);
+            retDialog = builder.create();
+
+            break;
+        case StudentListMakerActivity.DIALOG_ASK_REMOVE_STUDENT:
+            builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+            builder.setTitle(R.string.dialog_remove_student_title);
+            builder.setMessage("");
+            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    mSheet.remove(currentStudent);
+                    mStudentListAdapter.remove(currentStudent);
+                    Toast.makeText(StudentListMakerActivity.this,
+                                   currentStudent.getStudentNo() + " " + currentStudent.getStudentName() + getString(R.string.notice_student_removed),
+                                   Toast.LENGTH_SHORT).show();
+                    currentStudent = new Student();
+                }
+            });
+            builder.setNegativeButton(android.R.string.no, null);
+            builder.setCancelable(true);
+            retDialog = builder.create();
+
+            break;
         case StudentListMakerActivity.DIALOG_EDIT_INFO:
             builder = new AlertDialog.Builder(StudentListMakerActivity.this);
-            builder.setTitle(R.string.menu_edit_info);
-            
-            LinearLayout layout = new LinearLayout(StudentListMakerActivity.this);
-            layout.setOrientation(LinearLayout.VERTICAL);
-            
-            TextView textViewForSubject = new TextView(StudentListMakerActivity.this);
-            textViewForSubject.setText(R.string.dialog_edit_subject_label);
-            layout.addView(textViewForSubject);
-            
-            editTextForSubject = new EditText(StudentListMakerActivity.this);
-            editTextForSubject.setInputType(InputType.TYPE_CLASS_TEXT);
-            editTextForSubject.setMaxLines(1);
-            editTextForSubject.setHint(R.string.dialog_edit_subject_hint);
-            layout.addView(editTextForSubject);
-            
-            TextView textViewForTime = new TextView(StudentListMakerActivity.this);
-            textViewForTime.setText(R.string.dialog_edit_time_label);
-            layout.addView(textViewForTime);
-            
-            editTextForTime = new EditText(StudentListMakerActivity.this);
-            editTextForTime.setInputType(InputType.TYPE_CLASS_TEXT);
-            editTextForTime.setMaxLines(1);
-            editTextForTime.setHint(R.string.dialog_edit_time_hint);
-            layout.addView(editTextForTime);
-            
-            builder.setView(layout);
+            builder.setTitle(R.string.dialog_edit_info_title);
+
+            inflater = LayoutInflater.from(StudentListMakerActivity.this);
+            mView = inflater.inflate(R.layout.dialog_edit_info, null);
+            editTextForSubject = (EditText)mView.findViewById(R.id.dialog_subject);
+            editTextForTime    = (EditText)mView.findViewById(R.id.dialog_time);
+
+            builder.setView(mView);
             builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -281,13 +417,8 @@ public class StudentListMakerActivity extends Activity {
                 }
             });
             builder.setNegativeButton(android.R.string.cancel, null);
+            builder.setCancelable(true);
             retDialog = builder.create();
-            retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    removeDialog(id);
-                }
-            });
 
             break;
         case StudentListMakerActivity.DIALOG_ASK_OVERWRITE:
@@ -297,8 +428,14 @@ public class StudentListMakerActivity extends Activity {
             builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    mSheet.saveCsvFile(saveFile, "Shift_JIS");
-                    Toast.makeText(StudentListMakerActivity.this, saveFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
+                    try {
+                        mSheet.saveCsvFile(saveFile, "Shift_JIS");
+                        Toast.makeText(StudentListMakerActivity.this, saveFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
+                    }
+                    catch (IOException e) {
+                        Toast.makeText(StudentListMakerActivity.this, saveFile.getName() + R.string.error_saving_failed, Toast.LENGTH_SHORT).show();
+                        Log.e("onActivityResult", e.getMessage(), e);
+                    }
                 }
             });
             builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
@@ -313,7 +450,7 @@ public class StudentListMakerActivity extends Activity {
                     Intent mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
                     String initDirPath;
                     File parent = saveFile.getParentFile();
-                    if(parent != null) {
+                    if (parent != null) {
                         initDirPath = parent.getAbsolutePath();
                     }
                     else {
@@ -327,29 +464,48 @@ public class StudentListMakerActivity extends Activity {
             });
             builder.setCancelable(true);
             retDialog = builder.create();
-            
+
             break;
         }
 
         return(retDialog);
     }
-    
+
     @Override
     public void onPrepareDialog(int id, Dialog dialog) {
         AlertDialog mAlertDialog = null;
-        if(dialog instanceof AlertDialog) {
+        if (dialog instanceof AlertDialog) {
             mAlertDialog = (AlertDialog)dialog;
         }
-        
-        switch(id) {
+
+        switch (id) {
+        case StudentListMakerActivity.DIALOG_EDIT_STUDENT:
+            mAlertDialog.setTitle(currentStudent.getStudentNo() + " " + currentStudent.getStudentName());
+            editTextForStudentNum.setText(String.valueOf(currentStudent.getStudentNum()));
+            editTextForStudentNo.setText(currentStudent.getStudentNo());
+            editTextForClassName.setText(currentStudent.getClassName());
+            editTextForStudentName.setText(currentStudent.getStudentName());
+            editTextForStudentRuby.setText(currentStudent.getStudentRuby());
+
+            break;
+        case StudentListMakerActivity.DIALOG_ASK_REMOVE_NFC_ID:
+            mAlertDialog.setMessage(currentStudent.getStudentNo() + " " + currentStudent.getStudentName()
+                                    + getString(R.string.dialog_remove_nfc_id_message));
+
+            break;
+        case StudentListMakerActivity.DIALOG_ASK_REMOVE_STUDENT:
+            mAlertDialog.setMessage(currentStudent.getStudentNo() + " " + currentStudent.getStudentName()
+                                    + getString(R.string.dialog_remove_student_message));
+
+            break;
         case StudentListMakerActivity.DIALOG_EDIT_INFO:
             editTextForSubject.setText(mSheet.getSubject());
             editTextForTime.setText(mSheet.getTime());
-            
+
             break;
         case StudentListMakerActivity.DIALOG_ASK_OVERWRITE:
             mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
-            
+
             break;
         }
     }
@@ -428,6 +584,8 @@ public class StudentListMakerActivity extends Activity {
      * @param studentNo 学籍番号
      */
     public void onStudentNoReaded(String studentNo) {
+        // タッチしながら読み取った場合、タッチを無効にする
+        studentListView.clearFocus();
         if (mSheet.hasStudentNo(studentNo)) {
             // 既に学籍番号に対応するデータが存在する場合はそのデータを取り出す
             currentStudent = mSheet.get(studentNo);
@@ -441,6 +599,8 @@ public class StudentListMakerActivity extends Activity {
             mStudentListAdapter.add(currentStudent);
             studentListView.setSelection(mStudentListAdapter.getCount() - 1);
         }
+        // 正しくハイライトさせるために必要
+        studentListView.setPressed(true);
     }
 
     /**

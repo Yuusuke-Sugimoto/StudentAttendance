@@ -19,14 +19,37 @@
     <string name="menu_hide_invisible_file">隠しファイルを隠す</string>
     <string name="menu_new_file">新規ファイルを作成する</string>
 
-    <string name="dialog_ask">確認</string>
-    <string name="dialog_ask_overwrite">に上書きしてもよろしいですか?</string>
+    <string name="dialog_student_menu_title">学生メニュー</string>
+    <string name="dialog_student_menu_edit">編集</string>
+    <string name="dialog_student_menu_nfc_id_remove">NFCタグを削除</string>
+    <string name="dialog_student_menu_remove">削除</string>
+    <string name="dialog_edit_student_title">学生データの編集</string>
+    <string name="dialog_edit_student_num_label">連番:</string>
+    <string name="dialog_edit_student_num_hint">連番を入力</string>
+    <string name="dialog_edit_student_no_label">学籍番号:</string>
+    <string name="dialog_edit_student_no_hint">学籍番号を入力</string>
+    <string name="dialog_edit_class_name_label">所属:</string>
+    <string name="dialog_edit_class_name_hint">所属を入力</string>
+    <string name="dialog_edit_student_name_label">氏名:</string>
+    <string name="dialog_edit_student_name_hint">氏名を入力</string>
+    <string name="dialog_edit_student_ruby_label">カナ:</string>
+    <string name="dialog_edit_student_ruby_hint">カナを入力</string>
+    <string name="dialog_remove_nfc_id_title">NFCタグの削除</string>
+    <string name="dialog_remove_nfc_id_message">のNFCタグを削除しますか?</string>
+    <string name="dialog_remove_student_title">学生データの削除</string>
+    <string name="dialog_remove_student_message">のデータを削除しますか?</string>
+    <string name="dialog_edit_info_title">講義情報の編集</string>
     <string name="dialog_edit_subject_label">科目名:</string>
     <string name="dialog_edit_subject_hint">科目名を入力</string>
     <string name="dialog_edit_time_label">授業時間:</string>
     <string name="dialog_edit_time_hint">授業時間を入力</string>
+    <string name="dialog_new_file_title">新規ファイルの作成</string>
     <string name="dialog_new_file_hint">ファイル名を入力</string>
+    <string name="dialog_ask">確認</string>
+    <string name="dialog_ask_overwrite">に上書きしてもよろしいですか?</string>
 
+    <string name="notice_student_removed">のデータを削除しました</string>
+    <string name="notice_nfc_tag_removed">のNFCタグを削除しました</string>
     <string name="notice_new_sheet_created">新規シートを作成しました</string>
     <string name="notice_csv_file_opened">を開きました</string>
     <string name="notice_csv_file_saved">に保存しました</string>
@@ -34,9 +57,12 @@
 
     <string name="error">エラー</string>
     <string name="error_make_directory_failed">保存用ディレクトリの作成に失敗しました</string>
-    <string name="error_saving_failed">保存に失敗しました</string>
+    <string name="error_opening_failed">を開けませんでした</string>
+    <string name="error_saving_failed">への保存に失敗しました</string>
     <string name="error_file_already_exists">既に同名のファイルが存在します。</string>
     <string name="error_file_create_failed">ファイルの作成に失敗しました。</string>
     <string name="error_illegal_file_name">ファイル名に使用できない文字が含まれています。</string>
     <string name="error_file_name_null">ファイル名が入力されていません。</string>
+
+    <string name="alphabet_and_number">0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</string>
 </resources>

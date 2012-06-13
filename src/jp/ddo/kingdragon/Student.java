@@ -176,6 +176,12 @@ public class Student {
     public int getNumOfNfcId() {
         return nfcIds.size();
     }
+    /***
+     * NFCタグを削除する
+     */
+    public void removeNfcIds() {
+        nfcIds = new ArrayList<String>();
+    }
 
     /**
      * 学籍番号とNFCタグのIDが揃ったかどうかを調べる

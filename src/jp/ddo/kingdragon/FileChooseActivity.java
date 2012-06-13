@@ -6,12 +6,11 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.AdapterView.OnItemClickListener;
@@ -75,17 +74,17 @@ public class FileChooseActivity extends Activity {
      */
     private boolean isShowingInvisibleFile;
     /**
-     * ダイアログに適用するレイアウト
+     * 新規ファイル作成ダイアログに適用するレイアウト
      */
-    private LinearLayout layoutForDialog;
+    private LinearLayout layoutForNewFile;
     /**
-     * ダイアログに使用するEditText
+     * ファイル名用のEditText
      */
-    private EditText editTextForDialog;
+    private EditText editTextForFileName;
     /**
-     * ダイアログに使用するTextView
+     * 拡張子用のTextView
      */
-    private TextView textViewForDialog;
+    private TextView textViewForExtension;
 
     // コレクションの宣言
     /**
@@ -146,7 +145,7 @@ public class FileChooseActivity extends Activity {
 
         return true;
     }
-    
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem item = menu.getItem(0);
@@ -156,7 +155,7 @@ public class FileChooseActivity extends Activity {
         else {
             item.setTitle(R.string.menu_show_invisible_file);
         }
-        
+
         return true;
     }
 
@@ -186,27 +185,18 @@ public class FileChooseActivity extends Activity {
         switch (id) {
         case FileChooseActivity.DIALOG_NEW_FILE:
             builder = new AlertDialog.Builder(FileChooseActivity.this);
-            builder.setTitle(R.string.menu_new_file);
-            
-            layoutForDialog = new LinearLayout(FileChooseActivity.this);
-            
-            editTextForDialog = new EditText(FileChooseActivity.this);
-            LayoutParams params = new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 77);
-            editTextForDialog.setLayoutParams(params);
-            editTextForDialog.setInputType(InputType.TYPE_CLASS_TEXT);
-            editTextForDialog.setMaxLines(1);
-            editTextForDialog.setHint(R.string.dialog_new_file_hint);
-            layoutForDialog.addView(editTextForDialog);
-            
-            textViewForDialog = new TextView(FileChooseActivity.this);
-            params = new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 13);
-            textViewForDialog.setLayoutParams(params);
-            
-            builder.setView(layoutForDialog);
+            builder.setTitle(R.string.dialog_new_file_title);
+
+            LayoutInflater inflater = LayoutInflater.from(FileChooseActivity.this);
+            layoutForNewFile = (LinearLayout)inflater.inflate(R.layout.dialog_new_file, null);
+            editTextForFileName = (EditText)layoutForNewFile.findViewById(R.id.dialog_file_name);
+            textViewForExtension = (TextView)layoutForNewFile.findViewById(R.id.dialog_file_extension);
+
+            builder.setView(layoutForNewFile);
             builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    StringBuilder fileNameTemp = new StringBuilder(editTextForDialog.getEditableText().toString());
+                    StringBuilder fileNameTemp = new StringBuilder(editTextForFileName.getEditableText().toString());
                     if (fileNameTemp.length() != 0) {
                         // 円記号(U+00A5)をバックスラッシュ(U+005C)に置換
                         int pos;
@@ -282,14 +272,14 @@ public class FileChooseActivity extends Activity {
 
         switch (id) {
         case FileChooseActivity.DIALOG_NEW_FILE:
-            editTextForDialog.setText("");
-            layoutForDialog.removeView(textViewForDialog);
+            editTextForFileName.setText("");
+            layoutForNewFile.removeView(textViewForExtension);
             if (extension.matches("[A-Za-z0-9]*")) {
                 // 拡張子が1つだけ設定されている時はその拡張子を付加する
-                textViewForDialog.setText("." + extension);
-                layoutForDialog.addView(textViewForDialog);
+                textViewForExtension.setText("." + extension);
+                layoutForNewFile.addView(textViewForExtension);
             }
-            
+
             break;
         case FileChooseActivity.DIALOG_FILE_ALREADY_EXISTS:
             mAlertDialog.setMessage(getString(R.string.error_file_already_exists));
