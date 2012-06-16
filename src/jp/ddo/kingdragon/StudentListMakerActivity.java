@@ -149,7 +149,7 @@ public class StudentListMakerActivity extends Activity {
         studentListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                currentStudent = (Student)parent.getItemAtPosition(position);
+                studentListView.performItemClick(view, position, id);
                 showDialog(StudentListMakerActivity.DIALOG_STUDENT_MENU);
 
                 return true;
@@ -584,23 +584,21 @@ public class StudentListMakerActivity extends Activity {
      * @param studentNo 学籍番号
      */
     public void onStudentNoReaded(String studentNo) {
-        // タッチしながら読み取った場合、タッチを無効にする
-        studentListView.clearFocus();
         if (mSheet.hasStudentNo(studentNo)) {
-            // 既に学籍番号に対応するデータが存在する場合はそのデータを取り出す
-            currentStudent = mSheet.get(studentNo);
-            // 対象の行を選択する
-            studentListView.setSelection(mStudentListAdapter.getPosition(currentStudent));
+            // 既に学籍番号に対応するデータが存在する場合はその行を選択する
+            int position = mStudentListAdapter.getPosition(mSheet.get(studentNo));
+            studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
+            studentListView.setSelection(position);
         }
         else {
             // 存在しない場合は追加する
             currentStudent.setStudentNo(studentNo);
             mSheet.add(currentStudent);
             mStudentListAdapter.add(currentStudent);
-            studentListView.setSelection(mStudentListAdapter.getCount() - 1);
+            int position = mStudentListAdapter.getCount() - 1;
+            studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
+            studentListView.setSelection(position);
         }
-        // 正しくハイライトさせるために必要
-        studentListView.setPressed(true);
     }
 
     /**

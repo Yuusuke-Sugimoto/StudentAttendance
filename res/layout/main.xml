@@ -45,6 +45,6 @@
               android:divider="#111"
               android:dividerHeight="1dip"
               android:fastScrollEnabled="true"
-              android:scrollingCache="false" />
+              android:choiceMode="singleChoice" />
     <include layout="@layout/horizontal_divider" />
 </LinearLayout>

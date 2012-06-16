@@ -1,10 +1,12 @@
 package jp.ddo.kingdragon;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -53,6 +55,16 @@ public class StudentListAdapter extends ArrayAdapter<Student> {
         holder.studentNo.setText(mStudent.getStudentNo());
         holder.studentName.setText(mStudent.getStudentName());
         holder.numOfNfcId.setText(String.valueOf(mStudent.getNumOfNfcId()));
+
+        if (parent instanceof ListView) {
+            ListView mListView = (ListView)parent;
+            if(position == mListView.getCheckedItemPosition()) {
+                convertView.setBackgroundResource(R.drawable.orange);
+            }
+            else {
+                convertView.setBackgroundColor(Color.TRANSPARENT);
+            }
+        }
 
         return convertView;
     }
