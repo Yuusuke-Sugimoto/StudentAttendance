@@ -365,7 +365,7 @@ public class StudentListMakerActivity extends Activity {
             builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    currentStudent.removeNfcIds();
+                    currentStudent.removeAllNfcIds();
                     studentListView.invalidateViews();
                     Toast.makeText(StudentListMakerActivity.this,
                                    currentStudent.getStudentNo() + " " + currentStudent.getStudentName() + getString(R.string.notice_nfc_tag_removed),
@@ -611,7 +611,12 @@ public class StudentListMakerActivity extends Activity {
             while (id.length() < 16) {
                 id.append("0");
             }
-            currentStudent.addNfcId(id.toString());
+            if (currentStudent.indexOfNfcId(id.toString()) == -1) {
+                currentStudent.addNfcId(id.toString());
+            }
+            else {
+                currentStudent.removeNfcId(id.toString());
+            }
             studentListView.invalidateViews();
         }
     }

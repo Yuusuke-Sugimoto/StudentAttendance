@@ -154,13 +154,20 @@ public class Student {
     /**
      * NFCタグのIDを追加する<br />
      * 既に同じタグが追加されている場合は追加しない。
-     * @param id NFCタグのID
+     * @param id 追加するID
      */
     public void addNfcId(String id) {
         if (nfcIds.indexOf(id) == -1) {
             // 同じIDが追加されていなければ追加する
             nfcIds.add(id);
         }
+    }
+    /**
+     * NFCタグのIDを削除する
+     * @param id 削除するID
+     */
+    public void removeNfcId(String id) {
+        nfcIds.remove(id);
     }
     /**
      * NFCタグのIDの配列を返す
@@ -177,10 +184,18 @@ public class Student {
         return nfcIds.size();
     }
     /***
-     * NFCタグを削除する
+     * NFCタグを全て削除する
      */
-    public void removeNfcIds() {
+    public void removeAllNfcIds() {
         nfcIds = new ArrayList<String>();
+    }
+    /**
+     * NFCタグのIDの添字を返す
+     * @param id 検索するID
+     * @return NFCタグのIDの添字 存在しなければ-1
+     */
+    public int indexOfNfcId(String id) {
+        return nfcIds.indexOf(id);
     }
 
     /**

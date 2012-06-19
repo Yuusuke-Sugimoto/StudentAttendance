@@ -56,6 +56,11 @@ public class StudentListAdapter extends ArrayAdapter<Student> {
         holder.studentName.setText(mStudent.getStudentName());
         holder.numOfNfcId.setText(String.valueOf(mStudent.getNumOfNfcId()));
 
+        /**
+         * 選択中の行を常にハイライトする
+         * 参考:ListViewのonItemClickイベントに関して - Android-SDK-Japan | Google グループ
+         *      https://groups.google.com/group/android-sdk-japan/browse_thread/thread/d1b256728c759f01/f42670b4aa8326e2?show_docid=f42670b4aa8326e2&hl=ja
+         */
         if (parent instanceof ListView) {
             ListView mListView = (ListView)parent;
             if(position == mListView.getCheckedItemPosition()) {
