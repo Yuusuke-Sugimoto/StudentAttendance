@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="jp.ddo.kingdragon"
+          package="jp.ddo.kingdragon.listmaker"
           android:versionCode="1"
           android:versionName="1.0">
     <uses-sdk android:targetSdkVersion="10"
@@ -22,7 +22,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".FileChooseActivity"
+        <activity android:name=".listmaker.FileChooseActivity"
                   android:label="@string/file_choose_title">
         </activity>
     </application>

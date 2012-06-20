@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon;
+package jp.ddo.kingdragon.listmaker;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -308,7 +308,7 @@ public class StudentListMakerActivity extends Activity {
 
                         break;
                     case 1:
-                        // NFCタグを削除
+                        // NFCタグを全削除
                         showDialog(StudentListMakerActivity.DIALOG_ASK_REMOVE_NFC_ID);
 
                         break;
@@ -541,29 +541,6 @@ public class StudentListMakerActivity extends Activity {
     }
 
     /**
-     * バイト配列を16進数表現の文字列にして返す<br />
-     * 参考:16進数文字列(String)⇔バイト配列(byte[]) - lambda {|diary| lambda { diary.succ! } }.call(hatena)<br />
-     *      http://d.hatena.ne.jp/winebarrel/20041012/p1
-     * @param bytes バイト配列
-     * @return 16進数表現の文字列
-     */
-    public static String byteArrayToHexString(byte[] bytes) {
-        StringBuilder hexString = new StringBuilder();
-
-        for (byte b : bytes) {
-            // 下位8ビットのみ取り出す
-            int bottomByte = b & 0xff;
-            if (bottomByte < 0x10) {
-                // 10未満の場合は0を付加
-                hexString.append("0");
-            }
-            hexString.append(Integer.toHexString(bottomByte).toUpperCase());
-        }
-
-        return hexString.toString();
-    }
-
-    /**
      * 文字が入力された際に呼び出される
      * @param c 入力された文字
      */
@@ -584,21 +561,20 @@ public class StudentListMakerActivity extends Activity {
      * @param studentNo 学籍番号
      */
     public void onStudentNoReaded(String studentNo) {
+        int position;
         if (mSheet.hasStudentNo(studentNo)) {
             // 既に学籍番号に対応するデータが存在する場合はその行を選択する
-            int position = mStudentListAdapter.getPosition(mSheet.get(studentNo));
-            studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
-            studentListView.setSelection(position);
+            position = mStudentListAdapter.getPosition(mSheet.get(studentNo));
         }
         else {
             // 存在しない場合は追加する
             currentStudent.setStudentNo(studentNo);
             mSheet.add(currentStudent);
             mStudentListAdapter.add(currentStudent);
-            int position = mStudentListAdapter.getCount() - 1;
-            studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
-            studentListView.setSelection(position);
+            position = mStudentListAdapter.getCount() - 1;
         }
+        studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
+        studentListView.setSelection(position);
     }
 
     /**
@@ -607,14 +583,16 @@ public class StudentListMakerActivity extends Activity {
      */
     public void onNfcTagReaded(Intent inIntent) {
         if (currentStudent.getStudentNo().length() != 0) {
-            StringBuilder id = new StringBuilder(byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
+            StringBuilder id = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
             while (id.length() < 16) {
                 id.append("0");
             }
             if (currentStudent.indexOfNfcId(id.toString()) == -1) {
+                // 登録されていないNFCタグであれば追加
                 currentStudent.addNfcId(id.toString());
             }
             else {
+                // 登録されているNFCタグであれば削除
                 currentStudent.removeNfcId(id.toString());
             }
             studentListView.invalidateViews();

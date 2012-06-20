@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon;
+package jp.ddo.kingdragon.listmaker;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon;
+package jp.ddo.kingdragon.listmaker;
 
 import android.app.Activity;
 import android.app.AlertDialog;

@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon;
+package jp.ddo.kingdragon.listmaker;
 
 import android.content.Context;
 import android.view.LayoutInflater;
