@@ -213,7 +213,7 @@ public class StudentListMakerActivity extends Activity {
                 }
                 catch (IOException e) {
                     Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.error_opening_failed), Toast.LENGTH_SHORT).show();
-
+                    Log.e("onActivityResult", e.getMessage(), e);
                 }
             }
 
@@ -479,6 +479,10 @@ public class StudentListMakerActivity extends Activity {
         }
 
         switch (id) {
+        case StudentListMakerActivity.DIALOG_STUDENT_MENU:
+            mAlertDialog.setTitle(currentStudent.getStudentNo() + " " + currentStudent.getStudentName());
+
+            break;
         case StudentListMakerActivity.DIALOG_EDIT_STUDENT:
             mAlertDialog.setTitle(currentStudent.getStudentNo() + " " + currentStudent.getStudentName());
             editTextForStudentNum.setText(String.valueOf(currentStudent.getStudentNum()));
@@ -583,17 +587,18 @@ public class StudentListMakerActivity extends Activity {
      */
     public void onNfcTagReaded(Intent inIntent) {
         if (currentStudent.getStudentNo().length() != 0) {
-            StringBuilder id = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
-            while (id.length() < 16) {
-                id.append("0");
+            StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
+            while(rawId.length() < 16) {
+                rawId.append("0");
             }
-            if (currentStudent.indexOfNfcId(id.toString()) == -1) {
+            String id = rawId.toString();
+            if (currentStudent.indexOfNfcId(id) == -1) {
                 // 登録されていないNFCタグであれば追加
-                currentStudent.addNfcId(id.toString());
+                currentStudent.addNfcId(id);
             }
             else {
                 // 登録されているNFCタグであれば削除
-                currentStudent.removeNfcId(id.toString());
+                currentStudent.removeNfcId(id);
             }
             studentListView.invalidateViews();
         }

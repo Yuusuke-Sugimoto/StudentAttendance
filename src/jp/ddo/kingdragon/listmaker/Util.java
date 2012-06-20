@@ -20,9 +20,9 @@ public class Util {
                 // 10未満の場合は0を付加
                 hexString.append("0");
             }
-            hexString.append(Integer.toHexString(bottomByte).toUpperCase());
+            hexString.append(Integer.toHexString(bottomByte));
         }
 
-        return hexString.toString();
+        return hexString.toString().toUpperCase();
     }
 }

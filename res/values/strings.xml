@@ -10,11 +10,12 @@
     <string name="header_student_no">学籍番号</string>
     <string name="header_student_name">氏名</string>
     <string name="header_student_num_of_nfc_id">数</string>
+    <string name="header_student_attendance">出欠</string>
 
     <string name="menu_new_sheet">新規シート</string>
     <string name="menu_edit_info">講義情報を編集する</string>
     <string name="menu_open">CSVファイルを開く</string>
-    <string name="menu_save">CSVファイルを保存する</string>
+    <string name="menu_save">CSVファイルに保存する</string>
     <string name="menu_show_invisible_file">隠しファイルを表示する</string>
     <string name="menu_hide_invisible_file">隠しファイルを隠す</string>
     <string name="menu_new_file">新規ファイルを作成する</string>
@@ -47,6 +48,11 @@
     <string name="dialog_new_file_hint">ファイル名を入力</string>
     <string name="dialog_ask">確認</string>
     <string name="dialog_ask_overwrite">に上書きしてもよろしいですか?</string>
+    <string name="dialog_attendance_menu_title">出欠メニュー</string>
+    <string name="dialog_attendance_menu_attendance">出席</string>
+    <string name="dialog_attendance_menu_lateness">遅刻</string>
+    <string name="dialog_attendance_menu_leave_early">早退</string>
+    <string name="dialog_attendance_menu_absence">欠席</string>
 
     <string name="notice_student_removed">のデータを削除しました</string>
     <string name="notice_nfc_tag_removed">のNFCタグを削除しました</string>

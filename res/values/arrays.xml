@@ -5,4 +5,11 @@
         <item>@string/dialog_student_menu_nfc_id_remove</item>
         <item>@string/dialog_student_menu_remove</item>
     </string-array>
+
+    <string-array name="dialog_attendance_menu">
+        <item>@string/dialog_attendance_menu_attendance</item>
+        <item>@string/dialog_attendance_menu_lateness</item>
+        <item>@string/dialog_attendance_menu_leave_early</item>
+        <item>@string/dialog_attendance_menu_absence</item>
+    </string-array>
 </resources>
