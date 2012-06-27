@@ -639,6 +639,7 @@ public class StudentListMakerActivity extends Activity {
             mStudentSheet.add(currentStudent);
             mStudentListAdapter.add(currentStudent);
             position = mStudentListAdapter.getCount() - 1;
+            isSaved = false;
         }
         studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
         studentListView.setSelection(position);
@@ -664,6 +665,7 @@ public class StudentListMakerActivity extends Activity {
                 currentStudent.removeNfcId(id);
             }
             studentListView.invalidateViews();
+            isSaved = false;
         }
     }
 
