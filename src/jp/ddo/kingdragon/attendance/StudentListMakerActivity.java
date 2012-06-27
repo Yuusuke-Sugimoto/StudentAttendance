@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon.listmaker;
+package jp.ddo.kingdragon.attendance;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -137,7 +137,6 @@ public class StudentListMakerActivity extends Activity {
          *      http://developer.android.com/resources/samples/ApiDemos/src/com/example/android/apis/view/List14.html
          */
         studentListView = (ListView)findViewById(R.id.student_list);
-        studentListView.setSelector(R.drawable.list_selector_background);
         mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
         studentListView.setAdapter(mStudentListAdapter);
         studentListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

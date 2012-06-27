@@ -45,6 +45,7 @@
               android:divider="#111"
               android:dividerHeight="1dip"
               android:fastScrollEnabled="true"
+              android:listSelector="@drawable/list_selector_background"
               android:choiceMode="singleChoice" />
     <include layout="@layout/horizontal_divider" />
 </LinearLayout>

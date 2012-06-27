@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon.listmaker;
+package jp.ddo.kingdragon.attendance;
 
 public class Util {
     private Util() {}

@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon.listmaker;
+package jp.ddo.kingdragon.attendance;
 
 import android.content.Context;
 import android.view.LayoutInflater;

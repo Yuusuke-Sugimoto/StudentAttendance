@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="jp.ddo.kingdragon.listmaker"
+          package="jp.ddo.kingdragon.attendance"
           android:versionCode="1"
           android:versionName="1.0">
     <uses-sdk android:targetSdkVersion="10"
@@ -13,7 +13,7 @@
 
     <application android:icon="@drawable/ic_launcher"
                  android:label="@string/app_name">
-        <activity android:name=".StudentListMakerActivity"
+        <activity android:name=".StudentAttendanceActivity"
                   android:label="@string/app_name"
                   android:configChanges="keyboard|keyboardHidden">
             <intent-filter>
@@ -22,13 +22,14 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".StudentAttendanceActivity"
+        <activity android:name=".StudentListMakerActivity"
                   android:label="@string/app_name"
                   android:configChanges="keyboard|keyboardHidden">
         </activity>
 
         <activity android:name=".FileChooseActivity"
-                  android:label="@string/file_choose_title">
+                  android:label="@string/file_choose_title"
+                  android:configChanges="keyboard|keyboardHidden">
         </activity>
     </application>
 </manifest>
