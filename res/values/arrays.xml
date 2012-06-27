@@ -7,9 +7,9 @@
     </string-array>
 
     <string-array name="dialog_attendance_menu">
-        <item>@string/dialog_attendance_menu_attendance</item>
-        <item>@string/dialog_attendance_menu_lateness</item>
-        <item>@string/dialog_attendance_menu_leave_early</item>
-        <item>@string/dialog_attendance_menu_absence</item>
+        <item>@string/attendance</item>
+        <item>@string/lateness</item>
+        <item>@string/leave_early</item>
+        <item>@string/absence</item>
     </string-array>
 </resources>

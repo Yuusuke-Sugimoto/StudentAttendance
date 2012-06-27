@@ -48,6 +48,11 @@ public class FileChooseActivity extends Activity {
 
     // 変数の宣言
     /**
+     * 隠しファイルを表示するかどうか
+     */
+    private boolean isShowingInvisibleFile;
+
+    /**
      * 現在のディレクトリ
      */
     private File currentDir;
@@ -67,12 +72,6 @@ public class FileChooseActivity extends Activity {
      * ファイルの一覧を表示するアダプタ
      */
     private FileListAdapter mFileListAdapter;
-    /**
-     * 隠しファイルを表示するかどうか<br />
-     * true:表示する<br />
-     * false:表示しない
-     */
-    private boolean isShowingInvisibleFile;
     /**
      * 新規ファイル作成ダイアログに適用するレイアウト
      */
@@ -196,19 +195,14 @@ public class FileChooseActivity extends Activity {
             builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    StringBuilder fileNameTemp = new StringBuilder(editTextForFileName.getEditableText().toString());
-                    if (fileNameTemp.length() != 0) {
-                        // 円記号(U+00A5)をバックスラッシュ(U+005C)に置換
-                        int pos;
-                        while ((pos = fileNameTemp.indexOf("\u00a5")) != -1) {
-                            fileNameTemp.replace(pos, pos + 1, "\\");
-                        }
+                    StringBuilder fileNameBuilder = new StringBuilder(editTextForFileName.getEditableText().toString());
+                    if (fileNameBuilder.length() != 0) {
                         if (extension.matches("[A-Za-z0-9]*")) {
                             // 拡張子が1つだけ設定されている時はその拡張子を付加する
-                            fileNameTemp.append("." + extension);
+                            fileNameBuilder.append("." + extension);
                         }
-                        String fileName = fileNameTemp.toString();
-                        if (!fileName.matches(".*(<|>|:|\\*|\\?|\"|/|\\\\|\\|).*")) {
+                        String fileName = fileNameBuilder.toString();
+                        if (!fileName.matches(".*(<|>|:|\\*|\\?|\"|/|\\\\|\\||\u00a5).*")) {
                             // 使用不可能な文字列(< > : * ? " / \ |)が含まれていなければファイルを作成
                             File mFile = new File(currentDir, fileName);
                             try {

@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">StudentListMaker</string>
+    <string name="app_name">StudentAttendance</string>
+    <string name="attendance">出席</string>
+    <string name="lateness">遅刻</string>
+    <string name="leave_early">早退</string>
+    <string name="absence">欠席</string>
 
-    <string name="file_choose_title">ファイルを選択する</string>
+    <string name="attendance_title">出席管理画面</string>
+    <string name="attendance_read_start_label">読み取り開始</string>
+    <string name="attendance_read_finish_label">読み取り終了</string>
+
+    <string name="listmaker_title">リスト作成画面</string>
+
+    <string name="file_choose_title">ファイル選択画面</string>
     <string name="file_choose_icon">ファイルアイコン</string>
     <string name="file_choose_parent">[上のディレクトリへ]</string>
 
@@ -10,16 +20,20 @@
     <string name="header_student_no">学籍番号</string>
     <string name="header_student_name">氏名</string>
     <string name="header_student_num_of_nfc_id">数</string>
-    <string name="header_student_attendance">出欠</string>
+    <string name="header_student_status">出欠</string>
 
-    <string name="menu_new_sheet">新規シート</string>
-    <string name="menu_edit_info">講義情報を編集する</string>
+    <string name="menu_make_list">リストを作成する</string>
     <string name="menu_open">CSVファイルを開く</string>
     <string name="menu_save">CSVファイルに保存する</string>
+    <string name="menu_new_sheet">新規シート</string>
+    <string name="menu_edit_info">講義情報を編集する</string>
     <string name="menu_show_invisible_file">隠しファイルを表示する</string>
     <string name="menu_hide_invisible_file">隠しファイルを隠す</string>
     <string name="menu_new_file">新規ファイルを作成する</string>
 
+    <string name="dialog_ask_exit_without_saving">保存せずに終了してもよろしいですか?</string>
+    <string name="dialog_ask_remove_without_saving">保存されていない内容を破棄してもよろしいですか?</string>
+    <string name="dialog_attendance_menu_title">出欠メニュー</string>
     <string name="dialog_student_menu_title">学生メニュー</string>
     <string name="dialog_student_menu_edit">編集</string>
     <string name="dialog_student_menu_nfc_id_remove">NFCタグを削除</string>
@@ -48,11 +62,6 @@
     <string name="dialog_new_file_hint">ファイル名を入力</string>
     <string name="dialog_ask">確認</string>
     <string name="dialog_ask_overwrite">に上書きしてもよろしいですか?</string>
-    <string name="dialog_attendance_menu_title">出欠メニュー</string>
-    <string name="dialog_attendance_menu_attendance">出席</string>
-    <string name="dialog_attendance_menu_lateness">遅刻</string>
-    <string name="dialog_attendance_menu_leave_early">早退</string>
-    <string name="dialog_attendance_menu_absence">欠席</string>
 
     <string name="notice_student_removed">のデータを削除しました</string>
     <string name="notice_nfc_tag_removed">のNFCタグを削除しました</string>
@@ -65,6 +74,7 @@
     <string name="error_make_directory_failed">保存用ディレクトリの作成に失敗しました</string>
     <string name="error_opening_failed">を開けませんでした</string>
     <string name="error_saving_failed">への保存に失敗しました</string>
+    <string name="error_saving_data_null">保存するデータがありません</string>
     <string name="error_file_already_exists">既に同名のファイルが存在します。</string>
     <string name="error_file_create_failed">ファイルの作成に失敗しました。</string>
     <string name="error_illegal_file_name">ファイル名に使用できない文字が含まれています。</string>

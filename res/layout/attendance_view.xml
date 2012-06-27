@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="horizontal">
+    <TextView android:id="@+id/student_num"
+              android:layout_width="0dip"
+              android:layout_height="wrap_content"
+              android:layout_weight="2"
+              android:gravity="center"
+              android:textSize="20sp"
+              android:textColor="@drawable/list_selector_text" />
+    <include layout="@layout/vertical_divider" />
+    <TextView android:id="@+id/student_no"
+              android:layout_width="0dip"
+              android:layout_height="wrap_content"
+              android:layout_weight="4"
+              android:gravity="center"
+              android:textSize="20sp"
+              android:textColor="@drawable/list_selector_text" />
+    <include layout="@layout/vertical_divider" />
+    <TextView android:id="@+id/student_name"
+              android:layout_width="0dip"
+              android:layout_height="wrap_content"
+              android:layout_weight="6"
+              android:gravity="center"
+              android:textSize="20sp"
+              android:textColor="@drawable/list_selector_text" />
+    <include layout="@layout/vertical_divider" />
+    <TextView android:id="@+id/student_status"
+              android:layout_width="0dip"
+              android:layout_height="wrap_content"
+              android:layout_weight="2"
+              android:gravity="center"
+              android:textSize="20sp"
+              android:textColor="@drawable/list_selector_text" />
+</LinearLayout>

@@ -26,7 +26,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * メイン画面
+ * リスト作成画面
  * @author 杉本祐介
  */
 public class StudentListMakerActivity extends Activity {
@@ -35,18 +35,29 @@ public class StudentListMakerActivity extends Activity {
     private static final int REQUEST_CHOOSE_OPEN_FILE = 0;
     private static final int REQUEST_CHOOSE_SAVE_FILE = 1;
     // ダイアログのID
-    private static final int DIALOG_STUDENT_MENU       = 0;
-    private static final int DIALOG_EDIT_STUDENT       = 1;
-    private static final int DIALOG_ASK_REMOVE_NFC_ID  = 2;
-    private static final int DIALOG_ASK_REMOVE_STUDENT = 3;
-    private static final int DIALOG_EDIT_INFO          = 4;
-    private static final int DIALOG_ASK_OVERWRITE      = 5;
+    private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING   = 0;
+    private static final int DIALOG_ASK_REMOVE_WITHOUT_SAVING = 1;
+    private static final int DIALOG_STUDENT_MENU              = 2;
+    private static final int DIALOG_EDIT_STUDENT              = 3;
+    private static final int DIALOG_ASK_REMOVE_NFC_ID         = 4;
+    private static final int DIALOG_ASK_REMOVE_STUDENT        = 5;
+    private static final int DIALOG_EDIT_INFO                 = 6;
+    private static final int DIALOG_ASK_OVERWRITE             = 7;
 
     // 変数の宣言
+    /**
+     * 保存済みかどうか
+     */
+    private boolean isSaved;
+
     /**
      * 保存用ディレクトリ
      */
     private File baseDir;
+    /**
+     * 保存先のファイル
+     */
+    private File saveFile;
     /**
      * キーボード(バーコードリーダ)から入力された内容
      */
@@ -66,11 +77,7 @@ public class StudentListMakerActivity extends Activity {
     /**
      * 現在編集しているシート
      */
-    private Sheet mSheet;
-    /**
-     * 保存先のファイル
-     */
-    private File saveFile;
+    private StudentSheet mStudentSheet;
     /**
      * 連番用のEditText
      */
@@ -122,11 +129,12 @@ public class StudentListMakerActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+        setContentView(R.layout.student_list_maker);
 
+        isSaved = true;
         inputBuffer = new StringBuilder();
         currentStudent = new Student();
-        mSheet = new Sheet();
+        mStudentSheet = new StudentSheet();
 
         /**
          * ListViewのレイアウトを変更する
@@ -156,7 +164,7 @@ public class StudentListMakerActivity extends Activity {
         });
 
         // 保存用ディレクトリの作成
-        baseDir = new File(Environment.getExternalStorageDirectory(), "");
+        baseDir = new File(Environment.getExternalStorageDirectory(), "StudentAttendance");
         if (!baseDir.exists() && !baseDir.mkdirs()) {
             Toast.makeText(StudentListMakerActivity.this, R.string.error_make_directory_failed, Toast.LENGTH_SHORT).show();
 
@@ -205,9 +213,10 @@ public class StudentListMakerActivity extends Activity {
                 String fileName = data.getStringExtra("fileName");
                 String filePath = data.getStringExtra("filePath");
                 try {
-                    mSheet = new Sheet(new File(filePath), "Shift_JIS");
-                    mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mSheet.getStudentList());
+                    mStudentSheet = new StudentSheet(new File(filePath), "Shift_JIS");
+                    mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mStudentSheet.getStudentList());
                     studentListView.setAdapter(mStudentListAdapter);
+                    isSaved = false;
                     Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
                 }
                 catch (IOException e) {
@@ -227,11 +236,12 @@ public class StudentListMakerActivity extends Activity {
                 }
                 else {
                     try {
-                        mSheet.saveCsvFile(saveFile, "Shift_JIS");
+                        mStudentSheet.saveCsvFile(saveFile, "Shift_JIS");
+                        isSaved = true;
                         Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
                     }
                     catch (IOException e) {
-                        Toast.makeText(StudentListMakerActivity.this, fileName + R.string.error_saving_failed, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
                         Log.e("onActivityResult", e.getMessage(), e);
                     }
                 }
@@ -254,10 +264,13 @@ public class StudentListMakerActivity extends Activity {
 
         switch (item.getItemId()) {
         case R.id.menu_new_sheet:
-            mSheet = new Sheet();
-            mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
-            studentListView.setAdapter(mStudentListAdapter);
-            Toast.makeText(StudentListMakerActivity.this, R.string.notice_new_sheet_created, Toast.LENGTH_SHORT).show();
+            if(!isSaved) {
+                showDialog(StudentListMakerActivity.DIALOG_ASK_REMOVE_WITHOUT_SAVING);
+            }
+            else {
+                makeNewSheet();
+                Toast.makeText(StudentListMakerActivity.this, R.string.notice_new_sheet_created, Toast.LENGTH_SHORT).show();
+            }
 
             break;
         case R.id.menu_edit_info:
@@ -294,6 +307,39 @@ public class StudentListMakerActivity extends Activity {
         View mView;
 
         switch (id) {
+        case StudentListMakerActivity.DIALOG_ASK_EXIT_WITHOUT_SAVING:
+            builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+            builder.setIcon(android.R.drawable.ic_dialog_alert);
+            builder.setTitle(R.string.dialog_ask);
+            builder.setMessage(R.string.dialog_ask_exit_without_saving);
+            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    StudentListMakerActivity.super.onBackPressed();
+                }
+            });
+            builder.setNegativeButton(android.R.string.no, null);
+            builder.setCancelable(true);
+            retDialog = builder.create();
+
+            break;
+        case StudentListMakerActivity.DIALOG_ASK_REMOVE_WITHOUT_SAVING:
+            builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+            builder.setIcon(android.R.drawable.ic_dialog_alert);
+            builder.setTitle(R.string.dialog_ask);
+            builder.setMessage(R.string.dialog_ask_remove_without_saving);
+            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    makeNewSheet();
+                    Toast.makeText(StudentListMakerActivity.this, R.string.notice_new_sheet_created, Toast.LENGTH_SHORT).show();
+                }
+            });
+            builder.setNegativeButton(android.R.string.no, null);
+            builder.setCancelable(true);
+            retDialog = builder.create();
+
+            break;
         case StudentListMakerActivity.DIALOG_STUDENT_MENU:
             builder = new AlertDialog.Builder(StudentListMakerActivity.this);
             builder.setTitle(R.string.dialog_student_menu_title);
@@ -350,6 +396,7 @@ public class StudentListMakerActivity extends Activity {
                     String studentRuby = editTextForStudentRuby.getEditableText().toString();
                     currentStudent.setStudentRuby(studentRuby);
                     studentListView.invalidateViews();
+                    isSaved = false;
                 }
             });
             builder.setNegativeButton(android.R.string.cancel, null);
@@ -359,6 +406,7 @@ public class StudentListMakerActivity extends Activity {
             break;
         case StudentListMakerActivity.DIALOG_ASK_REMOVE_NFC_ID:
             builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+            builder.setIcon(android.R.drawable.ic_dialog_alert);
             builder.setTitle(R.string.dialog_remove_nfc_id_title);
             builder.setMessage("");
             builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
@@ -366,6 +414,7 @@ public class StudentListMakerActivity extends Activity {
                 public void onClick(DialogInterface dialog, int which) {
                     currentStudent.removeAllNfcIds();
                     studentListView.invalidateViews();
+                    isSaved = false;
                     Toast.makeText(StudentListMakerActivity.this,
                                    currentStudent.getStudentNo() + " " + currentStudent.getStudentName() + getString(R.string.notice_nfc_tag_removed),
                                    Toast.LENGTH_SHORT).show();
@@ -378,13 +427,15 @@ public class StudentListMakerActivity extends Activity {
             break;
         case StudentListMakerActivity.DIALOG_ASK_REMOVE_STUDENT:
             builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+            builder.setIcon(android.R.drawable.ic_dialog_alert);
             builder.setTitle(R.string.dialog_remove_student_title);
             builder.setMessage("");
             builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    mSheet.remove(currentStudent);
+                    mStudentSheet.remove(currentStudent);
                     mStudentListAdapter.remove(currentStudent);
+                    isSaved = false;
                     Toast.makeText(StudentListMakerActivity.this,
                                    currentStudent.getStudentNo() + " " + currentStudent.getStudentName() + getString(R.string.notice_student_removed),
                                    Toast.LENGTH_SHORT).show();
@@ -410,9 +461,10 @@ public class StudentListMakerActivity extends Activity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     String subject = editTextForSubject.getEditableText().toString();
-                    mSheet.setSubject(subject);
+                    mStudentSheet.setSubject(subject);
                     String time = editTextForTime.getEditableText().toString();
-                    mSheet.setTime(time);
+                    mStudentSheet.setTime(time);
+                    isSaved = false;
                 }
             });
             builder.setNegativeButton(android.R.string.cancel, null);
@@ -422,17 +474,19 @@ public class StudentListMakerActivity extends Activity {
             break;
         case StudentListMakerActivity.DIALOG_ASK_OVERWRITE:
             builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+            builder.setIcon(android.R.drawable.ic_dialog_alert);
             builder.setTitle(R.string.dialog_ask);
             builder.setMessage("");
             builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     try {
-                        mSheet.saveCsvFile(saveFile, "Shift_JIS");
+                        mStudentSheet.saveCsvFile(saveFile, "Shift_JIS");
+                        isSaved = true;
                         Toast.makeText(StudentListMakerActivity.this, saveFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
                     }
                     catch (IOException e) {
-                        Toast.makeText(StudentListMakerActivity.this, saveFile.getName() + R.string.error_saving_failed, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(StudentListMakerActivity.this, saveFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
                         Log.e("onActivityResult", e.getMessage(), e);
                     }
                 }
@@ -502,14 +556,24 @@ public class StudentListMakerActivity extends Activity {
 
             break;
         case StudentListMakerActivity.DIALOG_EDIT_INFO:
-            editTextForSubject.setText(mSheet.getSubject());
-            editTextForTime.setText(mSheet.getTime());
+            editTextForSubject.setText(mStudentSheet.getSubject());
+            editTextForTime.setText(mStudentSheet.getTime());
 
             break;
         case StudentListMakerActivity.DIALOG_ASK_OVERWRITE:
             mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
 
             break;
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(!isSaved) {
+            showDialog(StudentListMakerActivity.DIALOG_ASK_EXIT_WITHOUT_SAVING);
+        }
+        else {
+            super.onBackPressed();
         }
     }
 
@@ -565,14 +629,14 @@ public class StudentListMakerActivity extends Activity {
      */
     public void onStudentNoReaded(String studentNo) {
         int position;
-        if (mSheet.hasStudentNo(studentNo)) {
+        if (mStudentSheet.hasStudentNo(studentNo)) {
             // 既に学籍番号に対応するデータが存在する場合はその行を選択する
-            position = mStudentListAdapter.getPosition(mSheet.get(studentNo));
+            position = mStudentListAdapter.getPosition(mStudentSheet.get(studentNo));
         }
         else {
             // 存在しない場合は追加する
             currentStudent.setStudentNo(studentNo);
-            mSheet.add(currentStudent);
+            mStudentSheet.add(currentStudent);
             mStudentListAdapter.add(currentStudent);
             position = mStudentListAdapter.getCount() - 1;
         }
@@ -601,5 +665,15 @@ public class StudentListMakerActivity extends Activity {
             }
             studentListView.invalidateViews();
         }
+    }
+
+    /**
+     * 新規シートを作成する
+     */
+    public void makeNewSheet() {
+        mStudentSheet = new StudentSheet();
+        mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
+        studentListView.setAdapter(mStudentListAdapter);
+        isSaved = true;
     }
 }

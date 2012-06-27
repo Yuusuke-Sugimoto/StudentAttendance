@@ -41,7 +41,8 @@
     <include layout="@layout/horizontal_divider" />
     <ListView android:id="@+id/student_list"
               android:layout_width="match_parent"
-              android:layout_height="wrap_content"
+              android:layout_height="0dip"
+              android:layout_weight="1"
               android:divider="#111"
               android:dividerHeight="1dip"
               android:fastScrollEnabled="true"

@@ -13,10 +13,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 /**
- * 1つのシートを管理するクラス
+ * 学生リストを管理するクラス
  * @author 杉本祐介
  */
-public class Sheet {
+public class StudentSheet {
     // 変数の宣言
     /**
      * 科目
@@ -37,7 +37,7 @@ public class Sheet {
     /**
      * 空のシートを生成する
      */
-    public Sheet() {
+    public StudentSheet() {
         subject = "";
         time = "";
         students = new LinkedHashMap<String, Student>();
@@ -50,7 +50,7 @@ public class Sheet {
      * @throws UnsupportedEncodingException
      * @throws IOException
      */
-    public Sheet(File csvFile, String encode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
+    public StudentSheet(File csvFile, String encode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
         this();
 
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));

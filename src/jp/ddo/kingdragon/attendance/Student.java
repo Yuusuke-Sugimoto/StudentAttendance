@@ -82,7 +82,7 @@ public class Student {
 
     // アクセッサ
     /**
-     * 学籍番号をセットする
+     * 学籍番号を変更する
      * @param studentNo 学籍番号
      */
     public void setStudentNo(String studentNo) {
@@ -96,7 +96,7 @@ public class Student {
         return studentNo;
     }
     /**
-     * 連番をセットする
+     * 連番を変更する
      * @param studentNum 連番
      */
     public void setStudentNum(int studentNum) {
@@ -110,7 +110,7 @@ public class Student {
         return studentNum;
     }
     /**
-     * 所属をセットする
+     * 所属を変更する
      * @param className 所属
      */
     public void setClassName(String className) {
@@ -124,7 +124,7 @@ public class Student {
         return className;
     }
     /**
-     * 氏名をセットする
+     * 氏名を変更する
      * @param studentName 氏名
      */
     public void setStudentName(String studentName) {
@@ -138,7 +138,7 @@ public class Student {
         return studentName;
     }
     /**
-     * カナをセットする
+     * カナを変更する
      * @param studentRuby カナ
      */
     public void setStudentRuby(String studentRuby) {

@@ -7,12 +7,11 @@
     <EditText android:id="@+id/dialog_file_name"
               android:layout_width="0dip"
               android:layout_height="wrap_content"
-              android:layout_weight="89"
+              android:layout_weight="1"
               android:inputType="text"
               android:maxLines="1"
               android:hint="@string/dialog_new_file_hint" />
     <TextView android:id="@+id/dialog_file_extension"
-              android:layout_width="0dip"
-              android:layout_height="wrap_content"
-              android:layout_weight="11" />
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content" />
 </LinearLayout>
