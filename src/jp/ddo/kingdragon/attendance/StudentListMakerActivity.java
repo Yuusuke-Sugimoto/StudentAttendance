@@ -656,13 +656,21 @@ public class StudentListMakerActivity extends Activity {
                 rawId.append("0");
             }
             String id = rawId.toString();
-            if (currentStudent.indexOfNfcId(id) == -1) {
-                // 登録されていないNFCタグであれば追加
-                currentStudent.addNfcId(id);
+            if (!currentStudent.hasNfcId(id)) {
+                // 登録されていないNFCタグであれば読み取り済みかどうかを調べ、
+                // 読み取り済みでなければ追加
+                if (!mStudentSheet.isNfcIdReaded(id)) {
+                    currentStudent.addNfcId(id);
+                    mStudentSheet.addReadedNfcId(id);
+                }
+                else {
+                    Toast.makeText(StudentListMakerActivity.this, R.string.error_nfc_id_already_readed, Toast.LENGTH_SHORT).show();
+                }
             }
             else {
                 // 登録されているNFCタグであれば削除
                 currentStudent.removeNfcId(id);
+                mStudentSheet.removeReadedNfcId(id);
             }
             studentListView.invalidateViews();
             isSaved = false;

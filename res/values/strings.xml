@@ -15,7 +15,7 @@
     <string name="file_choose_title">ファイル選択画面</string>
     <string name="file_choose_icon">ファイルアイコン</string>
     <string name="file_choose_parent">[上のディレクトリへ]</string>
-    
+
     <string name="setting_title">設定画面</string>
     <string name="setting_general_title">一般設定</string>
     <string name="setting_add_location_title">位置情報を付加する</string>
@@ -40,6 +40,9 @@
     <string name="dialog_ask_exit_without_saving">保存せずに終了してもよろしいですか?</string>
     <string name="dialog_ask_remove_without_saving">保存されていない内容を破棄してもよろしいですか?</string>
     <string name="dialog_attendance_menu_title">出欠メニュー</string>
+    <string name="dialog_ask">確認</string>
+    <string name="dialog_ask_overwrite">に上書きしてもよろしいですか?</string>
+    <string name="dialog_fetching_location">現在地を取得しています…\n(バックボタンで中止)</string>
     <string name="dialog_student_menu_title">学生メニュー</string>
     <string name="dialog_student_menu_edit">編集</string>
     <string name="dialog_student_menu_nfc_id_remove">NFCタグを削除</string>
@@ -66,9 +69,9 @@
     <string name="dialog_edit_time_hint">授業時間を入力</string>
     <string name="dialog_new_file_title">新規ファイルの作成</string>
     <string name="dialog_new_file_hint">ファイル名を入力</string>
-    <string name="dialog_ask">確認</string>
-    <string name="dialog_ask_overwrite">に上書きしてもよろしいですか?</string>
 
+    <string name="notice_location_fetched">現在地を取得しました</string>
+    <string name="notice_add_location_disabled">\"位置情報を付加する\"は無効になりました</string>
     <string name="notice_student_removed">のデータを削除しました</string>
     <string name="notice_nfc_tag_removed">のNFCタグを削除しました</string>
     <string name="notice_new_sheet_created">新規シートを作成しました</string>
@@ -78,6 +81,7 @@
 
     <string name="error">エラー</string>
     <string name="error_make_directory_failed">保存用ディレクトリの作成に失敗しました</string>
+    <string name="error_nfc_id_already_readed">既に他の学生に登録されているNFCタグです</string>
     <string name="error_opening_failed">を開けませんでした</string>
     <string name="error_saving_failed">への保存に失敗しました</string>
     <string name="error_saving_data_null">保存するデータがありません</string>

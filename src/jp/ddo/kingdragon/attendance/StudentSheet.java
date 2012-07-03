@@ -29,6 +29,10 @@ public class StudentSheet {
 
     // コレクションの宣言
     /**
+     * 読み取り済みのNFCタグのリスト
+     */
+    private ArrayList<String> readedNfcIds;
+    /**
      * 現在管理している学生データのリスト
      */
     private LinkedHashMap<String, Student> students;
@@ -40,6 +44,7 @@ public class StudentSheet {
     public StudentSheet() {
         subject = "";
         time = "";
+        readedNfcIds = new ArrayList<String>();
         students = new LinkedHashMap<String, Student>();
     }
     /**
@@ -73,11 +78,11 @@ public class StudentSheet {
                 }
                 else if (splittedLine.length > 6) {
                     // NFCタグのIDが複数セットされている場合は配列に直す
-                    ArrayList<String> temp = new ArrayList<String>();
+                    ArrayList<String> tempNfcIds = new ArrayList<String>();
                     for (int i = 5; i < splittedLine.length; i++) {
-                        temp.add(splittedLine[i]);
+                        tempNfcIds.add(splittedLine[i]);
                     }
-                    nfcIds = temp.toArray(new String[temp.size()]);
+                    nfcIds = tempNfcIds.toArray(new String[tempNfcIds.size()]);
                 }
                 else {
                     // NFCのタグのIDが未登録
@@ -98,6 +103,11 @@ public class StudentSheet {
                 }
                 students.put(splittedLine[2], new Student(splittedLine[2], num, splittedLine[1],
                                                           splittedLine[3], splittedLine[4], nfcIds));
+
+                // NFCタグを読み取り済みとして追加
+                for(String nfcId : nfcIds) {
+                    readedNfcIds.add(nfcId);
+                }
             }
 
             if (splittedLine[0].equals("科目")) {
@@ -145,6 +155,31 @@ public class StudentSheet {
      */
     public ArrayList<Student> getStudentList() {
         return new ArrayList<Student>(students.values());
+    }
+
+    /**
+     * 読み取り済みのNFCタグを追加する
+     * @param id 読み取り済みのNFCタグのID
+     */
+    public void addReadedNfcId(String id) {
+        readedNfcIds.add(id);
+    }
+
+    /**
+     * 読み取り済みのNFCタグを削除する
+     * @param id 読み取り済みのNFCタグのID
+     */
+    public void removeReadedNfcId(String id) {
+        readedNfcIds.remove(id);
+    }
+
+    /**
+     * NFCタグが読み取り済みかどうかを調べる
+     * @param id 検索するID
+     * @return 読み取り済みであればtrue そうでなければfalse
+     */
+    public boolean isNfcIdReaded(String id) {
+        return readedNfcIds.contains(id);
     }
 
     /**
@@ -203,9 +238,9 @@ public class StudentSheet {
      */
     public void saveCsvFile(File csvFile, String encode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
         OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(csvFile), encode);
-        osw.write("科目,授業時間,受講者数\n");
-        osw.write(subject + "," + time + "," + students.size() + "\n");
-        osw.write(",所属,学籍番号,氏名,カナ\n");
+        osw.write("\"科目\",\"授業時間\",\"受講者数\"\n");
+        osw.write("\"" + subject + "\",\"" + time + "\",\"" + students.size() + "\"\n");
+        osw.write("\"\",\"所属\",\"学籍番号\",\"氏名\",\"カナ\"\n");
         for (String key : students.keySet()) {
             osw.write(students.get(key).toCsvRecord() + "\n");
         }

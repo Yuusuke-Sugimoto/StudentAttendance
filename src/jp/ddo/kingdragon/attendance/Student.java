@@ -190,12 +190,12 @@ public class Student {
         nfcIds = new ArrayList<String>();
     }
     /**
-     * NFCタグのIDの添字を返す
+     * NFCタグが登録されているかどうかを返す
      * @param id 検索するID
-     * @return NFCタグのIDの添字 存在しなければ-1
+     * @return 登録されていればtrue そうでなければfalse
      */
-    public int indexOfNfcId(String id) {
-        return nfcIds.indexOf(id);
+    public boolean hasNfcId(String id) {
+        return nfcIds.contains(id);
     }
 
     /**
@@ -211,14 +211,14 @@ public class Student {
      * @return CSV形式にした学生データ
      */
     public String toCsvRecord() {
-        StringBuilder csvRecord = new StringBuilder();
+        StringBuilder csvRecord = new StringBuilder("\"");
 
         if (studentNum != -1) {
             csvRecord.append(studentNum);
         }
-        csvRecord.append("," + className + "," + studentNo + "," + studentName + "," + studentRuby);
+        csvRecord.append("\",\"" + className + "\",\"" + studentNo + "\",\"" + studentName + "\",\"" + studentRuby + "\"");
         for (String nfcId : nfcIds) {
-            csvRecord.append("," + nfcId);
+            csvRecord.append(",\"" + nfcId + "\"");
         }
 
         return csvRecord.toString();

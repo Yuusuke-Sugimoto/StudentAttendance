@@ -20,15 +20,19 @@ public class Attendance {
     /**
      * 学生データ
      */
-    private Student mStudent;
+    private final Student mStudent;
     /**
-     * 出席データ
+     * 出席種別
      */
     private int status;
     /**
      * 更新した日時
      */
     private long timeStamp;
+    /**
+     * 座標
+     */
+    private AttendanceLocation mAttendanceLocation;
     /**
      * strings.xmlから文字列を取得するために使用
      */
@@ -43,7 +47,7 @@ public class Attendance {
     public Attendance(Student inStudent, Resources inResources) {
         mStudent = inStudent;
         status = Attendance.ABSENCE;
-        timeStamp = 0;
+        timeStamp = -1;
         mResources = inResources;
     }
 
@@ -91,28 +95,37 @@ public class Attendance {
         return mStudent.getNfcIds();
     }
     /**
-     * 出席データを変更する
-     * @param status 出席データ
+     * 出席種別を変更する
+     * @param status 出席種別
      */
     public void setStatus(int status) {
+        setStatus(status, null);
+    }
+    /**
+     * 出席種別を変更する
+     * @param status 出席種別
+     * @param inAttendanceLocation 座標
+     */
+    public void setStatus(int status, AttendanceLocation inAttendanceLocation) {
         if(status >= Attendance.ATTENDANCE && status <= Attendance.ABSENCE) {
             this.status = status;
             timeStamp = System.currentTimeMillis();
+            mAttendanceLocation = inAttendanceLocation;
         }
         else {
             throw new IllegalArgumentException("setStatus : 引数の値が正しくありません。");
         }
     }
     /**
-     * 出席データを返す
-     * @return 出席データ
+     * 出席種別を返す
+     * @return 出席種別
      */
     public int getStatus() {
         return status;
     }
     /**
-     * 出席データを文字列で返す
-     * @return 出席データを文字列にしたもの
+     * 出席種別を文字列で返す
+     * @return 出席種別を文字列にしたもの
      */
     public String getStatusString() {
         String retStr = "";
@@ -140,16 +153,19 @@ public class Attendance {
      * @return CSV形式にした出席データ
      */
     public String toCsvRecord() {
-        StringBuilder csvRecord = new StringBuilder();
+        StringBuilder csvRecord = new StringBuilder("\"");
 
         if (getStudentNum() != -1) {
             csvRecord.append(getStudentNum());
         }
-        csvRecord.append("," + getClassName() + "," + getStudentNo() + "," + getStudentName() + "," + getStudentRuby());
+        csvRecord.append("\",\"" + getClassName() + "\",\"" + getStudentNo() + "\",\"" + getStudentName() + "\",\"" + getStudentRuby() + "\"");
         if(status != Attendance.ABSENCE) {
-            csvRecord.append("," + getStatusString());
+            csvRecord.append(",\"" + getStatusString() + "\"");
             SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            csvRecord.append("," + format.format(new Date(timeStamp)));
+            csvRecord.append(",\"" + format.format(new Date(timeStamp)) + "\"");
+            if(mAttendanceLocation != null) {
+                csvRecord.append("," + mAttendanceLocation.toCsvRecord());
+            }
         }
 
         return csvRecord.toString();

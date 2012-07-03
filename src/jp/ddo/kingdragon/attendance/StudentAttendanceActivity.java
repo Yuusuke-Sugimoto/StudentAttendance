@@ -4,13 +4,19 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.nfc.NfcAdapter;
 import android.nfc.tech.TagTechnology;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -39,6 +45,7 @@ public class StudentAttendanceActivity extends Activity {
     private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING = 0;
     private static final int DIALOG_ATTENDANCE_MENU         = 1;
     private static final int DIALOG_ASK_OVERWRITE           = 2;
+    private static final int DIALOG_FETCHING_LOCATION       = 3;
 
     // 変数の宣言
     /**
@@ -49,6 +56,10 @@ public class StudentAttendanceActivity extends Activity {
      * 保存済みかどうか
      */
     private boolean isSaved;
+    /**
+     * 現在地を取得中かどうか
+     */
+    private boolean isFetchingLocation;
 
     /**
      * 保存用ディレクトリ
@@ -92,6 +103,19 @@ public class StudentAttendanceActivity extends Activity {
      */
     private PendingIntent mPendingIntent;
 
+    /**
+     * 位置情報を取得するマネージャ
+     */
+    private LocationManager mLocationManager;
+    /**
+     * 位置情報を取得した際のリスナ
+     */
+    private LocationListener mLocationListener;
+    /**
+     * 取得した位置情報
+     */
+    private AttendanceLocation mAttendanceLocation;
+
     // 配列の宣言
     /**
      * 対応するインテントの種類
@@ -110,6 +134,9 @@ public class StudentAttendanceActivity extends Activity {
 
         isReading = false;
         isSaved = true;
+        isFetchingLocation = false;
+
+        mAttendanceLocation = null;
 
         /**
          * ListViewのレイアウトを変更する
@@ -158,6 +185,9 @@ public class StudentAttendanceActivity extends Activity {
             finish();
         }
 
+        // 設定情報にデフォルト値をセットする
+        PreferenceManager.setDefaultValues(StudentAttendanceActivity.this, R.xml.preference, false);
+
         mNfcAdapter = NfcAdapter.getDefaultAdapter(StudentAttendanceActivity.this);
         mPendingIntent = PendingIntent.getActivity(StudentAttendanceActivity.this, 0,
                                                    new Intent(StudentAttendanceActivity.this, getClass())
@@ -167,6 +197,32 @@ public class StudentAttendanceActivity extends Activity {
         filters = new IntentFilter[] {mFilter};
         // どの種類のタグでも対応できるようにTagTechnologyクラスを指定する
         techs = new String[][] {new String[] {TagTechnology.class.getName()}};
+
+        // 位置情報を取得するための設定
+        mLocationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                if(isFetchingLocation) {
+                    try {
+                        dismissDialog(StudentAttendanceActivity.DIALOG_FETCHING_LOCATION);
+                    }
+                    catch (IllegalArgumentException e) {}
+                    mAttendanceLocation = new AttendanceLocation(location.getLatitude(), location.getLongitude(),
+                                                                 location.getAltitude(), location.getAccuracy());
+                    Toast.makeText(StudentAttendanceActivity.this, R.string.notice_location_fetched, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {}
+
+            @Override
+            public void onProviderEnabled(String provider) {}
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+        };
+        mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
     }
 
     @Override
@@ -175,6 +231,21 @@ public class StudentAttendanceActivity extends Activity {
 
         if (mNfcAdapter != null) {
             mNfcAdapter.enableForegroundDispatch(StudentAttendanceActivity.this, mPendingIntent, filters, techs);
+        }
+
+        if (PreferenceUtility.isLocationEnabled(StudentAttendanceActivity.this)) {
+            if(mAttendanceLocation == null) {
+                showDialog(StudentAttendanceActivity.DIALOG_FETCHING_LOCATION);
+            }
+            if(!isFetchingLocation) {
+                isFetchingLocation = true;
+                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 300000, 0, mLocationListener);
+            }
+        }
+        else {
+            mAttendanceLocation = null;
+            isFetchingLocation = false;
+            mLocationManager.removeUpdates(mLocationListener);
         }
     }
 
@@ -185,6 +256,8 @@ public class StudentAttendanceActivity extends Activity {
         if (mNfcAdapter != null) {
             mNfcAdapter.disableForegroundDispatch(StudentAttendanceActivity.this);
         }
+        isFetchingLocation = false;
+        mLocationManager.removeUpdates(mLocationListener);
     }
 
     @Override
@@ -304,7 +377,12 @@ public class StudentAttendanceActivity extends Activity {
             builder.setItems(R.array.dialog_attendance_menu, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    currentAttendance.setStatus(which);
+                    if (!PreferenceUtility.isLocationEnabled(StudentAttendanceActivity.this)) {
+                        currentAttendance.setStatus(which);
+                    }
+                    else {
+                        currentAttendance.setStatus(which, mAttendanceLocation);
+                    }
                     attendanceListView.invalidateViews();
                     isSaved = false;
                 }
@@ -357,6 +435,22 @@ public class StudentAttendanceActivity extends Activity {
             });
             builder.setCancelable(true);
             retDialog = builder.create();
+
+            break;
+        case StudentAttendanceActivity.DIALOG_FETCHING_LOCATION:
+            ProgressDialog mProgressDialog = new ProgressDialog(StudentAttendanceActivity.this);
+            mProgressDialog.setMessage(getString(R.string.dialog_fetching_location));
+            mProgressDialog.setCancelable(true);
+            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    PreferenceUtility.putLocationEnabled(false, StudentAttendanceActivity.this);
+                    isFetchingLocation = false;
+                    mLocationManager.removeUpdates(mLocationListener);
+                    Toast.makeText(StudentAttendanceActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
+                }
+            });
+            retDialog = mProgressDialog;
 
             break;
         }
@@ -414,7 +508,12 @@ public class StudentAttendanceActivity extends Activity {
         String id = rawId.toString();
         if (isReading && mAttendanceSheet != null && mAttendanceSheet.hasNfcId(id)) {
             currentAttendance = mAttendanceSheet.get(id);
-            currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
+            if (!PreferenceUtility.isLocationEnabled(StudentAttendanceActivity.this)) {
+                currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
+            }
+            else {
+                currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition(), mAttendanceLocation);
+            }
             int position = mAttendanceListAdapter.getPosition(currentAttendance);
             attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
             attendanceListView.setSelection(position);

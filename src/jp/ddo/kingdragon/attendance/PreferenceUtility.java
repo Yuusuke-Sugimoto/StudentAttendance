@@ -16,11 +16,19 @@ public class PreferenceUtility {
     private PreferenceUtility() {}
 
     /**
+     * "位置情報を付加する"の値を変更する
+     * @param value 新しい値
+     * @param inContext SharedPreferences取得用のコンテキスト
+     */
+    public static void putLocationEnabled(boolean value, Context inContext) {
+        PreferenceUtility.putBoolean("setting_add_location", false, inContext);
+    }
+    /**
      * "位置情報を付加する"が有効かどうかを調べる
      * @param inContext SharedPreferences取得用のコンテキスト
      * @return 有効ならばtrue 無効または未設定ならばfalse
      */
-    public static boolean isLocationEnable(Context inContext) {
+    public static boolean isLocationEnabled(Context inContext) {
         return PreferenceUtility.getBoolean("setting_add_location", false, inContext);
     }
 
@@ -30,7 +38,7 @@ public class PreferenceUtility {
      * @param value 保存する値
      * @param inContext SharedPreferences取得用のコンテキスト
      */
-    public static void setString(String key, String value, Context inContext) {
+    public static void putString(String key, String value, Context inContext) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(inContext);
         prefs.edit().putString(key, value).commit();
     }
@@ -53,7 +61,7 @@ public class PreferenceUtility {
      * @param value 保存する値
      * @param inContext SharedPreferences取得用のコンテキスト
      */
-    public static void setInt(String key, int value, Context inContext) {
+    public static void putInt(String key, int value, Context inContext) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(inContext);
         prefs.edit().putInt(key, value).commit();
     }
@@ -76,7 +84,7 @@ public class PreferenceUtility {
      * @param value 保存する値
      * @param inContext SharedPreferences取得用のコンテキスト
      */
-    public static void setBoolean(String key, boolean value, Context inContext) {
+    public static void putBoolean(String key, boolean value, Context inContext) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(inContext);
         prefs.edit().putBoolean(key, value).commit();
     }
