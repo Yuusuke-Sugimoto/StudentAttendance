@@ -171,7 +171,9 @@ public class AttendanceSheet {
      * @return 現在の出席データの数
      */
     public int size() {
-        return attendances.size();
+        LinkedHashSet<Attendance> hashSet = new LinkedHashSet<Attendance>(attendances.values());
+        
+        return hashSet.size();
     }
 
     /**
@@ -192,12 +194,13 @@ public class AttendanceSheet {
      * @throws IOException
      */
     public void saveCsvFile(File csvFile, String encode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
+        LinkedHashSet<Attendance> hashSet = new LinkedHashSet<Attendance>(attendances.values());
         OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(csvFile), encode);
         osw.write("科目,授業時間,受講者数\n");
-        osw.write(subject + "," + time + "," + attendances.size() + "\n");
+        osw.write(subject + "," + time + "," + hashSet.size() + "\n");
         osw.write(",所属,学籍番号,氏名,カナ\n");
-        for (String key : attendances.keySet()) {
-            osw.write(attendances.get(key).toCsvRecord() + "\n");
+        for (Attendance mAttendance : hashSet) {
+            osw.write(mAttendance.toCsvRecord() + "\n");
         }
         osw.flush();
         osw.close();

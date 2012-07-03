@@ -15,6 +15,11 @@
     <string name="file_choose_title">ファイル選択画面</string>
     <string name="file_choose_icon">ファイルアイコン</string>
     <string name="file_choose_parent">[上のディレクトリへ]</string>
+    
+    <string name="setting_title">設定画面</string>
+    <string name="setting_general_title">一般設定</string>
+    <string name="setting_add_location_title">位置情報を付加する</string>
+    <string name="setting_add_location_summary">出席データに位置情報を付加します。</string>
 
     <string name="header_student_num">連番</string>
     <string name="header_student_no">学籍番号</string>
@@ -23,6 +28,7 @@
     <string name="header_student_status">出欠</string>
 
     <string name="menu_make_list">リストを作成する</string>
+    <string name="menu_setting">設定画面を開く</string>
     <string name="menu_open">CSVファイルを開く</string>
     <string name="menu_save">CSVファイルに保存する</string>
     <string name="menu_new_sheet">新規シート</string>

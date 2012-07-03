@@ -199,6 +199,8 @@ public class StudentAttendanceActivity extends Activity {
                     mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, mAttendanceSheet.getAttendanceList());
                     attendanceListView.setAdapter(mAttendanceListAdapter);
                     readStartButton.setEnabled(true);
+                    readStartButton.setText(R.string.attendance_read_start_label);
+                    isReading = false;
                     isSaved = false;
                     Toast.makeText(StudentAttendanceActivity.this, fileName + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
                 }
@@ -226,6 +228,11 @@ public class StudentAttendanceActivity extends Activity {
         switch (item.getItemId()) {
         case R.id.menu_make_list:
             mIntent = new Intent(StudentAttendanceActivity.this, StudentListMakerActivity.class);
+            startActivity(mIntent);
+
+            break;
+        case R.id.menu_setting:
+            mIntent = new Intent(StudentAttendanceActivity.this, SettingActivity.class);
             startActivity(mIntent);
 
             break;

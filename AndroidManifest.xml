@@ -31,5 +31,10 @@
                   android:label="@string/file_choose_title"
                   android:configChanges="keyboard|keyboardHidden">
         </activity>
+
+        <activity android:name=".SettingActivity"
+                  android:label="@string/setting_title"
+                  android:configChanges="keyboard|keyboardHidden">
+        </activity>
     </application>
 </manifest>
