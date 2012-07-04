@@ -37,12 +37,13 @@
     <string name="menu_hide_invisible_file">隠しファイルを隠す</string>
     <string name="menu_new_file">新規ファイルを作成する</string>
 
+    <string name="dialog_ask">確認</string>
     <string name="dialog_ask_exit_without_saving">保存せずに終了してもよろしいですか?</string>
     <string name="dialog_ask_remove_without_saving">保存されていない内容を破棄してもよろしいですか?</string>
     <string name="dialog_attendance_menu_title">出欠メニュー</string>
-    <string name="dialog_ask">確認</string>
     <string name="dialog_ask_overwrite">に上書きしてもよろしいですか?</string>
     <string name="dialog_fetching_location">現在地を取得しています…\n(バックボタンで中止)</string>
+    <string name="dialog_ask_open_list_maker">リスト作成画面を開きますか?</string>
     <string name="dialog_student_menu_title">学生メニュー</string>
     <string name="dialog_student_menu_edit">編集</string>
     <string name="dialog_student_menu_nfc_id_remove">NFCタグを削除</string>

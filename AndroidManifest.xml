@@ -6,6 +6,11 @@
     <uses-sdk android:targetSdkVersion="10"
               android:minSdkVersion="10" />
 
+    <supports-screens android:smallScreens="true"
+                      android:normalScreens="true"
+                      android:largeScreens="true"
+                      android:anyDensity="true" />
+
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -25,17 +30,14 @@
 
         <activity android:name=".StudentListMakerActivity"
                   android:label="@string/listmaker_title"
-                  android:configChanges="keyboard|keyboardHidden">
-        </activity>
+                  android:configChanges="keyboard|keyboardHidden" />
 
-        <activity android:name=".FileChooseActivity"
+        <activity android:name=".filechoose.FileChooseActivity"
                   android:label="@string/file_choose_title"
-                  android:configChanges="keyboard|keyboardHidden">
-        </activity>
+                  android:configChanges="keyboard|keyboardHidden" />
 
         <activity android:name=".SettingActivity"
                   android:label="@string/setting_title"
-                  android:configChanges="keyboard|keyboardHidden">
-        </activity>
+                  android:configChanges="keyboard|keyboardHidden" />
     </application>
 </manifest>

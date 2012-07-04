@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon.attendance;
+package jp.ddo.kingdragon.attendance.filechoose;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,6 +10,8 @@ import android.widget.TextView;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import jp.ddo.kingdragon.attendance.R;
 
 /**
  * ファイルの一覧を表示するアダプタクラス

@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon.attendance;
+package jp.ddo.kingdragon.attendance.util;
 
 public class Util {
     private Util() {}

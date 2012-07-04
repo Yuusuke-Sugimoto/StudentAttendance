@@ -32,6 +32,10 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import jp.ddo.kingdragon.attendance.filechoose.FileChooseActivity;
+import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
+import jp.ddo.kingdragon.attendance.util.Util;
+
 /**
  * 出席管理画面
  * @author 杉本祐介
@@ -46,6 +50,7 @@ public class StudentAttendanceActivity extends Activity {
     private static final int DIALOG_ATTENDANCE_MENU         = 1;
     private static final int DIALOG_ASK_OVERWRITE           = 2;
     private static final int DIALOG_FETCHING_LOCATION       = 3;
+    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 4;
 
     // 変数の宣言
     /**
@@ -300,8 +305,7 @@ public class StudentAttendanceActivity extends Activity {
 
         switch (item.getItemId()) {
         case R.id.menu_make_list:
-            mIntent = new Intent(StudentAttendanceActivity.this, StudentListMakerActivity.class);
-            startActivity(mIntent);
+            showDialog(StudentAttendanceActivity.DIALOG_ASK_OPEN_LIST_MAKER);
 
             break;
         case R.id.menu_setting:
@@ -451,6 +455,23 @@ public class StudentAttendanceActivity extends Activity {
                 }
             });
             retDialog = mProgressDialog;
+
+            break;
+        case StudentAttendanceActivity.DIALOG_ASK_OPEN_LIST_MAKER:
+            builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+            builder.setIcon(android.R.drawable.ic_dialog_alert);
+            builder.setTitle(R.string.dialog_ask);
+            builder.setMessage(R.string.dialog_ask_open_list_maker);
+            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent mIntent = new Intent(StudentAttendanceActivity.this, StudentListMakerActivity.class);
+                    startActivity(mIntent);
+                }
+            });
+            builder.setNegativeButton(android.R.string.no, null);
+            builder.setCancelable(true);
+            retDialog = builder.create();
 
             break;
         }

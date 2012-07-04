@@ -1,5 +1,9 @@
 2012年7月4日 杉本祐介
+・リスト作成画面に入る際にダイアログで確認するようにした
 ・PreferenceUtilityクラスの名前をPreferenceUtilに変更した
+・FileChooseActivityクラスおよびFileListAdapterクラスの位置を変更した
+・UtilクラスおよびPreferenceUtilクラスの位置を変更した
+・binフォルダ以下の内容がコミットに含まれないようにした
 
 2012年7月3日 杉本祐介
 ・出席データに位置情報を付加できるようにした

@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon.attendance;
+package jp.ddo.kingdragon.attendance.filechoose;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Stack;
+
+import jp.ddo.kingdragon.attendance.R;
 
 /**
  * ファイルの選択を行うアクティビティ<br />
