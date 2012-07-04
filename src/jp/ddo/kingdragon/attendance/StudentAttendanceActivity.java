@@ -233,7 +233,7 @@ public class StudentAttendanceActivity extends Activity {
             mNfcAdapter.enableForegroundDispatch(StudentAttendanceActivity.this, mPendingIntent, filters, techs);
         }
 
-        if (PreferenceUtility.isLocationEnabled(StudentAttendanceActivity.this)) {
+        if (PreferenceUtil.isLocationEnabled(StudentAttendanceActivity.this)) {
             if(mAttendanceLocation == null) {
                 showDialog(StudentAttendanceActivity.DIALOG_FETCHING_LOCATION);
             }
@@ -377,7 +377,7 @@ public class StudentAttendanceActivity extends Activity {
             builder.setItems(R.array.dialog_attendance_menu, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    if (!PreferenceUtility.isLocationEnabled(StudentAttendanceActivity.this)) {
+                    if (!PreferenceUtil.isLocationEnabled(StudentAttendanceActivity.this)) {
                         currentAttendance.setStatus(which);
                     }
                     else {
@@ -444,7 +444,7 @@ public class StudentAttendanceActivity extends Activity {
             mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
-                    PreferenceUtility.putLocationEnabled(false, StudentAttendanceActivity.this);
+                    PreferenceUtil.putLocationEnabled(false, StudentAttendanceActivity.this);
                     isFetchingLocation = false;
                     mLocationManager.removeUpdates(mLocationListener);
                     Toast.makeText(StudentAttendanceActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
@@ -508,7 +508,7 @@ public class StudentAttendanceActivity extends Activity {
         String id = rawId.toString();
         if (isReading && mAttendanceSheet != null && mAttendanceSheet.hasNfcId(id)) {
             currentAttendance = mAttendanceSheet.get(id);
-            if (!PreferenceUtility.isLocationEnabled(StudentAttendanceActivity.this)) {
+            if (!PreferenceUtil.isLocationEnabled(StudentAttendanceActivity.this)) {
                 currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
             }
             else {

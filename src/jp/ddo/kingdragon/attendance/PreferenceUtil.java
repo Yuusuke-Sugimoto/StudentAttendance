@@ -8,12 +8,12 @@ import android.preference.PreferenceManager;
  * 設定内容を管理するクラス
  * @author 杉本祐介
  */
-public class PreferenceUtility {
+public class PreferenceUtil {
     /**
      * コンストラクタ<br />
      * インスタンスが生成されないようにprivate宣言しておく
      */
-    private PreferenceUtility() {}
+    private PreferenceUtil() {}
 
     /**
      * "位置情報を付加する"の値を変更する
@@ -21,7 +21,7 @@ public class PreferenceUtility {
      * @param inContext SharedPreferences取得用のコンテキスト
      */
     public static void putLocationEnabled(boolean value, Context inContext) {
-        PreferenceUtility.putBoolean("setting_add_location", false, inContext);
+        PreferenceUtil.putBoolean("setting_add_location", false, inContext);
     }
     /**
      * "位置情報を付加する"が有効かどうかを調べる
@@ -29,7 +29,7 @@ public class PreferenceUtility {
      * @return 有効ならばtrue 無効または未設定ならばfalse
      */
     public static boolean isLocationEnabled(Context inContext) {
-        return PreferenceUtility.getBoolean("setting_add_location", false, inContext);
+        return PreferenceUtil.getBoolean("setting_add_location", false, inContext);
     }
 
     /**

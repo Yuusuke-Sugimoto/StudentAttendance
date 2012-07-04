@@ -11,10 +11,10 @@ import android.content.res.Resources;
  */
 public class Attendance {
     // 定数の宣言
-    public static final int ATTENDANCE  = 0;
-    public static final int LATENESS    = 1;
-    public static final int LEAVE_EARLY = 2;
-    public static final int ABSENCE     = 3;
+    private static final int ATTENDANCE  = 0;
+    private static final int LATENESS    = 1;
+    private static final int LEAVE_EARLY = 2;
+    private static final int ABSENCE     = 3;
 
     // 変数の宣言
     /**
