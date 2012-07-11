@@ -4,7 +4,7 @@ public class Util {
     private Util() {}
 
     /**
-     * バイト配列を16進数表現の文字列にして返す<br />
+     * バイト配列を16進数表現の文字列に変換する<br />
      * 参考:16進数文字列(String)⇔バイト配列(byte[]) - lambda {|diary| lambda { diary.succ! } }.call(hatena)<br />
      *      http://d.hatena.ne.jp/winebarrel/20041012/p1
      * @param bytes バイト配列

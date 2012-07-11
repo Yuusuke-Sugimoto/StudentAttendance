@@ -51,7 +51,14 @@ public class AttendanceListAdapter extends ArrayAdapter<Attendance> {
             holder = (ViewHolder)convertView.getTag();
         }
 
-        holder.studentNum.setText(String.valueOf(mAttendance.getStudentNum()));
+        String studentNum;
+        if (mAttendance.getStudentNum() != -1) {
+            studentNum = String.valueOf(mAttendance.getStudentNum());
+        }
+        else {
+            studentNum = "";
+        }
+        holder.studentNum.setText(studentNum);
         holder.studentNo.setText(mAttendance.getStudentNo());
         holder.studentName.setText(mAttendance.getStudentName());
         holder.studentStatus.setText(mAttendance.getStatusString());

@@ -1,5 +1,8 @@
 package jp.ddo.kingdragon.attendance;
 
+import au.com.bytecode.opencsv.CSVParser;
+import au.com.bytecode.opencsv.CSVWriter;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,28 +62,33 @@ public class StudentSheet {
         this();
 
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
+        CSVParser parser = new CSVParser();
         boolean isSubjectRecord = false;
         boolean isStudentRecord = false;
         String line;
         while ((line = br.readLine()) != null) {
-            String[] splittedLine = line.replace("\"", "").split(",");
+            StringBuilder rawLine = new StringBuilder(line);
+            while (rawLine.charAt(rawLine.length() - 1) == ',') {
+                rawLine.deleteCharAt(rawLine.length() - 1);
+            }
+            String[] values = parser.parseLine(rawLine.toString());
 
             if (isSubjectRecord) {
-                subject = splittedLine[0];
-                time = splittedLine[1];
+                subject = values[0];
+                time = values[1];
                 isSubjectRecord = false;
             }
             else if (isStudentRecord) {
                 String[] nfcIds;
-                if (splittedLine.length == 6) {
+                if (values.length == 6) {
                     // NFCのタグのIDが1つ
-                    nfcIds = new String[] {splittedLine[5]};
+                    nfcIds = new String[] {values[5]};
                 }
-                else if (splittedLine.length > 6) {
+                else if (values.length > 6) {
                     // NFCタグのIDが複数セットされている場合は配列に直す
                     ArrayList<String> tempNfcIds = new ArrayList<String>();
-                    for (int i = 5; i < splittedLine.length; i++) {
-                        tempNfcIds.add(splittedLine[i]);
+                    for (int i = 5; i < values.length; i++) {
+                        tempNfcIds.add(values[i]);
                     }
                     nfcIds = tempNfcIds.toArray(new String[tempNfcIds.size()]);
                 }
@@ -89,10 +97,10 @@ public class StudentSheet {
                     nfcIds = new String[0];
                 }
                 int num;
-                if (splittedLine[0].length() != 0) {
+                if (values[0].length() != 0) {
                     // 連番が設定されている場合
                     try {
-                        num = Integer.parseInt(splittedLine[0]);
+                        num = Integer.parseInt(values[0]);
                     }
                     catch (Exception ex) {
                         num = -1;
@@ -101,8 +109,8 @@ public class StudentSheet {
                 else {
                     num = -1;
                 }
-                students.put(splittedLine[2], new Student(splittedLine[2], num, splittedLine[1],
-                                                          splittedLine[3], splittedLine[4], nfcIds));
+                students.put(values[2], new Student(values[2], num, values[1],
+                                                          values[3], values[4], nfcIds));
 
                 // NFCタグを読み取り済みとして追加
                 for (String nfcId : nfcIds) {
@@ -110,10 +118,10 @@ public class StudentSheet {
                 }
             }
 
-            if (splittedLine[0].equals("科目")) {
+            if (values[0].equals("科目")) {
                 isSubjectRecord = true;
             }
-            else if (splittedLine[1].equals("所属")) {
+            else if (values[1].equals("所属")) {
                 isStudentRecord = true;
             }
         }
@@ -129,7 +137,7 @@ public class StudentSheet {
         this.subject = subject;
     }
     /**
-     * 科目名を返す
+     * 科目名を取得する
      * @return 科目名
      */
     public String getSubject() {
@@ -143,14 +151,14 @@ public class StudentSheet {
         this.time = time;
     }
     /**
-     * 授業時間を返す
+     * 授業時間を取得する
      * @return 授業時間
      */
     public String getTime() {
         return time;
     }
     /**
-     * 学生データのリストを返す
+     * 学生データのリストを取得する
      * @return 学生データのリスト
      */
     public ArrayList<Student> getStudentList() {
@@ -212,7 +220,7 @@ public class StudentSheet {
     }
 
     /**
-     * 現在の学生データの数を返す
+     * 現在の学生データの数を取得する
      * @return 現在の学生データの数
      */
     public int size() {
@@ -222,7 +230,7 @@ public class StudentSheet {
     /**
      * 引数で渡された学籍番号をもつ学生データが存在するかどうかを調べる
      * @param studentNo 学籍番号
-     * @return 存在したならばtrue、存在しなければfalse
+     * @return 存在したならばtrue 存在しなければfalse
      */
     public boolean hasStudentNo(String studentNo) {
         return students.containsKey(studentNo);
@@ -237,14 +245,14 @@ public class StudentSheet {
      * @throws IOException
      */
     public void saveCsvFile(File csvFile, String encode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
-        OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(csvFile), encode);
-        osw.write("\"科目\",\"授業時間\",\"受講者数\"\n");
-        osw.write("\"" + subject + "\",\"" + time + "\",\"" + students.size() + "\"\n");
-        osw.write("\"\",\"所属\",\"学籍番号\",\"氏名\",\"カナ\"\n");
+        CSVWriter writer = new CSVWriter(new OutputStreamWriter(new FileOutputStream(csvFile), encode));
+        writer.writeNext(new String[] {"科目", "授業時間", "受講者数"});
+        writer.writeNext(new String[] {subject, time, String.valueOf(students.size())});
+        writer.writeNext(new String[] {"", "所属", "学籍番号", "氏名", "カナ"});
         for (String key : students.keySet()) {
-            osw.write(students.get(key).toCsvRecord() + "\n");
+            writer.writeNext(students.get(key).getStudentData());
         }
-        osw.flush();
-        osw.close();
+        writer.flush();
+        writer.close();
     }
 }

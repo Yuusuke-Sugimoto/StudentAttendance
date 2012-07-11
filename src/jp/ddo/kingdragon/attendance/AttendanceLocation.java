@@ -1,7 +1,7 @@
 package jp.ddo.kingdragon.attendance;
 
 /**
- * 出席データの座標を管理するクラス
+ * 出席データの位置情報を管理するクラス
  * @author 杉本祐介
  */
 public class AttendanceLocation {
@@ -57,54 +57,31 @@ public class AttendanceLocation {
 
     // アクセッサ
     /**
-     * 緯度を返す
+     * 緯度を取得する
      * @return 緯度
      */
     public double getLatitude() {
         return latitude;
     }
     /**
-     * 経度を返す
+     * 経度を取得する
      * @return 経度
      */
     public double getLongitude() {
         return longitude;
     }
     /**
-     * 高度を返す
+     * 高度を取得する
      * @return 高度 セットされていなければ-1.0
      */
     public double getAltitude() {
         return altitude;
     }
     /**
-     * 精度を返す
+     * 精度を取得する
      * @return 精度 セットされていなければ-1.0f
      */
     public float getAccuracy() {
         return accuracy;
-    }
-
-    /**
-     * 座標データをCSV形式で出力する
-     * @return CSV形式にした座標データ
-     */
-    public String toCsvRecord() {
-        StringBuilder csvRecord = new StringBuilder("\"" + latitude + "\",\"" + longitude + "\"");
-
-        if (accuracy != -1.0f) {
-            csvRecord.append(",\"");
-            if (altitude != -1.0) {
-                csvRecord.append(altitude);
-            }
-            csvRecord.append("\",\"" + accuracy + "\"");
-        }
-        else {
-            if (altitude != -1.0) {
-                csvRecord.append(",\"" + altitude + "\"");
-            }
-        }
-
-        return csvRecord.toString();
     }
 }

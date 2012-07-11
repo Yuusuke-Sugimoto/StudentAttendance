@@ -8,8 +8,10 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceScreen;
 
 import jp.ddo.kingdragon.attendance.filechoose.FileChooseActivity;
 import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
@@ -33,11 +35,19 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
      */
     private static final String DEFAULT_ATTENDANCE_NAME = "%S_%y%M%d%h%m%s";
 
+    // 変数の宣言
+    /**
+     * 設定内容の読み取り/変更に使用
+     */
+    private PreferenceUtil mPreferenceUtil;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         addPreferencesFromResource(R.xml.preference);
+
+        mPreferenceUtil = new PreferenceUtil(SettingActivity.this);
 
         final EditTextPreference locationIntervalPreference = (EditTextPreference)findPreference("setting_location_interval");
         locationIntervalPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -48,7 +58,7 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
                 String newLocationInterval = (String)newValue;
                 if (newLocationInterval.length() == 0) {
                     // 値が空だった場合初期値をセットする
-                    PreferenceUtil.putLocationInterval(SettingActivity.DEFAULT_LOCATION_INTERVAL, SettingActivity.this);
+                    mPreferenceUtil.putLocationInterval(SettingActivity.DEFAULT_LOCATION_INTERVAL);
                     locationIntervalPreference.setText(String.valueOf(SettingActivity.DEFAULT_LOCATION_INTERVAL));
                     retBool = false;
                 }
@@ -62,7 +72,7 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 Intent mIntent = new Intent(SettingActivity.this, FileChooseActivity.class);
-                mIntent.putExtra("initDirPath", PreferenceUtil.getAttendanceDir(SettingActivity.this));
+                mIntent.putExtra("initDirPath", mPreferenceUtil.getAttendanceDir());
                 mIntent.putExtra("filter", ".*");
                 mIntent.putExtra("dirMode", true);
                 startActivityForResult(mIntent, SettingActivity.REQUEST_CHANGE_ATTENDANCE_DIR);
@@ -87,12 +97,23 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
                 }
                 else {
                     // 値が空だった場合初期値をセットする
-                    PreferenceUtil.putAttendanceName(SettingActivity.DEFAULT_ATTENDANCE_NAME, SettingActivity.this);
+                    mPreferenceUtil.putAttendanceName(SettingActivity.DEFAULT_ATTENDANCE_NAME);
                     attendanceNamePreference.setText(SettingActivity.DEFAULT_ATTENDANCE_NAME);
                     retBool = false;
                 }
 
                 return retBool;
+            }
+        });
+
+        Preference apacheLicensePreference = (Preference)findPreference("setting_license_apache");
+        apacheLicensePreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                Intent mIntent = new Intent(SettingActivity.this, ApacheLicenseActivity.class);
+                startActivity(mIntent);
+
+                return true;
             }
         });
     }
@@ -119,7 +140,7 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
         case SettingActivity.REQUEST_CHANGE_ATTENDANCE_DIR:
             if (resultCode == Activity.RESULT_OK) {
                 String filePath = data.getStringExtra("filePath");
-                PreferenceUtil.putAttendanceDir(filePath, SettingActivity.this);
+                mPreferenceUtil.putAttendanceDir(filePath);
             }
 
             break;
@@ -153,14 +174,50 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
         updateUi();
     }
 
+    /**
+     * 各項目の表示を更新する
+     */
     public void updateUi() {
+        ListPreference locationProviderPreference = (ListPreference)findPreference("setting_location_provider");
+        locationProviderPreference.setSummary(locationProviderPreference.getEntry());
+
         EditTextPreference locationIntervalPreference = (EditTextPreference)findPreference("setting_location_interval");
-        locationIntervalPreference.setSummary(PreferenceUtil.getLocationInterval(SettingActivity.this) + "分");
+        locationIntervalPreference.setSummary(mPreferenceUtil.getLocationInterval() + "分");
+
+        PreferenceScreen locationFormatPreference = (PreferenceScreen)findPreference("setting_location_format");
+        StringBuilder locationFormatSummary = new StringBuilder();
+        if (mPreferenceUtil.isLatitudeEnabled()) {
+            locationFormatSummary.append(getString(R.string.setting_location_format_latitude_title));
+        }
+        if (mPreferenceUtil.isLongitudeEnabled()) {
+            if (locationFormatSummary.length() != 0) {
+                locationFormatSummary.append(",");
+            }
+            locationFormatSummary.append(getString(R.string.setting_location_format_longitude_title));
+        }
+        if (mPreferenceUtil.isAltitudeEnabled()) {
+            if (locationFormatSummary.length() != 0) {
+                locationFormatSummary.append(",");
+            }
+            locationFormatSummary.append(getString(R.string.setting_location_format_altitude_title));
+        }
+        if (mPreferenceUtil.isAccuracyEnabled()) {
+            if (locationFormatSummary.length() != 0) {
+                locationFormatSummary.append(",");
+            }
+            locationFormatSummary.append(getString(R.string.setting_location_format_accuracy_title));
+        }
+        if (locationFormatSummary.length() == 0) {
+            locationFormatSummary.append(getString(R.string.setting_location_format_output_null));
+        }
+        locationFormatPreference.setSummary(locationFormatSummary.toString());
 
         Preference attendanceDirPreference = (Preference)findPreference("setting_attendance_dir");
-        attendanceDirPreference.setSummary(PreferenceUtil.getAttendanceDir(SettingActivity.this));
+        attendanceDirPreference.setSummary(mPreferenceUtil.getAttendanceDir());
 
         EditTextPreference attendanceNamePreference = (EditTextPreference)findPreference("setting_attendance_name");
-        attendanceNamePreference.setSummary(PreferenceUtil.getAttendanceName(SettingActivity.this));
+        attendanceNamePreference.setSummary(mPreferenceUtil.getAttendanceName());
+
+        getListView().invalidateViews();
     }
 }

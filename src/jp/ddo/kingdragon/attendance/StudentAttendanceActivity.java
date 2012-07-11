@@ -100,6 +100,11 @@ public class StudentAttendanceActivity extends Activity {
     private Button readStartButton;
 
     /**
+     * 設定内容の読み取り/変更に使用
+     */
+    private PreferenceUtil mPreferenceUtil;
+
+    /**
      * NFCタグの読み取りに使用
      */
     private NfcAdapter mNfcAdapter;
@@ -142,6 +147,7 @@ public class StudentAttendanceActivity extends Activity {
         isFetchingLocation = false;
 
         mAttendanceLocation = null;
+        mPreferenceUtil = new PreferenceUtil(StudentAttendanceActivity.this);
 
         /**
          * ListViewのレイアウトを変更する
@@ -238,15 +244,20 @@ public class StudentAttendanceActivity extends Activity {
             mNfcAdapter.enableForegroundDispatch(StudentAttendanceActivity.this, mPendingIntent, filters, techs);
         }
 
-        if (PreferenceUtil.isLocationEnabled(StudentAttendanceActivity.this)) {
+        if (mPreferenceUtil.isLocationEnabled()) {
             if (mAttendanceLocation == null) {
                 showDialog(StudentAttendanceActivity.DIALOG_FETCHING_LOCATION);
             }
             if (!isFetchingLocation) {
                 isFetchingLocation = true;
-                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                                                        PreferenceUtil.getLocationInterval(StudentAttendanceActivity.this) * 60000,
-                                                        0, mLocationListener);
+                if (mPreferenceUtil.getLocationProvider() == PreferenceUtil.LOCATION_PROVIDER_GPS) {
+                    mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, mPreferenceUtil.getLocationInterval() * 60000,
+                                                            0, mLocationListener);
+                }
+                else {
+                    mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, mPreferenceUtil.getLocationInterval() * 60000,
+                                                            0, mLocationListener);
+                }
             }
         }
         else {
@@ -333,7 +344,7 @@ public class StudentAttendanceActivity extends Activity {
         case R.id.menu_save:
             if (mAttendanceSheet != null) {
                 // ファイル名を生成
-                StringBuilder rawFileName = new StringBuilder(PreferenceUtil.getAttendanceName(StudentAttendanceActivity.this) + ".csv");
+                StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName() + ".csv");
                 // 科目名と授業時間を置換
                 int subjectPos;
                 while ((subjectPos = rawFileName.indexOf("%S")) != -1) {
@@ -373,14 +384,20 @@ public class StudentAttendanceActivity extends Activity {
                 }
 
                 String fileName = rawFileName.toString();
-                File saveDir = new File(PreferenceUtil.getAttendanceDir(StudentAttendanceActivity.this));
+                File saveDir = new File(mPreferenceUtil.getAttendanceDir());
                 saveFile = new File(saveDir, fileName);
                 if (saveFile.exists()) {
                     showDialog(StudentAttendanceActivity.DIALOG_ASK_OVERWRITE);
                 }
                 else {
                     try {
-                        mAttendanceSheet.saveCsvFile(saveFile, "Shift_JIS");
+                        if (!mPreferenceUtil.isLocationEnabled()) {
+                            mAttendanceSheet.saveCsvFile(saveFile, "Shift_JIS");
+                        }
+                        else {
+                            mAttendanceSheet.saveCsvFile(saveFile, "Shift_JIS", mPreferenceUtil.isLatitudeEnabled(), mPreferenceUtil.isLongitudeEnabled(),
+                                                         mPreferenceUtil.isAltitudeEnabled(), mPreferenceUtil.isAccuracyEnabled());
+                        }
                         isSaved = true;
                         Toast.makeText(StudentAttendanceActivity.this, fileName + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
                     }
@@ -429,7 +446,7 @@ public class StudentAttendanceActivity extends Activity {
             builder.setItems(R.array.dialog_attendance_menu, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    if (!PreferenceUtil.isLocationEnabled(StudentAttendanceActivity.this)) {
+                    if (!mPreferenceUtil.isLocationEnabled()) {
                         currentAttendance.setStatus(which);
                     }
                     else {
@@ -452,7 +469,13 @@ public class StudentAttendanceActivity extends Activity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     try {
-                        mAttendanceSheet.saveCsvFile(saveFile, "Shift_JIS");
+                        if (!mPreferenceUtil.isLocationEnabled()) {
+                            mAttendanceSheet.saveCsvFile(saveFile, "Shift_JIS");
+                        }
+                        else {
+                            mAttendanceSheet.saveCsvFile(saveFile, "Shift_JIS", mPreferenceUtil.isLatitudeEnabled(), mPreferenceUtil.isLongitudeEnabled(),
+                                                         mPreferenceUtil.isAltitudeEnabled(), mPreferenceUtil.isAccuracyEnabled());
+                        }
                         Toast.makeText(StudentAttendanceActivity.this, saveFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
                     }
                     catch (IOException e) {
@@ -496,7 +519,7 @@ public class StudentAttendanceActivity extends Activity {
             mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
-                    PreferenceUtil.putLocationEnabled(false, StudentAttendanceActivity.this);
+                    mPreferenceUtil.putLocationEnabled(false);
                     isFetchingLocation = false;
                     mLocationManager.removeUpdates(mLocationListener);
                     Toast.makeText(StudentAttendanceActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
@@ -577,7 +600,7 @@ public class StudentAttendanceActivity extends Activity {
         String id = rawId.toString();
         if (isReading && mAttendanceSheet != null && mAttendanceSheet.hasNfcId(id)) {
             currentAttendance = mAttendanceSheet.get(id);
-            if (!PreferenceUtil.isLocationEnabled(StudentAttendanceActivity.this)) {
+            if (!mPreferenceUtil.isLocationEnabled()) {
                 currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
             }
             else {

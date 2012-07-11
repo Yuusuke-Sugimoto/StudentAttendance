@@ -51,7 +51,14 @@ public class StudentListAdapter extends ArrayAdapter<Student> {
             holder = (ViewHolder)convertView.getTag();
         }
 
-        holder.studentNum.setText(String.valueOf(mStudent.getStudentNum()));
+        String studentNum;
+        if (mStudent.getStudentNum() != -1) {
+            studentNum = String.valueOf(mStudent.getStudentNum());
+        }
+        else {
+            studentNum = "";
+        }
+        holder.studentNum.setText(studentNum);
         holder.studentNo.setText(mStudent.getStudentNo());
         holder.studentName.setText(mStudent.getStudentName());
         holder.numOfNfcId.setText(String.valueOf(mStudent.getNumOfNfcId()));

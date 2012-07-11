@@ -389,6 +389,9 @@ public class StudentListMakerActivity extends Activity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     String studentNum = editTextForStudentNum.getEditableText().toString();
+                    if (studentNum.length() == 0) {
+                        studentNum = "-1";
+                    }
                     currentStudent.setStudentNum(Integer.parseInt(studentNum));
                     String studentNo = editTextForStudentNo.getEditableText().toString();
                     currentStudent.setStudentNo(studentNo);

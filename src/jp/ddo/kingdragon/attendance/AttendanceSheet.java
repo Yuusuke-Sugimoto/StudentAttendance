@@ -1,5 +1,10 @@
 package jp.ddo.kingdragon.attendance;
 
+import android.content.res.Resources;
+
+import au.com.bytecode.opencsv.CSVParser;
+import au.com.bytecode.opencsv.CSVWriter;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,8 +17,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-
-import android.content.res.Resources;
 
 /**
  * 出席リストを管理するクラス
@@ -52,28 +55,33 @@ public class AttendanceSheet {
         attendances = new LinkedHashMap<String, Attendance>();
 
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
+        CSVParser parser = new CSVParser();
         boolean isSubjectRecord = false;
         boolean isStudentRecord = false;
         String line;
         while ((line = br.readLine()) != null) {
-            String[] splittedLine = line.replace("\"", "").split(",");
+            StringBuilder rawLine = new StringBuilder(line);
+            while (rawLine.charAt(rawLine.length() - 1) == ',') {
+                rawLine.deleteCharAt(rawLine.length() - 1);
+            }
+            String[] values = parser.parseLine(rawLine.toString());
 
             if (isSubjectRecord) {
-                subject = splittedLine[0];
-                time = splittedLine[1];
+                subject = values[0];
+                time = values[1];
                 isSubjectRecord = false;
             }
             else if (isStudentRecord) {
                 String[] nfcIds;
-                if (splittedLine.length == 6) {
+                if (values.length == 6) {
                     // NFCのタグのIDが1つ
-                    nfcIds = new String[] {splittedLine[5]};
+                    nfcIds = new String[] {values[5]};
                 }
-                else if (splittedLine.length > 6) {
+                else if (values.length > 6) {
                     // NFCタグのIDが複数セットされている場合は配列に直す
                     ArrayList<String> temp = new ArrayList<String>();
-                    for (int i = 5; i < splittedLine.length; i++) {
-                        temp.add(splittedLine[i]);
+                    for (int i = 5; i < values.length; i++) {
+                        temp.add(values[i]);
                     }
                     nfcIds = temp.toArray(new String[temp.size()]);
                 }
@@ -82,10 +90,10 @@ public class AttendanceSheet {
                     nfcIds = new String[0];
                 }
                 int num;
-                if (splittedLine[0].length() != 0) {
+                if (values[0].length() != 0) {
                     // 連番が設定されている場合
                     try {
-                        num = Integer.parseInt(splittedLine[0]);
+                        num = Integer.parseInt(values[0]);
                     }
                     catch (Exception ex) {
                         num = -1;
@@ -94,8 +102,8 @@ public class AttendanceSheet {
                 else {
                     num = -1;
                 }
-                Attendance mAttendance = new Attendance(new Student(splittedLine[2], num, splittedLine[1],
-                                                                    splittedLine[3], splittedLine[4], nfcIds),
+                Attendance mAttendance = new Attendance(new Student(values[2], num, values[1],
+                                                                    values[3], values[4], nfcIds),
                                                         inResources);
                 // ID1個ごとにリストに追加する
                 if (nfcIds.length > 0) {
@@ -104,14 +112,14 @@ public class AttendanceSheet {
                     }
                 }
                 else {
-                    attendances.put(splittedLine[2], mAttendance);
+                    attendances.put(values[2], mAttendance);
                 }
             }
 
-            if (splittedLine[0].equals("科目")) {
+            if (values[0].equals("科目")) {
                 isSubjectRecord = true;
             }
-            else if (splittedLine[1].equals("所属")) {
+            else if (values[1].equals("所属")) {
                 isStudentRecord = true;
             }
         }
@@ -127,7 +135,7 @@ public class AttendanceSheet {
         this.subject = subject;
     }
     /**
-     * 科目名を返す
+     * 科目名を取得する
      * @return 科目名
      */
     public String getSubject() {
@@ -141,14 +149,14 @@ public class AttendanceSheet {
         this.time = time;
     }
     /**
-     * 授業時間を返す
+     * 授業時間を取得する
      * @return 授業時間
      */
     public String getTime() {
         return time;
     }
     /**
-     * 出席データのリストを返す
+     * 出席データのリストを取得する
      * @return 出席データのリスト
      */
     public ArrayList<Attendance> getAttendanceList() {
@@ -167,7 +175,7 @@ public class AttendanceSheet {
     }
 
     /**
-     * 現在の出席データの数を返す
+     * 現在の出席データの数を取得する
      * @return 現在の出席データの数
      */
     public int size() {
@@ -194,15 +202,33 @@ public class AttendanceSheet {
      * @throws IOException
      */
     public void saveCsvFile(File csvFile, String encode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
+        saveCsvFile(csvFile, encode, false, false, false, false);
+    }
+
+    /**
+     * 出席データをCSV形式で保存する<br />
+     * 位置情報を付加する。
+     * @param csvFile 保存先のインスタンス
+     * @param encode 書き込む際に使用する文字コード
+     * @param isLatitudeEnabled 緯度を付加するかどうか
+     * @param isLongitudeEnabled 経度を付加するかどうか
+     * @param isAltitudeEnabled 高度を付加するかどうか
+     * @param isAccuracyEnabled 精度を付加するかどうか
+     * @throws FileNotFoundException
+     * @throws UnsupportedEncodingException
+     * @throws IOException
+     */
+    public void saveCsvFile(File csvFile, String encode, boolean isLatitudeEnabled, boolean isLongitudeEnabled, boolean isAltitudeEnabled,
+                            boolean isAccuracyEnabled) throws UnsupportedEncodingException, FileNotFoundException, IOException {
         LinkedHashSet<Attendance> hashSet = new LinkedHashSet<Attendance>(attendances.values());
-        OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(csvFile), encode);
-        osw.write("\"科目\",\"授業時間\",\"受講者数\"\n");
-        osw.write("\"" + subject + "\",\"" + time + "\",\"" + hashSet.size() + "\"\n");
-        osw.write("\"\",\"所属\",\"学籍番号\",\"氏名\",\"カナ\"\n");
+        CSVWriter writer = new CSVWriter(new OutputStreamWriter(new FileOutputStream(csvFile), encode));
+        writer.writeNext(new String[] {"科目", "授業時間", "受講者数"});
+        writer.writeNext(new String[] {subject, time, String.valueOf(hashSet.size())});
+        writer.writeNext(new String[] {"", "所属", "学籍番号", "氏名", "カナ"});
         for (Attendance mAttendance : hashSet) {
-            osw.write(mAttendance.toCsvRecord() + "\n");
+            writer.writeNext(mAttendance.getAttendanceData(isLatitudeEnabled, isLongitudeEnabled, isAltitudeEnabled, isAccuracyEnabled));
         }
-        osw.flush();
-        osw.close();
+        writer.flush();
+        writer.close();
     }
 }

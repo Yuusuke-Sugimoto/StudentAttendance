@@ -89,7 +89,7 @@ public class Student {
         this.studentNo = studentNo;
     }
     /**
-     * 学籍番号を返す
+     * 学籍番号を取得する
      * @return 学籍番号
      */
     public String getStudentNo() {
@@ -103,7 +103,7 @@ public class Student {
         this.studentNum = studentNum;
     }
     /**
-     * 連番を返す
+     * 連番を取得する
      * @return 連番
      */
     public int getStudentNum() {
@@ -117,7 +117,7 @@ public class Student {
         this.className = className;
     }
     /**
-     * 所属を返す
+     * 所属を取得する
      * @return 所属
      */
     public String getClassName() {
@@ -131,7 +131,7 @@ public class Student {
         this.studentName = studentName;
     }
     /**
-     * 氏名を返す
+     * 氏名を取得する
      * @return 氏名
      */
     public String getStudentName() {
@@ -145,7 +145,7 @@ public class Student {
         this.studentRuby = studentRuby;
     }
     /**
-     * カナを返す
+     * カナを取得する
      * @return カナ
      */
     public String getStudentRuby() {
@@ -170,14 +170,14 @@ public class Student {
         nfcIds.remove(id);
     }
     /**
-     * NFCタグのIDの配列を返す
+     * NFCタグのIDの配列を取得する
      * @return NFCタグの配列
      */
     public String[] getNfcIds() {
         return nfcIds.toArray(new String[nfcIds.size()]);
     }
     /**
-     * NFCタグのIDの数を返す
+     * NFCタグのIDの数を取得する
      * @return NFCタグの数
      */
     public int getNumOfNfcId() {
@@ -190,7 +190,7 @@ public class Student {
         nfcIds = new ArrayList<String>();
     }
     /**
-     * NFCタグが登録されているかどうかを返す
+     * NFCタグが登録されているかどうかを取得する
      * @param id 検索するID
      * @return 登録されていればtrue そうでなければfalse
      */
@@ -200,27 +200,33 @@ public class Student {
 
     /**
      * 学籍番号とNFCタグのIDが揃ったかどうかを調べる
-     * @return 揃っていればtrue、揃っていなければfalseを返す
+     * @return 揃っていればtrue 揃っていなければfalse
      */
     public boolean isDataPrepared() {
         return studentNo.length() != 0 && !nfcIds.isEmpty();
     }
 
     /**
-     * 学生データをCSV形式で出力する
-     * @return CSV形式にした学生データ
+     * 学生データの内容を配列で取得する
+     * @return 学生データの内容を配列に格納したもの
      */
-    public String toCsvRecord() {
-        StringBuilder csvRecord = new StringBuilder("\"");
+    public String[] getStudentData() {
+        ArrayList<String> studentData = new ArrayList<String>();
 
-        if (studentNum != -1) {
-            csvRecord.append(studentNum);
+        if (getStudentNum() != -1) {
+            studentData.add(String.valueOf(getStudentNum()));
         }
-        csvRecord.append("\",\"" + className + "\",\"" + studentNo + "\",\"" + studentName + "\",\"" + studentRuby + "\"");
+        else {
+            studentData.add("");
+        }
+        studentData.add(className);
+        studentData.add(studentNo);
+        studentData.add(studentName);
+        studentData.add(studentRuby);
         for (String nfcId : nfcIds) {
-            csvRecord.append(",\"" + nfcId + "\"");
+            studentData.add(nfcId);
         }
 
-        return csvRecord.toString();
+        return studentData.toArray(new String[studentData.size()]);
     }
 }

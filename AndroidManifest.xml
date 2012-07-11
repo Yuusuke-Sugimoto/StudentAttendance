@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="jp.ddo.kingdragon.attendance"
           android:versionCode="1"
-          android:versionName="1.0">
+          android:versionName="1.0.0"
+          android:installLocation="auto">
     <uses-sdk android:targetSdkVersion="10"
               android:minSdkVersion="10" />
 
@@ -11,7 +12,7 @@
                       android:largeScreens="true"
                       android:anyDensity="true" />
 
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -38,6 +39,10 @@
 
         <activity android:name=".SettingActivity"
                   android:label="@string/setting_title"
+                  android:configChanges="keyboard|keyboardHidden" />
+
+        <activity android:name=".ApacheLicenseActivity"
+                  android:label="@string/setting_license_apache_title"
                   android:configChanges="keyboard|keyboardHidden" />
     </application>
 </manifest>

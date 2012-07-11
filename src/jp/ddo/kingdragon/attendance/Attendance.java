@@ -1,6 +1,7 @@
 package jp.ddo.kingdragon.attendance;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import android.content.res.Resources;
@@ -53,42 +54,42 @@ public class Attendance {
 
     // アクセッサ
     /**
-     * 学籍番号を返す
+     * 学籍番号を取得する
      * @return 学籍番号
      */
     public String getStudentNo() {
         return mStudent.getStudentNo();
     }
     /**
-     * 連番を返す
+     * 連番を取得する
      * @return 連番
      */
     public int getStudentNum() {
         return mStudent.getStudentNum();
     }
     /**
-     * 所属を返す
+     * 所属を取得する
      * @return 所属
      */
     public String getClassName() {
         return mStudent.getClassName();
     }
     /**
-     * 氏名を返す
+     * 氏名を取得する
      * @return 氏名
      */
     public String getStudentName() {
         return mStudent.getStudentName();
     }
     /**
-     * カナを返す
+     * カナを取得する
      * @return カナ
      */
     public String getStudentRuby() {
         return mStudent.getStudentRuby();
     }
     /**
-     * NFCタグのIDの配列を返す
+     * NFCタグのIDの配列を取得する
      * @return NFCタグの配列
      */
     public String[] getNfcIds() {
@@ -117,14 +118,14 @@ public class Attendance {
         }
     }
     /**
-     * 出席種別を返す
+     * 出席種別を取得する
      * @return 出席種別
      */
     public int getStatus() {
         return status;
     }
     /**
-     * 出席種別を文字列で返す
+     * 出席種別を文字列で取得する
      * @return 出席種別を文字列にしたもの
      */
     public String getStatusString() {
@@ -149,25 +150,48 @@ public class Attendance {
     }
 
     /**
-     * 出席データをCSV形式で出力する
-     * @return CSV形式にした出席データ
+     * 出席データの内容を配列で取得する
+     * @return 出席データの内容を配列に格納したもの
      */
-    public String toCsvRecord() {
-        StringBuilder csvRecord = new StringBuilder("\"");
+    public String[] getAttendanceData() {
+        return getAttendanceData(false, false, false, false);
+    }
 
+    /**
+     * 出席データの内容を配列で取得する<br />
+     * 位置情報を付加する。
+     * @return 出席データの内容を配列に格納したもの
+     */
+    public String[] getAttendanceData(boolean isLatitudeEnabled, boolean isLongitudeEnabled, boolean isAltitudeEnabled, boolean isAccuracyEnabled) {
+        ArrayList<String> attendanceData = new ArrayList<String>();
         if (getStudentNum() != -1) {
-            csvRecord.append(getStudentNum());
+            attendanceData.add(String.valueOf(getStudentNum()));
         }
-        csvRecord.append("\",\"" + getClassName() + "\",\"" + getStudentNo() + "\",\"" + getStudentName() + "\",\"" + getStudentRuby() + "\"");
+        else {
+            attendanceData.add("");
+        }
+        attendanceData.add(getClassName());
+        attendanceData.add(getStudentNo());
+        attendanceData.add(getStudentName());
+        attendanceData.add(getStudentRuby());
         if (status != Attendance.ABSENCE) {
-            csvRecord.append(",\"" + getStatusString() + "\"");
+            attendanceData.add(getStatusString());
             SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            csvRecord.append(",\"" + format.format(new Date(timeStamp)) + "\"");
-            if (mAttendanceLocation != null) {
-                csvRecord.append("," + mAttendanceLocation.toCsvRecord());
+            attendanceData.add(format.format(new Date(timeStamp)));
+            if (isLatitudeEnabled) {
+                attendanceData.add(String.valueOf(mAttendanceLocation.getLatitude()));
+            }
+            if (isLongitudeEnabled) {
+                attendanceData.add(String.valueOf(mAttendanceLocation.getLongitude()));
+            }
+            if (isAltitudeEnabled) {
+                attendanceData.add(String.valueOf(mAttendanceLocation.getAltitude()));
+            }
+            if (isAccuracyEnabled) {
+                attendanceData.add(String.valueOf(mAttendanceLocation.getAccuracy()));
             }
         }
 
-        return csvRecord.toString();
+        return attendanceData.toArray(new String[attendanceData.size()]);
     }
 }
