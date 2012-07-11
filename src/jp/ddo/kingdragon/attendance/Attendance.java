@@ -107,7 +107,7 @@ public class Attendance {
      * @param inAttendanceLocation 座標
      */
     public void setStatus(int status, AttendanceLocation inAttendanceLocation) {
-        if(status >= Attendance.ATTENDANCE && status <= Attendance.ABSENCE) {
+        if (status >= Attendance.ATTENDANCE && status <= Attendance.ABSENCE) {
             this.status = status;
             timeStamp = System.currentTimeMillis();
             mAttendanceLocation = inAttendanceLocation;
@@ -130,7 +130,7 @@ public class Attendance {
     public String getStatusString() {
         String retStr = "";
 
-        switch(status) {
+        switch (status) {
         case Attendance.ATTENDANCE:
             retStr = mResources.getString(R.string.attendance);
 
@@ -159,11 +159,11 @@ public class Attendance {
             csvRecord.append(getStudentNum());
         }
         csvRecord.append("\",\"" + getClassName() + "\",\"" + getStudentNo() + "\",\"" + getStudentName() + "\",\"" + getStudentRuby() + "\"");
-        if(status != Attendance.ABSENCE) {
+        if (status != Attendance.ABSENCE) {
             csvRecord.append(",\"" + getStatusString() + "\"");
             SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             csvRecord.append(",\"" + format.format(new Date(timeStamp)) + "\"");
-            if(mAttendanceLocation != null) {
+            if (mAttendanceLocation != null) {
                 csvRecord.append("," + mAttendanceLocation.toCsvRecord());
             }
         }

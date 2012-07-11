@@ -6,12 +6,15 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.LinearLayout;
@@ -31,12 +34,13 @@ import jp.ddo.kingdragon.attendance.R;
 /**
  * ファイルの選択を行うアクティビティ<br />
  * [パラメータ]<br />
- * initDirPath:初期ディレクトリ<br />
- * filter:一覧に表示するファイル名の正規表現<br />
- * extension:一覧に表示する拡張子の正規表現<br />
+ * initDirPath:初期ディレクトリ[String]<br />
+ * filter:一覧に表示するファイル名の正規表現[String]<br />
+ * extension:一覧に表示する拡張子の正規表現[String]<br />
+ * dirMode:選択対象をディレクトリにするかどうか[boolean]<br />
  * [戻り値]<br />
- * fileName:ファイル名<br />
- * filePath:ファイルの絶対パス
+ * fileName:ファイル名[String]<br />
+ * filePath:ファイルの絶対パス[String]
  * @author 杉本祐介
  */
 public class FileChooseActivity extends Activity {
@@ -49,6 +53,10 @@ public class FileChooseActivity extends Activity {
     private static final int DIALOG_FILE_NAME_IS_NULL   = 4;
 
     // 変数の宣言
+    /**
+     * 選択対象がディレクトリかどうか
+     */
+    private boolean isDirModeEnabled;
     /**
      * 隠しファイルを表示するかどうか
      */
@@ -115,6 +123,8 @@ public class FileChooseActivity extends Activity {
             extension = ".*";
         }
 
+        isDirModeEnabled = mIntent.getBooleanExtra("dirMode", false);
+
         fileListView = (ListView)findViewById(R.id.file_list);
         fileListView.setOnItemClickListener(new OnItemClickListener() {
             @Override
@@ -134,6 +144,35 @@ public class FileChooseActivity extends Activity {
                 }
             }
         });
+
+        LinearLayout buttonLayout = (LinearLayout)findViewById(R.id.file_button_layout);
+        if (isDirModeEnabled) {
+            Button okButton = new Button(FileChooseActivity.this);
+            okButton.setLayoutParams(new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
+            okButton.setText(android.R.string.ok);
+            okButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent mIntent = new Intent();
+                    mIntent.putExtra("fileName", currentDir.getName());
+                    mIntent.putExtra("filePath", currentDir.getAbsolutePath());
+                    setResult(Activity.RESULT_OK, mIntent);
+                    finish();
+                }
+            });
+            buttonLayout.addView(okButton);
+        }
+        Button cancelButton = new Button(FileChooseActivity.this);
+        cancelButton.setLayoutParams(new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
+        cancelButton.setText(android.R.string.cancel);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setResult(Activity.RESULT_CANCELED, null);
+                finish();
+            }
+        });
+        buttonLayout.addView(cancelButton);
 
         history = new Stack<File>();
 
@@ -312,10 +351,12 @@ public class FileChooseActivity extends Activity {
      * @param dir 対象となるディレクトリ
      */
     public void showFileList(File dir) {
+        File limitDir = Environment.getExternalStorageDirectory();
         mFileListAdapter = new FileListAdapter(FileChooseActivity.this, 0);
         fileListView.setAdapter(mFileListAdapter);
 
-        if (dir.getParentFile() != null) {
+        // 外部SDカードより上の階層には移動できないようにする
+        if (dir.getParentFile() != null && !dir.equals(limitDir)) {
             mFileListAdapter.add(dir.getParentFile(), true);
         }
         if (dir.listFiles() != null) {
@@ -327,7 +368,7 @@ public class FileChooseActivity extends Activity {
                         directories.add(mFile);
                     }
                 }
-                else if (mFile.getName().toLowerCase().matches("(" + filter + ")\\.(" + extension + ")")) {
+                else if (!isDirModeEnabled && mFile.getName().toLowerCase().matches("(" + filter + ")\\.(" + extension + ")")) {
                     if (isShowingInvisibleFile || !mFile.getName().startsWith(".")) {
                         files.add(mFile);
                     }

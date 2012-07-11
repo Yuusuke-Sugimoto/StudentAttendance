@@ -20,6 +20,10 @@
     <string name="setting_general_title">一般設定</string>
     <string name="setting_add_location_title">位置情報を付加する</string>
     <string name="setting_add_location_summary">出席データに位置情報を付加します。</string>
+    <string name="setting_location_interval_title">位置情報の更新間隔</string>
+    <string name="setting_change_attendance_dir_title">出席データの保存先を変更</string>
+    <string name="setting_change_attendance_name_title">出席データの保存名を変更</string>
+    <string name="setting_change_attendance_name_message">以下の変数を利用可能です。\n%S : 科目名, %t : 授業時間\n%y : 年, %M : 月, %d : 日\n%h : 時, %m : 分, %s : 秒</string>
 
     <string name="header_student_num">連番</string>
     <string name="header_student_no">学籍番号</string>

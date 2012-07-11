@@ -5,5 +5,16 @@
                             android:key="setting_add_location"
                             android:defaultValue="false"
                             android:summary="@string/setting_add_location_summary" />
+        <EditTextPreference android:title="@string/setting_location_interval_title"
+                            android:key="setting_location_interval"
+                            android:defaultValue="5"
+                            android:inputType="number" />
+        <Preference android:title="@string/setting_change_attendance_dir_title"
+                    android:key="setting_attendance_dir" />
+        <EditTextPreference android:title="@string/setting_change_attendance_name_title"
+                            android:key="setting_attendance_name"
+                            android:defaultValue="%S_%y%M%d%h%m%s"
+                            android:inputType="text"
+                            android:dialogMessage="@string/setting_change_attendance_name_message" />
     </PreferenceCategory>
 </PreferenceScreen>

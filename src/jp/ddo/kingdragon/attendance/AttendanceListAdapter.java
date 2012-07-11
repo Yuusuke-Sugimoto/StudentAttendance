@@ -63,7 +63,7 @@ public class AttendanceListAdapter extends ArrayAdapter<Attendance> {
          */
         if (parent instanceof ListView) {
             ListView mListView = (ListView)parent;
-            if(position == mListView.getCheckedItemPosition()) {
+            if (position == mListView.getCheckedItemPosition()) {
                 convertView.setBackgroundResource(R.drawable.orange);
             }
             else {

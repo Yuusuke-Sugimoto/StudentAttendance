@@ -92,15 +92,15 @@ public class AttendanceLocation {
     public String toCsvRecord() {
         StringBuilder csvRecord = new StringBuilder("\"" + latitude + "\",\"" + longitude + "\"");
 
-        if(accuracy != -1.0f) {
+        if (accuracy != -1.0f) {
             csvRecord.append(",\"");
-            if(altitude != -1.0) {
+            if (altitude != -1.0) {
                 csvRecord.append(altitude);
             }
             csvRecord.append("\",\"" + accuracy + "\"");
         }
         else {
-            if(altitude != -1.0) {
+            if (altitude != -1.0) {
                 csvRecord.append(",\"" + altitude + "\"");
             }
         }

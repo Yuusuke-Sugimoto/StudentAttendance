@@ -98,8 +98,8 @@ public class AttendanceSheet {
                                                                     splittedLine[3], splittedLine[4], nfcIds),
                                                         inResources);
                 // ID1個ごとにリストに追加する
-                if(nfcIds.length > 0) {
-                    for(String id : nfcIds) {
+                if (nfcIds.length > 0) {
+                    for (String id : nfcIds) {
                         attendances.put(id, mAttendance);
                     }
                 }

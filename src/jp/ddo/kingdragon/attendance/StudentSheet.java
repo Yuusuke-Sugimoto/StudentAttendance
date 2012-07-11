@@ -105,7 +105,7 @@ public class StudentSheet {
                                                           splittedLine[3], splittedLine[4], nfcIds));
 
                 // NFCタグを読み取り済みとして追加
-                for(String nfcId : nfcIds) {
+                for (String nfcId : nfcIds) {
                     readedNfcIds.add(nfcId);
                 }
             }

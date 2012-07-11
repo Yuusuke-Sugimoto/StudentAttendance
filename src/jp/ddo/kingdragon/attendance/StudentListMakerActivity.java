@@ -267,7 +267,7 @@ public class StudentListMakerActivity extends Activity {
 
         switch (item.getItemId()) {
         case R.id.menu_new_sheet:
-            if(!isSaved) {
+            if (!isSaved) {
                 showDialog(StudentListMakerActivity.DIALOG_ASK_REMOVE_WITHOUT_SAVING);
             }
             else {
@@ -572,7 +572,7 @@ public class StudentListMakerActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if(!isSaved) {
+        if (!isSaved) {
             showDialog(StudentListMakerActivity.DIALOG_ASK_EXIT_WITHOUT_SAVING);
         }
         else {
@@ -655,7 +655,7 @@ public class StudentListMakerActivity extends Activity {
     public void onNfcTagReaded(Intent inIntent) {
         if (currentStudent.getStudentNo().length() != 0) {
             StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
-            while(rawId.length() < 16) {
+            while (rawId.length() < 16) {
                 rawId.append("0");
             }
             String id = rawId.toString();

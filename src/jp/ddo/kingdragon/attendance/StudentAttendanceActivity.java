@@ -171,7 +171,7 @@ public class StudentAttendanceActivity extends Activity {
         readStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(isReading) {
+                if (isReading) {
                     readStartButton.setText(R.string.attendance_read_start_label);
                     isReading = false;
                 }
@@ -207,7 +207,7 @@ public class StudentAttendanceActivity extends Activity {
         mLocationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                if(isFetchingLocation) {
+                if (isFetchingLocation) {
                     try {
                         dismissDialog(StudentAttendanceActivity.DIALOG_FETCHING_LOCATION);
                     }
@@ -239,12 +239,14 @@ public class StudentAttendanceActivity extends Activity {
         }
 
         if (PreferenceUtil.isLocationEnabled(StudentAttendanceActivity.this)) {
-            if(mAttendanceLocation == null) {
+            if (mAttendanceLocation == null) {
                 showDialog(StudentAttendanceActivity.DIALOG_FETCHING_LOCATION);
             }
-            if(!isFetchingLocation) {
+            if (!isFetchingLocation) {
                 isFetchingLocation = true;
-                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 300000, 0, mLocationListener);
+                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                                                        PreferenceUtil.getLocationInterval(StudentAttendanceActivity.this) * 60000,
+                                                        0, mLocationListener);
             }
         }
         else {
@@ -261,6 +263,13 @@ public class StudentAttendanceActivity extends Activity {
         if (mNfcAdapter != null) {
             mNfcAdapter.disableForegroundDispatch(StudentAttendanceActivity.this);
         }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // NFCタグ読み取り時にonPauseが実行されるためonStopに移動
         isFetchingLocation = false;
         mLocationManager.removeUpdates(mLocationListener);
     }
@@ -322,11 +331,50 @@ public class StudentAttendanceActivity extends Activity {
 
             break;
         case R.id.menu_save:
-            if(mAttendanceSheet != null) {
+            if (mAttendanceSheet != null) {
                 // ファイル名を生成
+                StringBuilder rawFileName = new StringBuilder(PreferenceUtil.getAttendanceName(StudentAttendanceActivity.this) + ".csv");
+                // 科目名と授業時間を置換
+                int subjectPos;
+                while ((subjectPos = rawFileName.indexOf("%S")) != -1) {
+                    rawFileName.replace(subjectPos, subjectPos + 2, mAttendanceSheet.getSubject());
+                }
+                int timePos;
+                while ((timePos = rawFileName.indexOf("%t")) != -1) {
+                    rawFileName.replace(timePos, timePos + 2, mAttendanceSheet.getTime());
+                }
+
+                // 年月日時分秒を置換
                 SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
-                String fileName = mAttendanceSheet.getSubject() + "_" + format.format(new Date()) + ".csv";
-                saveFile = new File(baseDir, fileName);
+                String dateString = format.format(new Date());
+                int yearPos;
+                while ((yearPos = rawFileName.indexOf("%y")) != -1) {
+                    rawFileName.replace(yearPos, yearPos + 2, dateString.substring(0, 4));
+                }
+                int monthPos;
+                while ((monthPos = rawFileName.indexOf("%M")) != -1) {
+                    rawFileName.replace(monthPos, monthPos + 2, dateString.substring(4, 6));
+                }
+                int dayPos;
+                while ((dayPos = rawFileName.indexOf("%d")) != -1) {
+                    rawFileName.replace(dayPos, dayPos + 2, dateString.substring(6, 8));
+                }
+                int hourPos;
+                while ((hourPos = rawFileName.indexOf("%h")) != -1) {
+                    rawFileName.replace(hourPos, hourPos + 2, dateString.substring(8, 10));
+                }
+                int minutePos;
+                while ((minutePos = rawFileName.indexOf("%m")) != -1) {
+                    rawFileName.replace(minutePos, minutePos + 2, dateString.substring(10, 12));
+                }
+                int secondPos;
+                while ((secondPos = rawFileName.indexOf("%s")) != -1) {
+                    rawFileName.replace(secondPos, secondPos + 2, dateString.substring(12, 14));
+                }
+
+                String fileName = rawFileName.toString();
+                File saveDir = new File(PreferenceUtil.getAttendanceDir(StudentAttendanceActivity.this));
+                saveFile = new File(saveDir, fileName);
                 if (saveFile.exists()) {
                     showDialog(StudentAttendanceActivity.DIALOG_ASK_OVERWRITE);
                 }
@@ -500,7 +548,7 @@ public class StudentAttendanceActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if(!isSaved) {
+        if (!isSaved) {
             showDialog(StudentAttendanceActivity.DIALOG_ASK_EXIT_WITHOUT_SAVING);
         }
         else {

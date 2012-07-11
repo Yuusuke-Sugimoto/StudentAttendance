@@ -2,6 +2,7 @@ package jp.ddo.kingdragon.attendance.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 
 /**
@@ -24,12 +25,63 @@ public class PreferenceUtil {
         PreferenceUtil.putBoolean("setting_add_location", false, inContext);
     }
     /**
-     * "位置情報を付加する"が有効かどうかを調べる
+     * "位置情報を付加する"が有効かどうかを返す
      * @param inContext SharedPreferences取得用のコンテキスト
      * @return 有効ならばtrue 無効または未設定ならばfalse
      */
     public static boolean isLocationEnabled(Context inContext) {
         return PreferenceUtil.getBoolean("setting_add_location", false, inContext);
+    }
+
+    /**
+     * 位置情報の更新間隔を変更する
+     * @param locationInterval 位置情報の更新間隔
+     * @param inContext SharedPreferences取得用のコンテキスト
+     */
+    public static void putLocationInterval(int locationInterval, Context inContext) {
+        PreferenceUtil.putString("setting_location_interval", String.valueOf(locationInterval), inContext);
+    }
+    /**
+     * 位置情報の更新間隔を返す
+     * @param inContext SharedPreferences取得用のコンテキスト
+     * @return 位置情報の更新間隔 未設定ならば5
+     */
+    public static int getLocationInterval(Context inContext) {
+        return Integer.parseInt(PreferenceUtil.getString("setting_location_interval", "5", inContext));
+    }
+
+    /**
+     * 出席データの保存先を変更する
+     * @param attendanceDir 出席データの保存先のパス
+     * @param inContext SharedPreferences取得用のコンテキスト
+     */
+    public static void putAttendanceDir(String attendanceDir, Context inContext) {
+        PreferenceUtil.putString("setting_attendance_dir", attendanceDir, inContext);
+    }
+    /**
+     * 出席データの保存先を返す
+     * @param inContext SharedPreferences取得用のコンテキスト
+     * @return 出席データの保存先 未設定ならば外部SDカードのパス/StudentAttendance
+     */
+    public static String getAttendanceDir(Context inContext) {
+        return PreferenceUtil.getString("setting_attendance_dir", Environment.getExternalStorageDirectory().getAbsolutePath() + "/StudentAttendance", inContext);
+    }
+
+    /**
+     * 出席データの保存名を変更する
+     * @param attendanceName 出席データの保存名
+     * @param inContext SharedPreferences取得用のコンテキスト
+     */
+    public static void putAttendanceName(String attendanceName, Context inContext) {
+        PreferenceUtil.putString("setting_attendance_name", attendanceName, inContext);
+    }
+    /**
+     * 出席データの保存先を返す
+     * @param inContext SharedPreferences取得用のコンテキスト
+     * @return 出席データの保存名 未設定ならば"%S_%y%M%d%h%m%s"
+     */
+    public static String getAttendanceName(Context inContext) {
+        return PreferenceUtil.getString("setting_attendance_name", "%S_%y%M%d%h%m%s", inContext);
     }
 
     /**
@@ -99,5 +151,15 @@ public class PreferenceUtil {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(inContext);
 
         return prefs.getBoolean(key, defValue);
+    }
+
+    /**
+     * SharedPreferencesから値を削除する
+     * @param key 削除する値のキー
+     * @param inContext SharedPreferences取得用のコンテキスト
+     */
+    public static void remove(String key, Context inContext) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(inContext);
+        prefs.edit().remove(key).commit();
     }
 }
