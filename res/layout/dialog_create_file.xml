@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/dialog_new_file_layout"
+              android:id="@+id/dialog_create_file_layout"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:orientation="horizontal">
@@ -10,7 +10,7 @@
               android:layout_weight="1"
               android:inputType="text"
               android:maxLines="1"
-              android:hint="@string/dialog_new_file_hint" />
+              android:hint="@string/dialog_create_file_hint" />
     <TextView android:id="@+id/dialog_file_extension"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content" />

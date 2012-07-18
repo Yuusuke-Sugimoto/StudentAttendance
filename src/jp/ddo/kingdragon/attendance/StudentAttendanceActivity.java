@@ -51,6 +51,7 @@ public class StudentAttendanceActivity extends Activity {
     private static final int DIALOG_ASK_OVERWRITE           = 2;
     private static final int DIALOG_FETCHING_LOCATION       = 3;
     private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 4;
+    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 5;
 
     // 変数の宣言
     /**
@@ -67,7 +68,7 @@ public class StudentAttendanceActivity extends Activity {
     private boolean isFetchingLocation;
 
     /**
-     * 保存用ディレクトリ
+     * 保存用フォルダ
      */
     private File baseDir;
     /**
@@ -188,7 +189,7 @@ public class StudentAttendanceActivity extends Activity {
             }
         });
 
-        // 保存用ディレクトリの作成
+        // 保存用フォルダの作成
         baseDir = new File(Environment.getExternalStorageDirectory(), "StudentAttendance");
         if (!baseDir.exists() && !baseDir.mkdirs()) {
             Toast.makeText(StudentAttendanceActivity.this, R.string.error_make_directory_failed, Toast.LENGTH_SHORT).show();
@@ -245,25 +246,23 @@ public class StudentAttendanceActivity extends Activity {
         }
 
         if (mPreferenceUtil.isLocationEnabled()) {
-            if (mAttendanceLocation == null) {
-                showDialog(StudentAttendanceActivity.DIALOG_FETCHING_LOCATION);
+            /**
+             * GPSが選択されていてGPSが無効になっている場合、設定画面を表示するか確認する
+             * 参考:[Android] GSPが有効か確認し、必要であればGPS設定画面を表示する。 | 株式会社ノベラック スタッフBlog
+             *      http://www.noveluck.co.jp/blog/archives/159
+             */
+            if (mPreferenceUtil.getLocationProvider() == PreferenceUtil.LOCATION_PROVIDER_NETWORK
+                || mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                startUpdateLocation();
             }
-            if (!isFetchingLocation) {
-                isFetchingLocation = true;
-                if (mPreferenceUtil.getLocationProvider() == PreferenceUtil.LOCATION_PROVIDER_GPS) {
-                    mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, mPreferenceUtil.getLocationInterval() * 60000,
-                                                            0, mLocationListener);
-                }
-                else {
-                    mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, mPreferenceUtil.getLocationInterval() * 60000,
-                                                            0, mLocationListener);
-                }
+            else {
+                stopUpdateLocation();
+                showDialog(StudentAttendanceActivity.DIALOG_ASK_OPEN_GPS_PREFERENCE);
             }
         }
         else {
             mAttendanceLocation = null;
-            isFetchingLocation = false;
-            mLocationManager.removeUpdates(mLocationListener);
+            stopUpdateLocation();
         }
     }
 
@@ -281,8 +280,7 @@ public class StudentAttendanceActivity extends Activity {
         super.onStop();
 
         // NFCタグ読み取り時にonPauseが実行されるためonStopに移動
-        isFetchingLocation = false;
-        mLocationManager.removeUpdates(mLocationListener);
+        stopUpdateLocation();
     }
 
     @Override
@@ -520,8 +518,7 @@ public class StudentAttendanceActivity extends Activity {
                 @Override
                 public void onCancel(DialogInterface dialog) {
                     mPreferenceUtil.putLocationEnabled(false);
-                    isFetchingLocation = false;
-                    mLocationManager.removeUpdates(mLocationListener);
+                    stopUpdateLocation();
                     Toast.makeText(StudentAttendanceActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
                 }
             });
@@ -541,6 +538,36 @@ public class StudentAttendanceActivity extends Activity {
                 }
             });
             builder.setNegativeButton(android.R.string.no, null);
+            builder.setCancelable(true);
+            retDialog = builder.create();
+
+            break;
+        case StudentAttendanceActivity.DIALOG_ASK_OPEN_GPS_PREFERENCE:
+            builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+            builder.setIcon(android.R.drawable.ic_dialog_alert);
+            builder.setTitle(R.string.dialog_ask);
+            builder.setMessage(R.string.dialog_ask_open_gps_preference);
+            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent mIntent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivity(mIntent);
+                }
+            });
+            builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    mPreferenceUtil.putLocationEnabled(false);
+                    stopUpdateLocation();
+                    Toast.makeText(StudentAttendanceActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
+                }
+            });
             builder.setCancelable(true);
             retDialog = builder.create();
 
@@ -611,5 +638,33 @@ public class StudentAttendanceActivity extends Activity {
             attendanceListView.setSelection(position);
             isSaved = false;
         }
+    }
+
+    /**
+     * 位置情報の取得を開始する
+     */
+    public void startUpdateLocation() {
+        if (mAttendanceLocation == null) {
+            showDialog(StudentAttendanceActivity.DIALOG_FETCHING_LOCATION);
+        }
+        if (!isFetchingLocation) {
+            isFetchingLocation = true;
+            if (mPreferenceUtil.getLocationProvider() == PreferenceUtil.LOCATION_PROVIDER_GPS) {
+                mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, mPreferenceUtil.getLocationInterval() * 60000,
+                                                        0, mLocationListener);
+            }
+            else {
+                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, mPreferenceUtil.getLocationInterval() * 60000,
+                                                        0, mLocationListener);
+            }
+        }
+    }
+
+    /**
+     * 位置情報の取得を停止する
+     */
+    public void stopUpdateLocation() {
+        isFetchingLocation = false;
+        mLocationManager.removeUpdates(mLocationListener);
     }
 }

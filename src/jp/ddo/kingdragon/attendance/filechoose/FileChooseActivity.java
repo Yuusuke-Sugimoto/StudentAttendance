@@ -46,11 +46,15 @@ import jp.ddo.kingdragon.attendance.R;
 public class FileChooseActivity extends Activity {
     // 定数の宣言
     // ダイアログのID
-    private static final int DIALOG_NEW_FILE            = 0;
-    private static final int DIALOG_FILE_ALREADY_EXISTS = 1;
-    private static final int DIALOG_FILE_CREATE_FAILED  = 2;
-    private static final int DIALOG_ILLEGAL_FILE_NAME   = 3;
-    private static final int DIALOG_FILE_NAME_IS_NULL   = 4;
+    private static final int DIALOG_CREATE_FILE             = 0;
+    private static final int DIALOG_FILE_ALREADY_EXISTS     = 1;
+    private static final int DIALOG_FILE_CREATE_FAILED      = 2;
+    private static final int DIALOG_ILLEGAL_FILE_NAME       = 3;
+    private static final int DIALOG_FILE_NAME_IS_NULL       = 4;
+    private static final int DIALOG_CREATE_DIRECTORY        = 5;
+    private static final int DIALOG_DIRECTORY_CREATE_FAILED = 6;
+    private static final int DIALOG_ILLEGAL_DIRECTORY_NAME  = 7;
+    private static final int DIALOG_DIRECTORY_NAME_IS_NULL  = 8;
 
     // 変数の宣言
     /**
@@ -85,7 +89,7 @@ public class FileChooseActivity extends Activity {
     /**
      * 新規ファイル作成ダイアログに適用するレイアウト
      */
-    private LinearLayout layoutForNewFile;
+    private LinearLayout layoutForCreateFile;
     /**
      * ファイル名用のEditText
      */
@@ -94,6 +98,10 @@ public class FileChooseActivity extends Activity {
      * 拡張子用のTextView
      */
     private TextView textViewForExtension;
+    /**
+     * フォルダ名用のEditText
+     */
+    private EditText editTextForDirectoryName;
 
     // コレクションの宣言
     /**
@@ -196,6 +204,10 @@ public class FileChooseActivity extends Activity {
             item.setTitle(R.string.menu_show_invisible_file);
         }
 
+        if (isDirModeEnabled) {
+            menu.removeItem(R.id.menu_create_file);
+        }
+
         return true;
     }
 
@@ -207,8 +219,12 @@ public class FileChooseActivity extends Activity {
             showFileList(currentDir);
 
             break;
-        case R.id.menu_new_file:
-            showDialog(FileChooseActivity.DIALOG_NEW_FILE);
+        case R.id.menu_create_file:
+            showDialog(FileChooseActivity.DIALOG_CREATE_FILE);
+
+            break;
+        case R.id.menu_create_directory:
+            showDialog(FileChooseActivity.DIALOG_CREATE_DIRECTORY);
 
             break;
         }
@@ -223,16 +239,16 @@ public class FileChooseActivity extends Activity {
         AlertDialog.Builder builder;
 
         switch (id) {
-        case FileChooseActivity.DIALOG_NEW_FILE:
+        case FileChooseActivity.DIALOG_CREATE_FILE:
             builder = new AlertDialog.Builder(FileChooseActivity.this);
-            builder.setTitle(R.string.dialog_new_file_title);
+            builder.setTitle(R.string.dialog_create_file_title);
 
             LayoutInflater inflater = LayoutInflater.from(FileChooseActivity.this);
-            layoutForNewFile = (LinearLayout)inflater.inflate(R.layout.dialog_new_file, null);
-            editTextForFileName = (EditText)layoutForNewFile.findViewById(R.id.dialog_file_name);
-            textViewForExtension = (TextView)layoutForNewFile.findViewById(R.id.dialog_file_extension);
+            layoutForCreateFile = (LinearLayout)inflater.inflate(R.layout.dialog_create_file, null);
+            editTextForFileName = (EditText)layoutForCreateFile.findViewById(R.id.dialog_file_name);
+            textViewForExtension = (TextView)layoutForCreateFile.findViewById(R.id.dialog_file_extension);
 
-            builder.setView(layoutForNewFile);
+            builder.setView(layoutForCreateFile);
             builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -249,6 +265,7 @@ public class FileChooseActivity extends Activity {
                             try {
                                 if (mFile.createNewFile()) {
                                     showFileList(currentDir);
+                                    editTextForFileName.setText("");
                                     Toast.makeText(FileChooseActivity.this, fileName + getString(R.string.notice_file_created), Toast.LENGTH_SHORT).show();
                                 }
                                 else {
@@ -288,7 +305,62 @@ public class FileChooseActivity extends Activity {
             retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    showDialog(FileChooseActivity.DIALOG_NEW_FILE);
+                    showDialog(FileChooseActivity.DIALOG_CREATE_FILE);
+                }
+            });
+
+            break;
+        case FileChooseActivity.DIALOG_CREATE_DIRECTORY:
+            builder = new AlertDialog.Builder(FileChooseActivity.this);
+            builder.setTitle(R.string.dialog_create_directory_title);
+            editTextForDirectoryName = new EditText(FileChooseActivity.this);
+            editTextForDirectoryName.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+            builder.setView(editTextForDirectoryName);
+            builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    String directoryName = editTextForDirectoryName.getEditableText().toString();
+                    if (directoryName.length() != 0) {
+                        if (!directoryName.matches(".*(<|>|:|\\*|\\?|\"|/|\\\\|\\||\u00a5).*")) {
+                            // 使用不可能な文字列(< > : * ? " / \ |)が含まれていなければフォルダを作成
+                            File mDir = new File(currentDir, directoryName);
+                            if (mDir.mkdir()) {
+                                showFileList(currentDir);
+                                editTextForDirectoryName.setText("");
+                                Toast.makeText(FileChooseActivity.this, directoryName + getString(R.string.notice_file_created), Toast.LENGTH_SHORT).show();
+                            }
+                            else {
+                                showDialog(FileChooseActivity.DIALOG_DIRECTORY_CREATE_FAILED);
+                            }
+                        }
+                        else {
+                            showDialog(FileChooseActivity.DIALOG_ILLEGAL_DIRECTORY_NAME);
+                        }
+                    }
+                    else {
+                        showDialog(FileChooseActivity.DIALOG_DIRECTORY_NAME_IS_NULL);
+                    }
+                }
+            });
+            builder.setNegativeButton(android.R.string.cancel, null);
+            builder.setCancelable(true);
+            retDialog = builder.create();
+
+            break;
+        case FileChooseActivity.DIALOG_DIRECTORY_CREATE_FAILED:
+        case FileChooseActivity.DIALOG_ILLEGAL_DIRECTORY_NAME:
+        case FileChooseActivity.DIALOG_DIRECTORY_NAME_IS_NULL:
+            builder = new AlertDialog.Builder(FileChooseActivity.this);
+            builder.setTitle(R.string.error);
+            builder.setMessage("");
+            builder.setIcon(android.R.drawable.ic_dialog_alert);
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setCancelable(true);
+            retDialog = builder.create();
+            retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    showDialog(FileChooseActivity.DIALOG_CREATE_DIRECTORY);
                 }
             });
 
@@ -306,13 +378,12 @@ public class FileChooseActivity extends Activity {
         }
 
         switch (id) {
-        case FileChooseActivity.DIALOG_NEW_FILE:
-            editTextForFileName.setText("");
-            layoutForNewFile.removeView(textViewForExtension);
+        case FileChooseActivity.DIALOG_CREATE_FILE:
+            layoutForCreateFile.removeView(textViewForExtension);
             if (extension.matches("[A-Za-z0-9]*")) {
                 // 拡張子が1つだけ設定されている時はその拡張子を付加する
                 textViewForExtension.setText("." + extension);
-                layoutForNewFile.addView(textViewForExtension);
+                layoutForCreateFile.addView(textViewForExtension);
             }
 
             break;
@@ -330,6 +401,18 @@ public class FileChooseActivity extends Activity {
             break;
         case FileChooseActivity.DIALOG_FILE_NAME_IS_NULL:
             mAlertDialog.setMessage(getString(R.string.error_file_name_null));
+
+            break;
+        case FileChooseActivity.DIALOG_DIRECTORY_CREATE_FAILED:
+            mAlertDialog.setMessage(getString(R.string.error_directory_create_failed));
+
+            break;
+        case FileChooseActivity.DIALOG_ILLEGAL_DIRECTORY_NAME:
+            mAlertDialog.setMessage(getString(R.string.error_illegal_directory_name));
+
+            break;
+        case FileChooseActivity.DIALOG_DIRECTORY_NAME_IS_NULL:
+            mAlertDialog.setMessage(getString(R.string.error_directory_name_null));
 
             break;
         }

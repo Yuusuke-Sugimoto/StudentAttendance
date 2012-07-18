@@ -36,8 +36,8 @@
     <string name="setting_location_format_accuracy_title">精度</string>
     <string name="setting_location_format_accuracy_summary">精度を出力します。</string>
     <string name="setting_save_title">保存設定</string>
-    <string name="setting_change_attendance_dir_title">出席データの保存先を変更</string>
-    <string name="setting_change_attendance_name_title">出席データの保存名を変更</string>
+    <string name="setting_change_attendance_dir_title">出席データの保存先</string>
+    <string name="setting_change_attendance_name_title">出席データの保存名</string>
     <string name="setting_change_attendance_name_message">以下の変数が利用可能です。\n%S : 科目名, %t : 授業時間\n%y : 年, %M : 月, %d : 日\n%h : 時, %m : 分, %s : 秒\n拡張子は自動で付加されます。</string>
     <string name="setting_other_title">その他</string>
     <string name="setting_license_title">ライセンス表記</string>
@@ -59,7 +59,8 @@
     <string name="menu_edit_info">講義情報を編集する</string>
     <string name="menu_show_invisible_file">隠しファイルを表示する</string>
     <string name="menu_hide_invisible_file">隠しファイルを隠す</string>
-    <string name="menu_new_file">新規ファイルを作成する</string>
+    <string name="menu_create_file">新規ファイルを作成する</string>
+    <string name="menu_create_directory">新規フォルダを作成する</string>
 
     <string name="dialog_ask">確認</string>
     <string name="dialog_ask_exit_without_saving">保存せずに終了してもよろしいですか?</string>
@@ -68,6 +69,7 @@
     <string name="dialog_ask_overwrite">に上書きしてもよろしいですか?</string>
     <string name="dialog_fetching_location">現在地を取得しています…\n(バックボタンで中止)</string>
     <string name="dialog_ask_open_list_maker">リスト作成画面を開きますか?</string>
+    <string name="dialog_ask_open_gps_preference">端末の設定でGPSが無効になっています。GPSの設定画面を開きますか?(キャンセルした場合、\"位置情報を付加する\"は無効になります)</string>
     <string name="dialog_student_menu_title">学生メニュー</string>
     <string name="dialog_student_menu_edit">編集</string>
     <string name="dialog_student_menu_nfc_id_remove">NFCタグを削除</string>
@@ -92,8 +94,10 @@
     <string name="dialog_edit_subject_hint">科目名を入力</string>
     <string name="dialog_edit_time_label">授業時間:</string>
     <string name="dialog_edit_time_hint">授業時間を入力</string>
-    <string name="dialog_new_file_title">新規ファイルの作成</string>
-    <string name="dialog_new_file_hint">ファイル名を入力</string>
+    <string name="dialog_create_file_title">新規ファイルの作成</string>
+    <string name="dialog_create_file_hint">ファイル名を入力</string>
+    <string name="dialog_create_directory_title">新規フォルダの作成</string>
+    <string name="dialog_create_directory_hint">フォルダ名を入力</string>
 
     <string name="notice_location_fetched">現在地を取得しました</string>
     <string name="notice_add_location_disabled">\"位置情報を付加する\"は無効になりました</string>
@@ -105,7 +109,7 @@
     <string name="notice_file_created">を作成しました</string>
 
     <string name="error">エラー</string>
-    <string name="error_make_directory_failed">保存用ディレクトリの作成に失敗しました</string>
+    <string name="error_make_directory_failed">保存用フォルダの作成に失敗しました</string>
     <string name="error_nfc_id_already_readed">既に他の学生に登録されているNFCタグです</string>
     <string name="error_opening_failed">を開けませんでした</string>
     <string name="error_saving_failed">への保存に失敗しました</string>
@@ -114,6 +118,9 @@
     <string name="error_file_create_failed">ファイルの作成に失敗しました。</string>
     <string name="error_illegal_file_name">ファイル名に使用できない文字が含まれています。</string>
     <string name="error_file_name_null">ファイル名が入力されていません。</string>
+    <string name="error_directory_create_failed">フォルダの作成に失敗しました。</string>
+    <string name="error_illegal_directory_name">フォルダ名に使用できない文字が含まれています。</string>
+    <string name="error_directory_name_null">フォルダ名が入力されていません。</string>
 
     <string name="alphabet_and_number">0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</string>
     <string name="zero">0</string>

@@ -4,8 +4,12 @@
           android:title="@string/menu_show_invisible_file"
           android:icon="@android:drawable/ic_menu_report_image"
           android:numericShortcut="1" />
-    <item android:id="@+id/menu_new_file"
-          android:title="@string/menu_new_file"
-          android:icon="@android:drawable/ic_menu_add"
+    <item android:id="@+id/menu_create_file"
+          android:title="@string/menu_create_file"
+          android:icon="@drawable/ic_new_sheet"
           android:numericShortcut="2" />
+    <item android:id="@+id/menu_create_directory"
+          android:title="@string/menu_create_directory"
+          android:icon="@drawable/ic_create_dir"
+          android:numericShortcut="3" />
 </menu>
