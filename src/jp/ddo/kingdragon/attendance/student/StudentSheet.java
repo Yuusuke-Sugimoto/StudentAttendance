@@ -165,34 +165,6 @@ public class StudentSheet implements Serializable {
         return time;
     }
     /**
-     * 学生データのリストをセットする
-     * @param studentData 学生データのリスト
-     */
-    public void setStudentData(LinkedHashMap<String, Student> studentData) {
-        students = studentData;
-    }
-    /**
-     * 学生データのリストを取得する
-     * @return 学生データのリスト
-     */
-    public LinkedHashMap<String, Student> getStudentData() {
-        return students;
-    }
-    /**
-     * 読み取り済みのNFCタグのリストをセットする
-     * @param readedNfcIds 読み取り済みのNFCタグのリスト
-     */
-    public void setReadedNfcIds(ArrayList<String> readedNfcIds) {
-        this.readedNfcIds = readedNfcIds;
-    }
-    /**
-     * 読み取り済みのNFCタグのリストを取得する
-     * @return 読み取り済みのNFCタグのリスト
-     */
-    public ArrayList<String> getReadedNfcIds() {
-        return readedNfcIds;
-    }
-    /**
      * 学生データの表示用のリストを取得する
      * @return 学生データの表示用のリスト
      */

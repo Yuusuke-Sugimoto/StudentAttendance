@@ -30,6 +30,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
@@ -147,6 +148,7 @@ public class DisasterModeActivity extends Activity {
     private String[][] techs;
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.disaster_mode);
@@ -154,8 +156,24 @@ public class DisasterModeActivity extends Activity {
         isReading = false;
         isFetchingLocation = false;
 
+        currentAttendance = null;
+        mAttendanceSheet = new AttendanceSheet();
         mAttendanceLocation = null;
         mPreferenceUtil = new PreferenceUtil(DisasterModeActivity.this);
+
+        // アクティビティ再生成前のデータがあれば復元する
+        if (savedInstanceState != null) {
+            isReading = savedInstanceState.getBoolean("IsReading");
+            isFetchingLocation = savedInstanceState.getBoolean("IsFetchingLocation");
+            currentAttendance = (Attendance)savedInstanceState.getSerializable("CurrentAttendance");
+            mAttendanceSheet = (AttendanceSheet)savedInstanceState.getSerializable("AttendanceSheet");
+            ArrayList<Attendance> attendanceDisplayData = (ArrayList<Attendance>)savedInstanceState.getSerializable("AttendanceDisplayData");
+            mAttendanceListAdapter = new AttendanceListAdapter(DisasterModeActivity.this, 0, attendanceDisplayData);
+            mAttendanceLocation = (AttendanceLocation)savedInstanceState.getSerializable("AttendanceLocation");
+        }
+        else {
+            mAttendanceListAdapter = new AttendanceListAdapter(DisasterModeActivity.this, 0);
+        }
 
         /**
          * ListViewのレイアウトを変更する
@@ -167,18 +185,30 @@ public class DisasterModeActivity extends Activity {
          */
         attendanceListView = (ListView)findViewById(R.id.student_list);
         attendanceListView.setSelector(R.drawable.list_selector_background);
-        mAttendanceListAdapter = new AttendanceListAdapter(DisasterModeActivity.this, 0);
         attendanceListView.setAdapter(mAttendanceListAdapter);
+        attendanceListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                currentAttendance = (Attendance)parent.getItemAtPosition(position);
+                attendanceListView.setSelection(position);
+                attendanceListView.invalidateViews();
+            }
+        });
         attendanceListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 attendanceListView.performItemClick(view, position, id);
-                currentAttendance = (Attendance)parent.getItemAtPosition(position);
                 showDialog(DisasterModeActivity.DIALOG_ATTENDANCE_MENU);
 
                 return true;
             }
         });
+        if (currentAttendance != null) {
+            int position = mAttendanceListAdapter.getPosition(currentAttendance);
+            if (position != -1) {
+                attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+            }
+        }
 
         readStartButton = (Button)findViewById(R.id.read_start);
         readStartButton.setOnClickListener(new View.OnClickListener() {
@@ -307,6 +337,20 @@ public class DisasterModeActivity extends Activity {
             else {
                 mAttendanceLocation = null;
                 stopUpdateLocation();
+            }
+
+            if (mAttendanceSheet.size() != 0) {
+                readStartButton.setEnabled(true);
+                if (!isReading) {
+                    readStartButton.setText(R.string.attendance_read_start_label);
+                }
+                else {
+                    readStartButton.setText(R.string.attendance_read_finish_label);
+                }
+            }
+            else {
+                readStartButton.setEnabled(false);
+                readStartButton.setText(R.string.attendance_read_start_label);
             }
 
             if (mWakeLock.isHeld()) {
@@ -526,6 +570,16 @@ public class DisasterModeActivity extends Activity {
         }
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean("IsReading", isReading);
+        outState.putBoolean("IsFetchingLocation", isFetchingLocation);
+        outState.putSerializable("CurrentAttendance", currentAttendance);
+        outState.putSerializable("AttendanceSheet", mAttendanceSheet);
+        outState.putSerializable("AttendanceDisplayData", mAttendanceSheet.getAttendanceDisplayData());
+        outState.putSerializable("AttendanceLocation", mAttendanceLocation);
+    }
+
     /**
      * NFCタグを読み取った際に呼び出される
      * @param inIntent NFCタグを読み取った際に発生したインテント
@@ -538,15 +592,19 @@ public class DisasterModeActivity extends Activity {
         String id = rawId.toString();
         if (isReading && mAttendanceSheet != null && mAttendanceSheet.hasNfcId(id)) {
             currentAttendance = mAttendanceSheet.get(id);
-            if (!mPreferenceUtil.isLocationEnabled()) {
-                currentAttendance.setStatus(Attendance.ATTENDANCE);
+            if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                if (!mPreferenceUtil.isLocationEnabled()) {
+                    currentAttendance.setStatus(Attendance.ATTENDANCE);
+                }
+                else {
+                    currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                }
             }
             else {
-                currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
             }
             int position = mAttendanceListAdapter.getPosition(currentAttendance);
             attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
-            attendanceListView.setSelection(position);
         }
     }
 

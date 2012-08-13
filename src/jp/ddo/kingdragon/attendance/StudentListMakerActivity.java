@@ -25,7 +25,6 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 
 import jp.ddo.kingdragon.attendance.filechoose.FileChooseActivity;
 import jp.ddo.kingdragon.attendance.student.Student;
@@ -51,6 +50,10 @@ public class StudentListMakerActivity extends Activity {
     private static final int DIALOG_ASK_REMOVE_STUDENT        = 5;
     private static final int DIALOG_EDIT_INFO                 = 6;
     private static final int DIALOG_ASK_OVERWRITE             = 7;
+    /**
+     * 使用する文字コード
+     */
+    private static final String CHARACTER_CODE = "Shift_JIS";
 
     // 変数の宣言
     /**
@@ -146,6 +149,18 @@ public class StudentListMakerActivity extends Activity {
         currentStudent = new Student();
         mStudentSheet = new StudentSheet();
 
+        // アクティビティ再生成前のデータがあれば復元する
+        if (savedInstanceState != null) {
+            isSaved = savedInstanceState.getBoolean("IsSaved");
+            currentStudent = (Student)savedInstanceState.getSerializable("CurrentStudent");
+            mStudentSheet = (StudentSheet)savedInstanceState.getSerializable("StudentSheet");
+            ArrayList<Student> studentDisplayData = (ArrayList<Student>)savedInstanceState.getSerializable("StudentDisplayData");
+            mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, studentDisplayData);
+        }
+        else {
+            mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
+        }
+
         /**
          * ListViewのレイアウトを変更する
          * 参考:リストビューをカスタマイズする | Tech Booster
@@ -155,29 +170,13 @@ public class StudentListMakerActivity extends Activity {
          *      http://developer.android.com/resources/samples/ApiDemos/src/com/example/android/apis/view/List14.html
          */
         studentListView = (ListView)findViewById(R.id.student_list);
-        // 回転前のデータがあれば復元する
-        LinkedHashMap<String, Student> studentData = null;
-        ArrayList<String> readedNfcIds = null;
-        ArrayList<Student> studentDisplayData = null;
-        if (savedInstanceState != null) {
-            studentData = (LinkedHashMap<String, Student>)savedInstanceState.getSerializable("StudentData");
-            readedNfcIds = (ArrayList<String>)savedInstanceState.getSerializable("ReadedNfcIds");
-            studentDisplayData = (ArrayList<Student>)savedInstanceState.getSerializable("StudentDisplayData");
-        }
-        if (studentData != null && readedNfcIds != null && studentDisplayData != null) {
-            mStudentSheet.setStudentData(studentData);
-            mStudentSheet.setReadedNfcIds(readedNfcIds);
-            mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, studentDisplayData);
-            currentStudent = (Student)savedInstanceState.getSerializable("CurrentStudent");
-        }
-        else {
-            mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
-        }
         studentListView.setAdapter(mStudentListAdapter);
         studentListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 currentStudent = (Student)parent.getItemAtPosition(position);
+                studentListView.setSelection(position);
+                studentListView.invalidateViews();
             }
         });
         studentListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -189,6 +188,10 @@ public class StudentListMakerActivity extends Activity {
                 return true;
             }
         });
+        int position = mStudentListAdapter.getPosition(currentStudent);
+        if (position != -1) {
+            studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
+        }
 
         // 保存用ディレクトリの作成
         baseDir = new File(Environment.getExternalStorageDirectory(), "StudentAttendance");
@@ -240,7 +243,7 @@ public class StudentListMakerActivity extends Activity {
                 String fileName = data.getStringExtra("fileName");
                 String filePath = data.getStringExtra("filePath");
                 try {
-                    mStudentSheet = new StudentSheet(new File(filePath), "Shift_JIS");
+                    mStudentSheet = new StudentSheet(new File(filePath), CHARACTER_CODE);
                     mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mStudentSheet.getStudentDisplayData());
                     studentListView.setAdapter(mStudentListAdapter);
                     isSaved = false;
@@ -255,22 +258,13 @@ public class StudentListMakerActivity extends Activity {
             break;
         case StudentListMakerActivity.REQUEST_CHOOSE_SAVE_FILE:
             if (resultCode == Activity.RESULT_OK) {
-                String fileName = data.getStringExtra("fileName");
                 String filePath = data.getStringExtra("filePath");
                 saveFile = new File(filePath);
                 if (saveFile.exists()) {
                     showDialog(StudentListMakerActivity.DIALOG_ASK_OVERWRITE);
                 }
                 else {
-                    try {
-                        mStudentSheet.saveCsvFile(saveFile, "Shift_JIS");
-                        isSaved = true;
-                        Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
-                    }
-                    catch (IOException e) {
-                        Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
-                        Log.e("onActivityResult", e.getMessage(), e);
-                    }
+                    saveCsvFile(saveFile, StudentListMakerActivity.CHARACTER_CODE);
                 }
             }
 
@@ -510,15 +504,7 @@ public class StudentListMakerActivity extends Activity {
             builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    try {
-                        mStudentSheet.saveCsvFile(saveFile, "Shift_JIS");
-                        isSaved = true;
-                        Toast.makeText(StudentListMakerActivity.this, saveFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
-                    }
-                    catch (IOException e) {
-                        Toast.makeText(StudentListMakerActivity.this, saveFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
-                        Log.e("onActivityResult", e.getMessage(), e);
-                    }
+                    saveCsvFile(saveFile, StudentListMakerActivity.CHARACTER_CODE);
                 }
             });
             builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
@@ -639,10 +625,27 @@ public class StudentListMakerActivity extends Activity {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putSerializable("StudentData", mStudentSheet.getStudentData());
-        outState.putSerializable("ReadedNfcIds", mStudentSheet.getReadedNfcIds());
-        outState.putSerializable("StudentDisplayData", mStudentSheet.getStudentDisplayData());
+        outState.putBoolean("IsSaved", isSaved);
         outState.putSerializable("CurrentStudent", currentStudent);
+        outState.putSerializable("StudentSheet", mStudentSheet);
+        outState.putSerializable("StudentDisplayData", mStudentSheet.getStudentDisplayData());
+    }
+
+    /**
+     * 出席データをCSV形式で保存する
+     * @param csvFile 保存先のインスタンス
+     * @param encode 書き込む際に使用する文字コード
+     */
+    public void saveCsvFile(File csvFile, String encode) {
+        try {
+            mStudentSheet.saveCsvFile(csvFile, encode);
+            isSaved = true;
+            Toast.makeText(StudentListMakerActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
+        }
+        catch (IOException e) {
+            Toast.makeText(StudentListMakerActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
+            Log.e("onActivityResult", e.getMessage(), e);
+        }
     }
 
     /**
@@ -680,7 +683,6 @@ public class StudentListMakerActivity extends Activity {
             isSaved = false;
         }
         studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
-        studentListView.setSelection(position);
     }
 
     /**
@@ -702,7 +704,7 @@ public class StudentListMakerActivity extends Activity {
                     mStudentSheet.addReadedNfcId(id);
                 }
                 else {
-                    Toast.makeText(StudentListMakerActivity.this, R.string.error_nfc_id_already_readed, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(StudentListMakerActivity.this, R.string.error_nfc_id_already_registered, Toast.LENGTH_SHORT).show();
                 }
             }
             else {

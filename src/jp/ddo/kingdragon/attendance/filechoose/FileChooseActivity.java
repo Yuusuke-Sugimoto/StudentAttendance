@@ -110,6 +110,7 @@ public class FileChooseActivity extends Activity {
     private Stack<File> history;
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.file_choose);
@@ -183,6 +184,13 @@ public class FileChooseActivity extends Activity {
         buttonLayout.addView(cancelButton);
 
         history = new Stack<File>();
+
+        // アクティビティ再生成前のデータがあれば復元する
+        if (savedInstanceState != null) {
+            isShowingInvisibleFile = savedInstanceState.getBoolean("IsShowingInvisibleFile");
+            currentDir = (File)savedInstanceState.getSerializable("CurrentDir");
+            history = (Stack<File>)savedInstanceState.getSerializable("History");
+        }
 
         showFileList(currentDir);
     }
@@ -427,6 +435,13 @@ public class FileChooseActivity extends Activity {
         else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean("IsShowingInvisibleFile", isShowingInvisibleFile);
+        outState.putSerializable("CurrentDir", currentDir);
+        outState.putSerializable("History", history);
     }
 
     /**

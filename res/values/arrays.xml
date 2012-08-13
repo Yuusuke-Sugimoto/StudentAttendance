@@ -16,6 +16,12 @@
         <item>@string/absence</item>
     </string-array>
 
+    <string-array name="dialog_attendance_spinner_menu">
+        <item>@string/attendance</item>
+        <item>@string/lateness</item>
+        <item>@string/leave_early</item>
+    </string-array>
+
     <string-array name="dialog_student_menu">
         <item>@string/dialog_student_menu_edit</item>
         <item>@string/dialog_student_menu_nfc_id_remove</item>

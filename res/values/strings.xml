@@ -116,7 +116,8 @@
 
     <string name="error">エラー</string>
     <string name="error_make_directory_failed">保存用フォルダの作成に失敗しました</string>
-    <string name="error_nfc_id_already_readed">既に他の学生に登録されているNFCタグです</string>
+    <string name="error_student_already_readed">既に出席確認済みの学生です</string>
+    <string name="error_nfc_id_already_registered">既に他の学生に登録されているNFCタグです</string>
     <string name="error_opening_failed">を開けませんでした</string>
     <string name="error_saving_failed">への保存に失敗しました</string>
     <string name="error_saving_data_null">保存するデータがありません</string>

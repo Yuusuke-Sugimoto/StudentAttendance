@@ -169,20 +169,6 @@ public class AttendanceSheet implements Serializable {
         return time;
     }
     /**
-     * 出席データのリストをセットする
-     * @param attendanceData 出席データのリスト
-     */
-    public void setAttendanceData(LinkedHashMap<String, Attendance> attendanceData) {
-        attendances = attendanceData;
-    }
-    /**
-     * 出席データのリストを取得する
-     * @return 出席データのリスト
-     */
-    public LinkedHashMap<String, Attendance> getAttendanceData() {
-        return attendances;
-    }
-    /**
      * 出席データの表示用のリストを取得する
      * @return 出席データの表示用のリスト
      */

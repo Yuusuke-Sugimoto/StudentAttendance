@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashMap;
 
 import jp.ddo.kingdragon.attendance.filechoose.FileChooseActivity;
 import jp.ddo.kingdragon.attendance.student.Attendance;
@@ -50,7 +49,6 @@ public class StudentAttendanceActivity extends Activity {
     // 定数の宣言
     // リクエストコード
     private static final int REQUEST_CHOOSE_OPEN_FILE = 0;
-    private static final int REQUEST_CHOOSE_SAVE_FILE = 1;
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING = 0;
     private static final int DIALOG_ATTENDANCE_MENU         = 1;
@@ -58,6 +56,10 @@ public class StudentAttendanceActivity extends Activity {
     private static final int DIALOG_FETCHING_LOCATION       = 3;
     private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 4;
     private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 5;
+    /**
+     * 使用する文字コード
+     */
+    private static final String CHARACTER_CODE = "Shift_JIS";
 
     // 変数の宣言
     /**
@@ -154,16 +156,26 @@ public class StudentAttendanceActivity extends Activity {
         isSaved = true;
         isFetchingLocation = false;
 
+        currentAttendance = null;
         mAttendanceSheet = new AttendanceSheet();
         mAttendanceLocation = null;
         mPreferenceUtil = new PreferenceUtil(StudentAttendanceActivity.this);
 
         // アクティビティ再生成前のデータがあれば復元する
-        LinkedHashMap<String, Attendance> attendanceData = null;
-        ArrayList<Attendance> attendanceDisplayData = null;
+        int attendanceKind = -1;
         if (savedInstanceState != null) {
-            attendanceData = (LinkedHashMap<String, Attendance>)savedInstanceState.getSerializable("AttendanceData");
-            attendanceDisplayData = (ArrayList<Attendance>)savedInstanceState.getSerializable("AttendanceDisplayData");
+            isReading = savedInstanceState.getBoolean("IsReading");
+            isSaved = savedInstanceState.getBoolean("IsSaved");
+            isFetchingLocation = savedInstanceState.getBoolean("IsFetchingLocation");
+            attendanceKind = savedInstanceState.getInt("AttendanceKind");
+            currentAttendance = (Attendance)savedInstanceState.getSerializable("CurrentAttendance");
+            mAttendanceSheet = (AttendanceSheet)savedInstanceState.getSerializable("AttendanceSheet");
+            ArrayList<Attendance> attendanceDisplayData = (ArrayList<Attendance>)savedInstanceState.getSerializable("AttendanceDisplayData");
+            mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, attendanceDisplayData);
+            mAttendanceLocation = (AttendanceLocation)savedInstanceState.getSerializable("AttendanceLocation");
+        }
+        else {
+            mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0);
         }
 
         /**
@@ -176,27 +188,35 @@ public class StudentAttendanceActivity extends Activity {
          */
         attendanceListView = (ListView)findViewById(R.id.student_list);
         attendanceListView.setSelector(R.drawable.list_selector_background);
-        if (attendanceData != null && attendanceDisplayData != null) {
-            mAttendanceSheet.setAttendanceData(attendanceData);
-            mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, attendanceDisplayData);
-            currentAttendance = (Attendance)savedInstanceState.getSerializable("CurrentAttendance");
-        }
-        else {
-            mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0);
-        }
         attendanceListView.setAdapter(mAttendanceListAdapter);
+        attendanceListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                currentAttendance = (Attendance)parent.getItemAtPosition(position);
+                attendanceListView.setSelection(position);
+                attendanceListView.invalidateViews();
+            }
+        });
         attendanceListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 attendanceListView.performItemClick(view, position, id);
-                currentAttendance = (Attendance)parent.getItemAtPosition(position);
                 showDialog(StudentAttendanceActivity.DIALOG_ATTENDANCE_MENU);
 
                 return true;
             }
         });
+        if (currentAttendance != null) {
+            int position = mAttendanceListAdapter.getPosition(currentAttendance);
+            if (position != -1) {
+                attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+            }
+        }
 
         attendanceKindSpinner = (Spinner)findViewById(R.id.attendance_kind);
+        if (attendanceKind != -1) {
+            attendanceKindSpinner.setSelection(attendanceKind);
+        }
         readStartButton = (Button)findViewById(R.id.read_start);
         readStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -290,9 +310,12 @@ public class StudentAttendanceActivity extends Activity {
             }
 
             if (mAttendanceSheet.size() != 0) {
-                if (!readStartButton.isEnabled()) {
-                    readStartButton.setEnabled(true);
+                readStartButton.setEnabled(true);
+                if (!isReading) {
                     readStartButton.setText(R.string.attendance_read_start_label);
+                }
+                else {
+                    readStartButton.setText(R.string.attendance_read_finish_label);
                 }
             }
             else {
@@ -333,7 +356,7 @@ public class StudentAttendanceActivity extends Activity {
                 String fileName = data.getStringExtra("fileName");
                 String filePath = data.getStringExtra("filePath");
                 try {
-                    mAttendanceSheet = new AttendanceSheet(new File(filePath), "Shift_JIS", getResources());
+                    mAttendanceSheet = new AttendanceSheet(new File(filePath), CHARACTER_CODE, getResources());
                     mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, mAttendanceSheet.getAttendanceDisplayData());
                     attendanceListView.setAdapter(mAttendanceListAdapter);
                     isReading = false;
@@ -428,21 +451,7 @@ public class StudentAttendanceActivity extends Activity {
                     showDialog(StudentAttendanceActivity.DIALOG_ASK_OVERWRITE);
                 }
                 else {
-                    try {
-                        if (!mPreferenceUtil.isLocationEnabled()) {
-                            mAttendanceSheet.saveCsvFile(saveFile, "Shift_JIS");
-                        }
-                        else {
-                            mAttendanceSheet.saveCsvFile(saveFile, "Shift_JIS", mPreferenceUtil.isLatitudeEnabled(), mPreferenceUtil.isLongitudeEnabled(),
-                                                         mPreferenceUtil.isAltitudeEnabled(), mPreferenceUtil.isAccuracyEnabled());
-                        }
-                        isSaved = true;
-                        Toast.makeText(StudentAttendanceActivity.this, fileName + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
-                    }
-                    catch (IOException e) {
-                        Toast.makeText(StudentAttendanceActivity.this, fileName + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
-                        Log.e("onActivityResult", e.getMessage(), e);
-                    }
+                    saveCsvFile(saveFile, StudentAttendanceActivity.CHARACTER_CODE);
                 }
             }
             else {
@@ -506,46 +515,10 @@ public class StudentAttendanceActivity extends Activity {
             builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    try {
-                        if (!mPreferenceUtil.isLocationEnabled()) {
-                            mAttendanceSheet.saveCsvFile(saveFile, "Shift_JIS");
-                        }
-                        else {
-                            mAttendanceSheet.saveCsvFile(saveFile, "Shift_JIS", mPreferenceUtil.isLatitudeEnabled(), mPreferenceUtil.isLongitudeEnabled(),
-                                                         mPreferenceUtil.isAltitudeEnabled(), mPreferenceUtil.isAccuracyEnabled());
-                        }
-                        Toast.makeText(StudentAttendanceActivity.this, saveFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
-                    }
-                    catch (IOException e) {
-                        Toast.makeText(StudentAttendanceActivity.this, saveFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
-                        Log.e("onActivityResult", e.getMessage(), e);
-                    }
+                    saveCsvFile(saveFile, StudentAttendanceActivity.CHARACTER_CODE);
                 }
             });
-            builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
-            builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    Intent mIntent = new Intent(StudentAttendanceActivity.this, FileChooseActivity.class);
-                    String initDirPath;
-                    File parent = saveFile.getParentFile();
-                    if (parent != null) {
-                        initDirPath = parent.getAbsolutePath();
-                    }
-                    else {
-                        initDirPath = "/";
-                    }
-                    mIntent.putExtra("initDirPath", initDirPath);
-                    mIntent.putExtra("filter", ".*");
-                    mIntent.putExtra("extension", "csv");
-                    startActivityForResult(mIntent, StudentAttendanceActivity.REQUEST_CHOOSE_SAVE_FILE);
-                }
-            });
+            builder.setNegativeButton(android.R.string.no, null);
             builder.setCancelable(true);
             retDialog = builder.create();
 
@@ -657,10 +630,36 @@ public class StudentAttendanceActivity extends Activity {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        if (mAttendanceSheet != null) {
-            outState.putSerializable("AttendanceData", mAttendanceSheet.getAttendanceData());
-            outState.putSerializable("AttendanceDisplayData", mAttendanceSheet.getAttendanceDisplayData());
-            outState.putSerializable("CurrentAttendance", currentAttendance);
+        outState.putBoolean("IsReading", isReading);
+        outState.putBoolean("IsSaved", isSaved);
+        outState.putBoolean("IsFetchingLocation", isFetchingLocation);
+        outState.putInt("AttendanceKind", attendanceKindSpinner.getSelectedItemPosition());
+        outState.putSerializable("CurrentAttendance", currentAttendance);
+        outState.putSerializable("AttendanceSheet", mAttendanceSheet);
+        outState.putSerializable("AttendanceDisplayData", mAttendanceSheet.getAttendanceDisplayData());
+        outState.putSerializable("AttendanceLocation", mAttendanceLocation);
+    }
+
+    /**
+     * 出席データをCSV形式で保存する
+     * @param csvFile 保存先のインスタンス
+     * @param encode 書き込む際に使用する文字コード
+     */
+    public void saveCsvFile(File csvFile, String encode) {
+        try {
+            if (!mPreferenceUtil.isLocationEnabled()) {
+                mAttendanceSheet.saveCsvFile(csvFile, encode);
+            }
+            else {
+                mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(), mPreferenceUtil.isLongitudeEnabled(),
+                                             mPreferenceUtil.isAltitudeEnabled(), mPreferenceUtil.isAccuracyEnabled());
+            }
+            isSaved = true;
+            Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
+        }
+        catch (IOException e) {
+            Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
+            Log.e("onActivityResult", e.getMessage(), e);
         }
     }
 
@@ -676,16 +675,20 @@ public class StudentAttendanceActivity extends Activity {
         String id = rawId.toString();
         if (isReading && mAttendanceSheet != null && mAttendanceSheet.hasNfcId(id)) {
             currentAttendance = mAttendanceSheet.get(id);
-            if (!mPreferenceUtil.isLocationEnabled()) {
-                currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
+            if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                if (!mPreferenceUtil.isLocationEnabled()) {
+                    currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
+                }
+                else {
+                    currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition(), mAttendanceLocation);
+                }
+                isSaved = false;
             }
             else {
-                currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition(), mAttendanceLocation);
+                Toast.makeText(StudentAttendanceActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
             }
             int position = mAttendanceListAdapter.getPosition(currentAttendance);
             attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
-            attendanceListView.setSelection(position);
-            isSaved = false;
         }
     }
 
