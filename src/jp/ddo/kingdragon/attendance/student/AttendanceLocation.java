@@ -1,10 +1,18 @@
-package jp.ddo.kingdragon.attendance;
+package jp.ddo.kingdragon.attendance.student;
+
+import java.io.Serializable;
 
 /**
  * 出席データの位置情報を管理するクラス
  * @author 杉本祐介
  */
-public class AttendanceLocation {
+public class AttendanceLocation implements Serializable {
+    // 定数の宣言
+    /**
+     * シリアルバージョンUID
+     */
+    private static final long serialVersionUID = -5939174616940873761L;
+
     // 変数の宣言
     /**
      * 緯度

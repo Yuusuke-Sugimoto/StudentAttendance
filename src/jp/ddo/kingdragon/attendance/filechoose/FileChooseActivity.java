@@ -117,7 +117,7 @@ public class FileChooseActivity extends Activity {
         Intent mIntent = getIntent();
         String initDirPath = mIntent.getStringExtra("initDirPath");
         if (initDirPath == null) {
-            initDirPath = "/sdcard";
+            initDirPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         }
         currentDir = new File(initDirPath);
 

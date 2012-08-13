@@ -24,8 +24,13 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 import jp.ddo.kingdragon.attendance.filechoose.FileChooseActivity;
+import jp.ddo.kingdragon.attendance.student.Student;
+import jp.ddo.kingdragon.attendance.student.StudentListAdapter;
+import jp.ddo.kingdragon.attendance.student.StudentSheet;
 import jp.ddo.kingdragon.attendance.util.Util;
 
 /**
@@ -130,11 +135,13 @@ public class StudentListMakerActivity extends Activity {
     private String[][] techs;
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.student_list_maker);
 
         isSaved = true;
+
         inputBuffer = new StringBuilder();
         currentStudent = new Student();
         mStudentSheet = new StudentSheet();
@@ -148,7 +155,24 @@ public class StudentListMakerActivity extends Activity {
          *      http://developer.android.com/resources/samples/ApiDemos/src/com/example/android/apis/view/List14.html
          */
         studentListView = (ListView)findViewById(R.id.student_list);
-        mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
+        // 回転前のデータがあれば復元する
+        LinkedHashMap<String, Student> studentData = null;
+        ArrayList<String> readedNfcIds = null;
+        ArrayList<Student> studentDisplayData = null;
+        if (savedInstanceState != null) {
+            studentData = (LinkedHashMap<String, Student>)savedInstanceState.getSerializable("StudentData");
+            readedNfcIds = (ArrayList<String>)savedInstanceState.getSerializable("ReadedNfcIds");
+            studentDisplayData = (ArrayList<Student>)savedInstanceState.getSerializable("StudentDisplayData");
+        }
+        if (studentData != null && readedNfcIds != null && studentDisplayData != null) {
+            mStudentSheet.setStudentData(studentData);
+            mStudentSheet.setReadedNfcIds(readedNfcIds);
+            mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, studentDisplayData);
+            currentStudent = (Student)savedInstanceState.getSerializable("CurrentStudent");
+        }
+        else {
+            mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
+        }
         studentListView.setAdapter(mStudentListAdapter);
         studentListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -217,7 +241,7 @@ public class StudentListMakerActivity extends Activity {
                 String filePath = data.getStringExtra("filePath");
                 try {
                     mStudentSheet = new StudentSheet(new File(filePath), "Shift_JIS");
-                    mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mStudentSheet.getStudentList());
+                    mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mStudentSheet.getStudentDisplayData());
                     studentListView.setAdapter(mStudentListAdapter);
                     isSaved = false;
                     Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
@@ -611,6 +635,14 @@ public class StudentListMakerActivity extends Activity {
             // NFCタグの読み取りで発生したインテントである場合
             onNfcTagReaded(intent);
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putSerializable("StudentData", mStudentSheet.getStudentData());
+        outState.putSerializable("ReadedNfcIds", mStudentSheet.getReadedNfcIds());
+        outState.putSerializable("StudentDisplayData", mStudentSheet.getStudentDisplayData());
+        outState.putSerializable("CurrentStudent", currentStudent);
     }
 
     /**

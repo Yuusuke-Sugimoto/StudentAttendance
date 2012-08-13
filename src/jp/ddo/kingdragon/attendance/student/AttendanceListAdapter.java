@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon.attendance;
+package jp.ddo.kingdragon.attendance.student;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -11,6 +11,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import jp.ddo.kingdragon.attendance.R;
 
 /**
  * 出席データの一覧を表示するアダプタクラス
@@ -79,6 +81,17 @@ public class AttendanceListAdapter extends ArrayAdapter<Attendance> {
         }
 
         return convertView;
+    }
+
+    /**
+     * 出席データのリストをセットする
+     * @param attendanceList 出席データのリスト
+     */
+    public void setList(List<Attendance> attendanceList) {
+        clear();
+        for (Attendance mAttendance : attendanceList) {
+            add(mAttendance);
+        }
     }
 
     /**

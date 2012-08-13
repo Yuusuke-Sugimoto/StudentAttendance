@@ -22,6 +22,10 @@ public class PreferenceUtil {
     private Context mContext;
 
     // コンストラクタ
+    /**
+     * インスタンスを生成する
+     * @param mContext SharedPreferences取得用のコンテキスト 非null
+     */
     public PreferenceUtil(Context inContext) {
         if (inContext != null) {
             mContext = inContext;
@@ -129,6 +133,14 @@ public class PreferenceUtil {
      */
     public String getAttendanceName() {
         return getString("setting_attendance_name", "%S_%y%M%d%h%m%s");
+    }
+
+    /**
+     * 災害モードが有効かどうかを取得する
+     * @return 有効ならばtrue 無効または未設定ならばfalse
+     */
+    public boolean isDisasterModeEnabled() {
+        return getBoolean("setting_disaster_mode", false);
     }
 
     /**

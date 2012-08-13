@@ -3,9 +3,12 @@ package jp.ddo.kingdragon.attendance;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -105,6 +108,16 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
                 return retBool;
             }
         });
+
+        WifiManager mWifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+        WifiInfo mWifiInfo = mWifiManager.getConnectionInfo();
+        int ipAddress = mWifiInfo.getIpAddress();
+        String strIpAddress = (ipAddress & 0xff) + "."
+                              + ((ipAddress >> 8)  & 0xff) + "."
+                              + ((ipAddress >> 16) & 0xff) + "."
+                              + ((ipAddress >> 24) & 0xff);
+        Preference ipAddressPreference = (Preference)findPreference("setting_ip_address");
+        ipAddressPreference.setSummary(strIpAddress);
 
         Preference apacheLicensePreference = (Preference)findPreference("setting_license_apache");
         apacheLicensePreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {

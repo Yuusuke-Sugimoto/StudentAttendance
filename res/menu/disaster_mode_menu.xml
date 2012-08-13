@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menu_make_list"
+          android:title="@string/menu_make_list"
+          android:icon="@android:drawable/ic_menu_add"
+          android:numericShortcut="1" />
+    <item android:id="@+id/menu_setting"
+          android:title="@string/menu_setting"
+          android:icon="@android:drawable/ic_menu_preferences"
+          android:numericShortcut="2" />
+</menu>

@@ -46,6 +46,15 @@
                             android:inputType="text"
                             android:dialogMessage="@string/setting_change_attendance_name_message" />
     </PreferenceCategory>
+    <PreferenceCategory android:title="@string/setting_disaster_title">
+        <CheckBoxPreference android:title="@string/setting_disaster_mode_title"
+                            android:key="setting_disaster_mode"
+                            android:defaultValue="false"
+                            android:summary="@string/setting_disaster_mode_summary" />
+        <Preference android:title="@string/setting_ip_address_title"
+                    android:key="setting_ip_address"
+                    android:dependency="setting_disaster_mode" />
+    </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting_other_title">
         <PreferenceScreen android:title="@string/setting_license_title"
                           android:summary="@string/setting_license_summary">

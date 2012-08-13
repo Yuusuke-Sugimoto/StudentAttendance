@@ -1,21 +1,40 @@
-package jp.ddo.kingdragon.attendance;
+package jp.ddo.kingdragon.attendance.student;
 
+import android.content.res.Resources;
+
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import android.content.res.Resources;
+import jp.ddo.kingdragon.attendance.R;
 
 /**
  * 学生データと出席データをまとめるクラス
  * @author 杉本祐介
  */
-public class Attendance {
+public class Attendance implements Serializable {
     // 定数の宣言
-    private static final int ATTENDANCE  = 0;
-    private static final int LATENESS    = 1;
-    private static final int LEAVE_EARLY = 2;
-    private static final int ABSENCE     = 3;
+    /**
+     * シリアルバージョンUID
+     */
+    private static final long serialVersionUID = -139773677012287047L;
+    /**
+     * 出席
+     */
+    public static final int ATTENDANCE  = 0;
+    /**
+     * 遅刻
+     */
+    public static final int LATENESS    = 1;
+    /**
+     * 早退
+     */
+    public static final int LEAVE_EARLY = 2;
+    /**
+     * 欠席
+     */
+    public static final int ABSENCE     = 3;
 
     // 変数の宣言
     /**
@@ -34,10 +53,19 @@ public class Attendance {
      * 座標
      */
     private AttendanceLocation mAttendanceLocation;
+
     /**
-     * strings.xmlから文字列を取得するために使用
+     * "出席"の文字列表現
      */
-    private Resources mResources;
+    private String attendanceString;
+    /**
+     * "遅刻"の文字列表現
+     */
+    private String latenessString;
+    /**
+     * "早退"の文字列表現
+     */
+    private String leaveEarlyString;
 
     // コンストラクタ
     /**
@@ -49,7 +77,10 @@ public class Attendance {
         mStudent = inStudent;
         status = Attendance.ABSENCE;
         timeStamp = -1;
-        mResources = inResources;
+
+        attendanceString = inResources.getString(R.string.attendance);
+        latenessString   = inResources.getString(R.string.lateness);
+        leaveEarlyString = inResources.getString(R.string.leave_early);
     }
 
     // アクセッサ
@@ -133,15 +164,15 @@ public class Attendance {
 
         switch (status) {
         case Attendance.ATTENDANCE:
-            retStr = mResources.getString(R.string.attendance);
+            retStr = attendanceString;
 
             break;
         case Attendance.LATENESS:
-            retStr = mResources.getString(R.string.lateness);
+            retStr = latenessString;
 
             break;
         case Attendance.LEAVE_EARLY:
-            retStr = mResources.getString(R.string.leave_early);
+            retStr = leaveEarlyString;
 
             break;
         }

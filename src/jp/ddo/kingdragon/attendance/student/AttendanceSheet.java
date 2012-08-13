@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon.attendance;
+package jp.ddo.kingdragon.attendance.student;
 
 import android.content.res.Resources;
 
@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -22,7 +23,13 @@ import java.util.LinkedHashSet;
  * 出席リストを管理するクラス
  * @author 杉本祐介
  */
-public class AttendanceSheet {
+public class AttendanceSheet implements Serializable {
+    // 定数の宣言
+    /**
+     * シリアルバージョンUID
+     */
+    private static final long serialVersionUID = 3500974580905601302L;
+
     // 変数の宣言
     /**
      * 科目
@@ -41,6 +48,14 @@ public class AttendanceSheet {
 
     // コンストラクタ
     /**
+     * 空のシートを生成する
+     */
+    public AttendanceSheet() {
+        subject = "";
+        time = "";
+        attendances = new LinkedHashMap<String, Attendance>();
+    }
+    /**
      * CSVファイルからシートを生成する
      * @param csvFile CSVファイルのインスタンス
      * @param encode CSVファイルの文字コード
@@ -50,9 +65,7 @@ public class AttendanceSheet {
      * @throws IOException
      */
     public AttendanceSheet(File csvFile, String encode, Resources inResources) throws UnsupportedEncodingException, FileNotFoundException, IOException {
-        subject = "";
-        time = "";
-        attendances = new LinkedHashMap<String, Attendance>();
+        this();
 
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
         CSVParser parser = new CSVParser();
@@ -156,10 +169,24 @@ public class AttendanceSheet {
         return time;
     }
     /**
+     * 出席データのリストをセットする
+     * @param attendanceData 出席データのリスト
+     */
+    public void setAttendanceData(LinkedHashMap<String, Attendance> attendanceData) {
+        attendances = attendanceData;
+    }
+    /**
      * 出席データのリストを取得する
      * @return 出席データのリスト
      */
-    public ArrayList<Attendance> getAttendanceList() {
+    public LinkedHashMap<String, Attendance> getAttendanceData() {
+        return attendances;
+    }
+    /**
+     * 出席データの表示用のリストを取得する
+     * @return 出席データの表示用のリスト
+     */
+    public ArrayList<Attendance> getAttendanceDisplayData() {
         LinkedHashSet<Attendance> hashSet = new LinkedHashSet<Attendance>(attendances.values());
 
         return new ArrayList<Attendance>(hashSet);

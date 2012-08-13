@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon.attendance;
+package jp.ddo.kingdragon.attendance.student;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -11,6 +11,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import jp.ddo.kingdragon.attendance.R;
 
 /**
  * 学生の一覧を表示するアダプタクラス
@@ -85,6 +87,17 @@ public class StudentListAdapter extends ArrayAdapter<Student> {
     public void add(Student inStudent) {
         if (getPosition(inStudent) == -1) {
             super.add(inStudent);
+        }
+    }
+
+    /**
+     * 学生データのリストをセットする
+     * @param studentList 学生データのリスト
+     */
+    public void setList(List<Student> studentList) {
+        clear();
+        for (Student mStudent : studentList) {
+            add(mStudent);
         }
     }
 

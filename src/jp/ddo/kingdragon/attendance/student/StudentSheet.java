@@ -1,4 +1,4 @@
-package jp.ddo.kingdragon.attendance;
+package jp.ddo.kingdragon.attendance.student;
 
 import au.com.bytecode.opencsv.CSVParser;
 import au.com.bytecode.opencsv.CSVWriter;
@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -19,7 +20,13 @@ import java.util.LinkedHashMap;
  * 学生リストを管理するクラス
  * @author 杉本祐介
  */
-public class StudentSheet {
+public class StudentSheet implements Serializable {
+    // 定数の宣言
+    /**
+     * シリアルバージョンUID
+     */
+    private static final long serialVersionUID = -6227987707663359448L;
+
     // 変数の宣言
     /**
      * 科目
@@ -158,10 +165,38 @@ public class StudentSheet {
         return time;
     }
     /**
+     * 学生データのリストをセットする
+     * @param studentData 学生データのリスト
+     */
+    public void setStudentData(LinkedHashMap<String, Student> studentData) {
+        students = studentData;
+    }
+    /**
      * 学生データのリストを取得する
      * @return 学生データのリスト
      */
-    public ArrayList<Student> getStudentList() {
+    public LinkedHashMap<String, Student> getStudentData() {
+        return students;
+    }
+    /**
+     * 読み取り済みのNFCタグのリストをセットする
+     * @param readedNfcIds 読み取り済みのNFCタグのリスト
+     */
+    public void setReadedNfcIds(ArrayList<String> readedNfcIds) {
+        this.readedNfcIds = readedNfcIds;
+    }
+    /**
+     * 読み取り済みのNFCタグのリストを取得する
+     * @return 読み取り済みのNFCタグのリスト
+     */
+    public ArrayList<String> getReadedNfcIds() {
+        return readedNfcIds;
+    }
+    /**
+     * 学生データの表示用のリストを取得する
+     * @return 学生データの表示用のリスト
+     */
+    public ArrayList<Student> getStudentDisplayData() {
         return new ArrayList<Student>(students.values());
     }
 

@@ -30,9 +30,15 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 
 import jp.ddo.kingdragon.attendance.filechoose.FileChooseActivity;
+import jp.ddo.kingdragon.attendance.student.Attendance;
+import jp.ddo.kingdragon.attendance.student.AttendanceListAdapter;
+import jp.ddo.kingdragon.attendance.student.AttendanceLocation;
+import jp.ddo.kingdragon.attendance.student.AttendanceSheet;
 import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
 import jp.ddo.kingdragon.attendance.util.Util;
 
@@ -138,6 +144,7 @@ public class StudentAttendanceActivity extends Activity {
     private String[][] techs;
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTitle(R.string.attendance_title);
@@ -147,8 +154,17 @@ public class StudentAttendanceActivity extends Activity {
         isSaved = true;
         isFetchingLocation = false;
 
+        mAttendanceSheet = new AttendanceSheet();
         mAttendanceLocation = null;
         mPreferenceUtil = new PreferenceUtil(StudentAttendanceActivity.this);
+
+        // アクティビティ再生成前のデータがあれば復元する
+        LinkedHashMap<String, Attendance> attendanceData = null;
+        ArrayList<Attendance> attendanceDisplayData = null;
+        if (savedInstanceState != null) {
+            attendanceData = (LinkedHashMap<String, Attendance>)savedInstanceState.getSerializable("AttendanceData");
+            attendanceDisplayData = (ArrayList<Attendance>)savedInstanceState.getSerializable("AttendanceDisplayData");
+        }
 
         /**
          * ListViewのレイアウトを変更する
@@ -160,7 +176,14 @@ public class StudentAttendanceActivity extends Activity {
          */
         attendanceListView = (ListView)findViewById(R.id.student_list);
         attendanceListView.setSelector(R.drawable.list_selector_background);
-        mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0);
+        if (attendanceData != null && attendanceDisplayData != null) {
+            mAttendanceSheet.setAttendanceData(attendanceData);
+            mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, attendanceDisplayData);
+            currentAttendance = (Attendance)savedInstanceState.getSerializable("CurrentAttendance");
+        }
+        else {
+            mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0);
+        }
         attendanceListView.setAdapter(mAttendanceListAdapter);
         attendanceListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -241,28 +264,47 @@ public class StudentAttendanceActivity extends Activity {
     public void onResume() {
         super.onResume();
 
-        if (mNfcAdapter != null) {
-            mNfcAdapter.enableForegroundDispatch(StudentAttendanceActivity.this, mPendingIntent, filters, techs);
-        }
+        if (!mPreferenceUtil.isDisasterModeEnabled()) {
+            if (mNfcAdapter != null) {
+                mNfcAdapter.enableForegroundDispatch(StudentAttendanceActivity.this, mPendingIntent, filters, techs);
+            }
 
-        if (mPreferenceUtil.isLocationEnabled()) {
-            /**
-             * GPSが選択されていてGPSが無効になっている場合、設定画面を表示するか確認する
-             * 参考:[Android] GSPが有効か確認し、必要であればGPS設定画面を表示する。 | 株式会社ノベラック スタッフBlog
-             *      http://www.noveluck.co.jp/blog/archives/159
-             */
-            if (mPreferenceUtil.getLocationProvider() == PreferenceUtil.LOCATION_PROVIDER_NETWORK
-                || mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                startUpdateLocation();
+            if (mPreferenceUtil.isLocationEnabled()) {
+                /**
+                 * GPSが選択されていてGPSが無効になっている場合、設定画面を表示するか確認する
+                 * 参考:[Android] GSPが有効か確認し、必要であればGPS設定画面を表示する。 | 株式会社ノベラック スタッフBlog
+                 *      http://www.noveluck.co.jp/blog/archives/159
+                 */
+                if (mPreferenceUtil.getLocationProvider() == PreferenceUtil.LOCATION_PROVIDER_NETWORK
+                    || mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    startUpdateLocation();
+                }
+                else {
+                    stopUpdateLocation();
+                    showDialog(StudentAttendanceActivity.DIALOG_ASK_OPEN_GPS_PREFERENCE);
+                }
             }
             else {
+                mAttendanceLocation = null;
                 stopUpdateLocation();
-                showDialog(StudentAttendanceActivity.DIALOG_ASK_OPEN_GPS_PREFERENCE);
+            }
+
+            if (mAttendanceSheet.size() != 0) {
+                if (!readStartButton.isEnabled()) {
+                    readStartButton.setEnabled(true);
+                    readStartButton.setText(R.string.attendance_read_start_label);
+                }
+            }
+            else {
+                readStartButton.setEnabled(false);
+                readStartButton.setText(R.string.attendance_read_start_label);
             }
         }
         else {
-            mAttendanceLocation = null;
-            stopUpdateLocation();
+            Intent mIntent = new Intent(StudentAttendanceActivity.this, DisasterModeActivity.class);
+            startActivity(mIntent);
+
+            finish();
         }
     }
 
@@ -279,7 +321,7 @@ public class StudentAttendanceActivity extends Activity {
     public void onStop() {
         super.onStop();
 
-        // NFCタグ読み取り時にonPauseが実行されるためonStopに移動
+        // NFCタグ読み取り時にonPause()が実行されるためonStop()に移動
         stopUpdateLocation();
     }
 
@@ -292,10 +334,8 @@ public class StudentAttendanceActivity extends Activity {
                 String filePath = data.getStringExtra("filePath");
                 try {
                     mAttendanceSheet = new AttendanceSheet(new File(filePath), "Shift_JIS", getResources());
-                    mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, mAttendanceSheet.getAttendanceList());
+                    mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, mAttendanceSheet.getAttendanceDisplayData());
                     attendanceListView.setAdapter(mAttendanceListAdapter);
-                    readStartButton.setEnabled(true);
-                    readStartButton.setText(R.string.attendance_read_start_label);
                     isReading = false;
                     isSaved = false;
                     Toast.makeText(StudentAttendanceActivity.this, fileName + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
@@ -612,6 +652,15 @@ public class StudentAttendanceActivity extends Activity {
         if (action.equals(NfcAdapter.ACTION_TAG_DISCOVERED)) {
             // NFCタグの読み取りで発生したインテントである場合
             onNfcTagReaded(intent);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (mAttendanceSheet != null) {
+            outState.putSerializable("AttendanceData", mAttendanceSheet.getAttendanceData());
+            outState.putSerializable("AttendanceDisplayData", mAttendanceSheet.getAttendanceDisplayData());
+            outState.putSerializable("CurrentAttendance", currentAttendance);
         }
     }
 

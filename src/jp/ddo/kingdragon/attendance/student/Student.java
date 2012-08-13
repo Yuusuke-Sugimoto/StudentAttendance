@@ -1,12 +1,19 @@
-package jp.ddo.kingdragon.attendance;
+package jp.ddo.kingdragon.attendance.student;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * 学生1人分のデータを管理するクラス
  * @author 杉本祐介
  */
-public class Student {
+public class Student implements Serializable {
+    // 定数の宣言
+    /**
+     * シリアルバージョンUID
+     */
+    private static final long serialVersionUID = 3083355134434853138L;
+
     // 変数の宣言
     /**
      * 学籍番号
