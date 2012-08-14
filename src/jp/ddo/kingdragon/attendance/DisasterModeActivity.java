@@ -30,12 +30,17 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
+
+import javax.servlet.Servlet;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+
+import dalvik.system.DexClassLoader;
 
 import jp.ddo.kingdragon.attendance.student.Attendance;
 import jp.ddo.kingdragon.attendance.student.AttendanceListAdapter;
@@ -72,9 +77,13 @@ public class DisasterModeActivity extends Activity {
     private boolean isFetchingLocation;
 
     /**
-     * 保存用フォルダ
+     * ベースフォルダ
      */
     private File baseDir;
+    /**
+     * リスト格納用フォルダ
+     */
+    private File listDir;
     /**
      * 現在扱っている出席データ
      */
@@ -225,10 +234,17 @@ public class DisasterModeActivity extends Activity {
             }
         });
 
-        // 保存用フォルダの作成
-        baseDir = new File(Environment.getExternalStorageDirectory(), "DisasterMode");
-        if (!baseDir.exists() && !baseDir.mkdirs()) {
-            Toast.makeText(DisasterModeActivity.this, R.string.error_make_directory_failed, Toast.LENGTH_SHORT).show();
+        // 各フォルダの作成
+        baseDir = new File(Environment.getExternalStorageDirectory(), "StudentAttendance");
+        listDir = new File(baseDir, "StudentList");
+        File servletDir = new File(baseDir, "Servlet");
+        if (!listDir.exists() && !listDir.mkdirs()) {
+            Toast.makeText(DisasterModeActivity.this, R.string.error_make_list_directory_failed, Toast.LENGTH_SHORT).show();
+
+            finish();
+        }
+        if (!servletDir.exists() && !servletDir.mkdirs()) {
+            Toast.makeText(DisasterModeActivity.this, R.string.error_make_servlet_directory_failed, Toast.LENGTH_SHORT).show();
 
             finish();
         }
@@ -292,7 +308,40 @@ public class DisasterModeActivity extends Activity {
         mHandlerList.addHandler(mResourceHandler);
 
         ServletContextHandler mServletContextHandler = new ServletContextHandler();
-        mServletContextHandler.addServlet(TestServlet.class, "/TestServlet");
+        File[] classes = servletDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String filename) {
+                boolean isClass = false;
+
+                if (filename.endsWith(".dex")) {
+                    isClass = true;
+                }
+
+                return isClass;
+            }
+        });
+        // 最適化されたdexファイルの保存先にプライベートフォルダを指定する
+        File optimizedDir = getDir("Servlet", Context.MODE_PRIVATE);
+        for (File mFile : optimizedDir.listFiles()) {
+            mFile.delete();
+        }
+        DexClassLoader loader;
+        for (File classFile : classes) {
+            loader = new DexClassLoader(classFile.getAbsolutePath(), optimizedDir.getAbsolutePath(),
+                                        null, getClassLoader());
+            try {
+                String classFileName = classFile.getName();
+                String className = classFileName.substring(0, classFileName.length() - 4);
+                Class<?> loadedClass = loader.loadClass(getPackageName() + "." + className);
+                mServletContextHandler.addServlet(loadedClass.asSubclass(Servlet.class), "/" + className);
+            }
+            catch (ClassNotFoundException e) {
+                Log.e("onCreate", e.getMessage(), e);
+            }
+            catch (ClassCastException e) {
+                Log.e("onCreate", e.getMessage(), e);
+            }
+        }
         mHandlerList.addHandler(mServletContextHandler);
 
         mServer.setHandler(mHandlerList);

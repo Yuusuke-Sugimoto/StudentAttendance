@@ -76,9 +76,17 @@ public class StudentAttendanceActivity extends Activity {
     private boolean isFetchingLocation;
 
     /**
-     * 保存用フォルダ
+     * ベースフォルダ
      */
     private File baseDir;
+    /**
+     * リスト格納用フォルダ
+     */
+    private File listDir;
+    /**
+     * 保存用フォルダ
+     */
+    private File saveDir;
     /**
      * 保存先のファイル
      */
@@ -232,10 +240,17 @@ public class StudentAttendanceActivity extends Activity {
             }
         });
 
-        // 保存用フォルダの作成
+        // 各フォルダの作成
         baseDir = new File(Environment.getExternalStorageDirectory(), "StudentAttendance");
-        if (!baseDir.exists() && !baseDir.mkdirs()) {
-            Toast.makeText(StudentAttendanceActivity.this, R.string.error_make_directory_failed, Toast.LENGTH_SHORT).show();
+        listDir = new File(baseDir, "StudentList");
+        saveDir = new File(mPreferenceUtil.getAttendanceDir());
+        if (!listDir.exists() && !listDir.mkdirs()) {
+            Toast.makeText(StudentAttendanceActivity.this, R.string.error_make_list_directory_failed, Toast.LENGTH_SHORT).show();
+
+            finish();
+        }
+        if (!saveDir.exists() && !saveDir.mkdirs()) {
+            Toast.makeText(StudentAttendanceActivity.this, R.string.error_make_save_directory_failed, Toast.LENGTH_SHORT).show();
 
             finish();
         }
@@ -396,7 +411,7 @@ public class StudentAttendanceActivity extends Activity {
             break;
         case R.id.menu_open:
             mIntent = new Intent(StudentAttendanceActivity.this, FileChooseActivity.class);
-            mIntent.putExtra("initDirPath", baseDir.getAbsolutePath());
+            mIntent.putExtra("initDirPath", listDir.getAbsolutePath());
             mIntent.putExtra("filter", ".*");
             mIntent.putExtra("extension", "csv");
             startActivityForResult(mIntent, StudentAttendanceActivity.REQUEST_CHOOSE_OPEN_FILE);
@@ -445,7 +460,6 @@ public class StudentAttendanceActivity extends Activity {
                 }
 
                 String fileName = rawFileName.toString();
-                File saveDir = new File(mPreferenceUtil.getAttendanceDir());
                 saveFile = new File(saveDir, fileName);
                 if (saveFile.exists()) {
                     showDialog(StudentAttendanceActivity.DIALOG_ASK_OVERWRITE);

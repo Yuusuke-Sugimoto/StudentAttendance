@@ -62,9 +62,13 @@ public class StudentListMakerActivity extends Activity {
     private boolean isSaved;
 
     /**
-     * 保存用ディレクトリ
+     * ベースフォルダ
      */
     private File baseDir;
+    /**
+     * リスト格納用フォルダ
+     */
+    private File listDir;
     /**
      * 保存先のファイル
      */
@@ -193,10 +197,11 @@ public class StudentListMakerActivity extends Activity {
             studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
         }
 
-        // 保存用ディレクトリの作成
+        // 各フォルダの作成
         baseDir = new File(Environment.getExternalStorageDirectory(), "StudentAttendance");
-        if (!baseDir.exists() && !baseDir.mkdirs()) {
-            Toast.makeText(StudentListMakerActivity.this, R.string.error_make_directory_failed, Toast.LENGTH_SHORT).show();
+        listDir = new File(baseDir, "StudentList");
+        if (!listDir.exists() && !listDir.mkdirs()) {
+            Toast.makeText(StudentListMakerActivity.this, R.string.error_make_list_directory_failed, Toast.LENGTH_SHORT).show();
 
             finish();
         }
@@ -300,7 +305,7 @@ public class StudentListMakerActivity extends Activity {
             break;
         case R.id.menu_open:
             mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
-            mIntent.putExtra("initDirPath", baseDir.getAbsolutePath());
+            mIntent.putExtra("initDirPath", listDir.getAbsolutePath());
             mIntent.putExtra("filter", ".*");
             mIntent.putExtra("extension", "csv");
             startActivityForResult(mIntent, StudentListMakerActivity.REQUEST_CHOOSE_OPEN_FILE);
@@ -308,7 +313,7 @@ public class StudentListMakerActivity extends Activity {
             break;
         case R.id.menu_save:
             mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
-            mIntent.putExtra("initDirPath", baseDir.getAbsolutePath());
+            mIntent.putExtra("initDirPath", listDir.getAbsolutePath());
             mIntent.putExtra("filter", ".*");
             mIntent.putExtra("extension", "csv");
             startActivityForResult(mIntent, StudentListMakerActivity.REQUEST_CHOOSE_SAVE_FILE);

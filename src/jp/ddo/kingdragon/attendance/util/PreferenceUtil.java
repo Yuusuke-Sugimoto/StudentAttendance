@@ -114,10 +114,10 @@ public class PreferenceUtil {
     }
     /**
      * 出席データの保存先を取得する
-     * @return 出席データの保存先 未設定ならば外部SDカードのパス/StudentAttendance
+     * @return 出席データの保存先 未設定ならば外部SDカードのパス/StudentAttendance/AttendanceData
      */
     public String getAttendanceDir() {
-        return getString("setting_attendance_dir", Environment.getExternalStorageDirectory().getAbsolutePath() + "/StudentAttendance");
+        return getString("setting_attendance_dir", Environment.getExternalStorageDirectory().getAbsolutePath() + "/StudentAttendance/AttendanceData");
     }
 
     /**
