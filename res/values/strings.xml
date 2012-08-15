@@ -67,6 +67,7 @@
     <string name="menu_hide_invisible_file">隠しファイルを隠す</string>
     <string name="menu_create_file">新規ファイルを作成する</string>
     <string name="menu_create_directory">新規フォルダを作成する</string>
+    <string name="menu_refresh">リストを再読み込み</string>
 
     <string name="dialog_ask">確認</string>
     <string name="dialog_ask_exit_without_saving">保存せずに終了してもよろしいですか?</string>
@@ -117,6 +118,7 @@
     <string name="error">エラー</string>
     <string name="error_make_list_directory_failed">リストフォルダの作成に失敗しました</string>
     <string name="error_make_save_directory_failed">保存フォルダの作成に失敗しました</string>
+    <string name="error_make_web_directory_failed">Webフォルダの作成に失敗しました</string>
     <string name="error_make_servlet_directory_failed">サーブレットフォルダの作成に失敗しました</string>
     <string name="error_student_already_readed">既に出席確認済みの学生です</string>
     <string name="error_nfc_id_already_registered">既に他の学生に登録されているNFCタグです</string>

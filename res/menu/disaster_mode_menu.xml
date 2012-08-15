@@ -8,4 +8,8 @@
           android:title="@string/menu_setting"
           android:icon="@android:drawable/ic_menu_preferences"
           android:numericShortcut="2" />
+    <item android:id="@+id/menu_refresh"
+          android:title="@string/menu_refresh"
+          android:icon="@drawable/ic_menu_refresh"
+          android:numericShortcut="3" />
 </menu>

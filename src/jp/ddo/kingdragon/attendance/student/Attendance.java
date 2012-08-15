@@ -91,6 +91,14 @@ public class Attendance implements Serializable {
     public String getStudentNo() {
         return mStudent.getStudentNo();
     }
+
+    /**
+     * 連番を変更する
+     * @param studentNum 連番
+     */
+    public void setStudentNum(int studentNum) {
+        mStudent.setStudentNum(studentNum);
+    }
     /**
      * 連番を取得する
      * @return 連番
@@ -98,6 +106,7 @@ public class Attendance implements Serializable {
     public int getStudentNum() {
         return mStudent.getStudentNum();
     }
+
     /**
      * 所属を取得する
      * @return 所属
@@ -105,6 +114,7 @@ public class Attendance implements Serializable {
     public String getClassName() {
         return mStudent.getClassName();
     }
+
     /**
      * 氏名を取得する
      * @return 氏名
@@ -112,6 +122,7 @@ public class Attendance implements Serializable {
     public String getStudentName() {
         return mStudent.getStudentName();
     }
+
     /**
      * カナを取得する
      * @return カナ
@@ -119,6 +130,7 @@ public class Attendance implements Serializable {
     public String getStudentRuby() {
         return mStudent.getStudentRuby();
     }
+
     /**
      * NFCタグのIDの配列を取得する
      * @return NFCタグの配列
@@ -126,6 +138,7 @@ public class Attendance implements Serializable {
     public String[] getNfcIds() {
         return mStudent.getNfcIds();
     }
+
     /**
      * 出席種別を変更する
      * @param status 出席種別
@@ -178,6 +191,58 @@ public class Attendance implements Serializable {
         }
 
         return retStr;
+    }
+
+    /**
+     * 緯度を取得する
+     * @return 緯度
+     */
+    public double getLatitude() {
+        double latitude = -1.0;
+        if (mAttendanceLocation != null) {
+            latitude = mAttendanceLocation.getLatitude();
+        }
+
+        return latitude;
+    }
+
+    /**
+     * 経度を取得する
+     * @return 経度
+     */
+    public double getLongitude() {
+        double longitude = -1.0;
+        if (mAttendanceLocation != null) {
+            longitude = mAttendanceLocation.getLongitude();
+        }
+
+        return longitude;
+    }
+
+    /**
+     * 高度を取得する
+     * @return 高度
+     */
+    public double getAltitude() {
+        double altitude = -1.0;
+        if (mAttendanceLocation != null) {
+            altitude = mAttendanceLocation.getAltitude();
+        }
+
+        return altitude;
+    }
+
+    /**
+     * 精度を取得する
+     * @return 精度
+     */
+    public float getAccuracy() {
+        float accuracy = -1.0f;
+        if (mAttendanceLocation != null) {
+            accuracy = mAttendanceLocation.getAccuracy();
+        }
+
+        return accuracy;
     }
 
     /**

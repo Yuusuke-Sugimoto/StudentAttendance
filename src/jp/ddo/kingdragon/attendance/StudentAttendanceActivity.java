@@ -687,7 +687,7 @@ public class StudentAttendanceActivity extends Activity {
             rawId.append("0");
         }
         String id = rawId.toString();
-        if (isReading && mAttendanceSheet != null && mAttendanceSheet.hasNfcId(id)) {
+        if (isReading && mAttendanceSheet.hasNfcId(id)) {
             currentAttendance = mAttendanceSheet.get(id);
             if (currentAttendance.getStatus() == Attendance.ABSENCE) {
                 if (!mPreferenceUtil.isLocationEnabled()) {

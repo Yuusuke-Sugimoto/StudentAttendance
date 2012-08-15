@@ -102,6 +102,7 @@ public class Student implements Serializable {
     public String getStudentNo() {
         return studentNo;
     }
+
     /**
      * 連番を変更する
      * @param studentNum 連番
@@ -116,6 +117,7 @@ public class Student implements Serializable {
     public int getStudentNum() {
         return studentNum;
     }
+
     /**
      * 所属を変更する
      * @param className 所属
@@ -130,6 +132,7 @@ public class Student implements Serializable {
     public String getClassName() {
         return className;
     }
+
     /**
      * 氏名を変更する
      * @param studentName 氏名
@@ -144,6 +147,7 @@ public class Student implements Serializable {
     public String getStudentName() {
         return studentName;
     }
+
     /**
      * カナを変更する
      * @param studentRuby カナ
@@ -158,6 +162,7 @@ public class Student implements Serializable {
     public String getStudentRuby() {
         return studentRuby;
     }
+
     /**
      * NFCタグのIDを追加する<br />
      * 既に同じタグが追加されている場合は追加しない。
@@ -169,6 +174,7 @@ public class Student implements Serializable {
             nfcIds.add(id);
         }
     }
+
     /**
      * NFCタグのIDを削除する
      * @param id 削除するID
@@ -176,6 +182,7 @@ public class Student implements Serializable {
     public void removeNfcId(String id) {
         nfcIds.remove(id);
     }
+
     /**
      * NFCタグのIDの配列を取得する
      * @return NFCタグの配列
@@ -183,6 +190,7 @@ public class Student implements Serializable {
     public String[] getNfcIds() {
         return nfcIds.toArray(new String[nfcIds.size()]);
     }
+
     /**
      * NFCタグのIDの数を取得する
      * @return NFCタグの数
@@ -190,12 +198,14 @@ public class Student implements Serializable {
     public int getNumOfNfcId() {
         return nfcIds.size();
     }
+
     /***
      * NFCタグを全て削除する
      */
     public void removeAllNfcIds() {
         nfcIds = new ArrayList<String>();
     }
+
     /**
      * NFCタグが登録されているかどうかを取得する
      * @param id 検索するID

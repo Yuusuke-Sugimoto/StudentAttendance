@@ -89,13 +89,20 @@ public class StudentSheet implements Serializable {
                 String[] nfcIds;
                 if (values.length == 6) {
                     // NFCのタグのIDが1つ
-                    nfcIds = new String[] {values[5]};
+                    if (values[5].length() != 0) {
+                        nfcIds = new String[] {values[5]};
+                    }
+                    else {
+                        nfcIds = new String[0];
+                    }
                 }
                 else if (values.length > 6) {
                     // NFCタグのIDが複数セットされている場合は配列に直す
                     ArrayList<String> tempNfcIds = new ArrayList<String>();
                     for (int i = 5; i < values.length; i++) {
-                        tempNfcIds.add(values[i]);
+                        if (values[i].length() != 0) {
+                            tempNfcIds.add(values[i]);
+                        }
                     }
                     nfcIds = tempNfcIds.toArray(new String[tempNfcIds.size()]);
                 }

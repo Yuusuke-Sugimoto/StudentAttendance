@@ -88,15 +88,22 @@ public class AttendanceSheet implements Serializable {
                 String[] nfcIds;
                 if (values.length == 6) {
                     // NFCのタグのIDが1つ
-                    nfcIds = new String[] {values[5]};
+                    if (values[5].length() != 0) {
+                        nfcIds = new String[] {values[5]};
+                    }
+                    else {
+                        nfcIds = new String[0];
+                    }
                 }
                 else if (values.length > 6) {
                     // NFCタグのIDが複数セットされている場合は配列に直す
-                    ArrayList<String> temp = new ArrayList<String>();
+                    ArrayList<String> tempNfcIds = new ArrayList<String>();
                     for (int i = 5; i < values.length; i++) {
-                        temp.add(values[i]);
+                        if (values[i].length() != 0) {
+                            tempNfcIds.add(values[i]);
+                        }
                     }
-                    nfcIds = temp.toArray(new String[temp.size()]);
+                    nfcIds = tempNfcIds.toArray(new String[tempNfcIds.size()]);
                 }
                 else {
                     // NFCのタグのIDが未登録
@@ -154,6 +161,7 @@ public class AttendanceSheet implements Serializable {
     public String getSubject() {
         return subject;
     }
+
     /**
      * 授業時間をセットする
      * @param time 授業時間
@@ -168,6 +176,16 @@ public class AttendanceSheet implements Serializable {
     public String getTime() {
         return time;
     }
+
+    /**
+     * 出席データをリストに追加する
+     * @param nfcId NFCタグのID
+     * @param mAttendance 出席データ
+     */
+    public void put(String nfcId, Attendance mAttendance) {
+        attendances.put(nfcId, mAttendance);
+    }
+
     /**
      * 出席データの表示用のリストを取得する
      * @return 出席データの表示用のリスト
@@ -200,10 +218,19 @@ public class AttendanceSheet implements Serializable {
     /**
      * 引数で渡されたNFCタグをもつ出席データが存在するかどうかを調べる
      * @param id NFCタグのID
-     * @return 存在したならばtrue、存在しなければfalse
+     * @return 存在したならばtrue 存在しなければfalse
      */
     public boolean hasNfcId(String id) {
         return attendances.containsKey(id);
+    }
+
+    /**
+     * 引数で渡された出席データが存在するかどうかを調べる
+     * @param mAttendance 出席データ
+     * @return 存在したならばtrue 存在しなければfalse
+     */
+    public boolean hasAttendance(Attendance mAttendance) {
+        return attendances.containsValue(mAttendance);
     }
 
     /**

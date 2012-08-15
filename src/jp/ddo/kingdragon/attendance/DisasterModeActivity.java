@@ -31,6 +31,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.servlet.Servlet;
@@ -62,11 +63,20 @@ public class DisasterModeActivity extends Activity {
     private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 3;
     private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 4;
     /**
+     * 使用する文字コード
+     */
+    private static final String CHARACTER_CODE = "Shift_JIS";
+    /**
      * ポート番号
      */
     private static final int PORT_NUMBER = 8080;
 
     // 変数の宣言
+    /**
+     * 現在編集しているシート
+     */
+    private static AttendanceSheet mAttendanceSheet;
+
     /**
      * 読み取り中かどうか
      */
@@ -96,10 +106,6 @@ public class DisasterModeActivity extends Activity {
      * 出席データの一覧を表示するアダプタ
      */
     private AttendanceListAdapter mAttendanceListAdapter;
-    /**
-     * 現在編集しているシート
-     */
-    private AttendanceSheet mAttendanceSheet;
     /**
      * 読み取り開始ボタン
      */
@@ -155,6 +161,12 @@ public class DisasterModeActivity extends Activity {
      * 対応させるタグの一覧
      */
     private String[][] techs;
+
+    // コレクションの宣言
+    /**
+     * リストディレクトリから読み取った全てのリストを格納するリスト
+     */
+    private ArrayList<AttendanceSheet> attendanceSheets;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -237,9 +249,15 @@ public class DisasterModeActivity extends Activity {
         // 各フォルダの作成
         baseDir = new File(Environment.getExternalStorageDirectory(), "StudentAttendance");
         listDir = new File(baseDir, "StudentList");
+        File webDir = new File(baseDir, "WebDoc");
         File servletDir = new File(baseDir, "Servlet");
         if (!listDir.exists() && !listDir.mkdirs()) {
             Toast.makeText(DisasterModeActivity.this, R.string.error_make_list_directory_failed, Toast.LENGTH_SHORT).show();
+
+            finish();
+        }
+        if (!webDir.exists() && !webDir.mkdirs()) {
+            Toast.makeText(DisasterModeActivity.this, R.string.error_make_web_directory_failed, Toast.LENGTH_SHORT).show();
 
             finish();
         }
@@ -304,44 +322,41 @@ public class DisasterModeActivity extends Activity {
         HandlerList mHandlerList = new HandlerList();
 
         ResourceHandler mResourceHandler = new ResourceHandler();
-        mResourceHandler.setResourceBase(baseDir.getAbsolutePath());
+        mResourceHandler.setResourceBase(webDir.getAbsolutePath());
         mHandlerList.addHandler(mResourceHandler);
 
         ServletContextHandler mServletContextHandler = new ServletContextHandler();
-        File[] classes = servletDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String filename) {
-                boolean isClass = false;
-
-                if (filename.endsWith(".dex")) {
-                    isClass = true;
-                }
-
-                return isClass;
-            }
-        });
-        // 最適化されたdexファイルの保存先にプライベートフォルダを指定する
-        File optimizedDir = getDir("Servlet", Context.MODE_PRIVATE);
-        for (File mFile : optimizedDir.listFiles()) {
-            mFile.delete();
-        }
-        DexClassLoader loader;
-        for (File classFile : classes) {
-            loader = new DexClassLoader(classFile.getAbsolutePath(), optimizedDir.getAbsolutePath(),
-                                        null, getClassLoader());
-            try {
-                String classFileName = classFile.getName();
-                String className = classFileName.substring(0, classFileName.length() - 4);
-                Class<?> loadedClass = loader.loadClass(getPackageName() + "." + className);
-                mServletContextHandler.addServlet(loadedClass.asSubclass(Servlet.class), "/" + className);
-            }
-            catch (ClassNotFoundException e) {
-                Log.e("onCreate", e.getMessage(), e);
-            }
-            catch (ClassCastException e) {
-                Log.e("onCreate", e.getMessage(), e);
-            }
-        }
+        mServletContextHandler.addServlet(AttendanceListServlet.class, "/AttendanceListServlet");
+//        File[] dexFiles = servletDir.listFiles(new FilenameFilter() {
+//            @Override
+//            public boolean accept(File dir, String filename) {
+//                boolean isDexFile = false;
+//
+//                if (filename.endsWith(".dex") || filename.endsWith(".jar")) {
+//                    isDexFile = true;
+//                }
+//
+//                return isDexFile;
+//            }
+//        });
+//        // 最適化されたdexファイルの保存先にプライベートフォルダを指定する
+//        File optimizedDir = getDir("Servlet", Context.MODE_PRIVATE);
+//        DexClassLoader loader = new DexClassLoader(servletDir.getAbsolutePath(), optimizedDir.getAbsolutePath(),
+//                                                   null, getClassLoader());
+//        for (File dexFile : dexFiles) {
+//            try {
+//                String dexFileName = dexFile.getName();
+//                String className = dexFileName.substring(0, dexFileName.length() - 4);
+//                Class<?> loadedClass = loader.loadClass("hoge." + className);
+//                mServletContextHandler.addServlet(loadedClass.asSubclass(Servlet.class), "/" + className);
+//            }
+//            catch (ClassNotFoundException e) {
+//                Log.e("onCreate", e.getMessage(), e);
+//            }
+//            catch (ClassCastException e) {
+//                Log.e("onCreate", e.getMessage(), e);
+//            }
+//        }
         mHandlerList.addHandler(mServletContextHandler);
 
         mServer.setHandler(mHandlerList);
@@ -357,6 +372,8 @@ public class DisasterModeActivity extends Activity {
                 }
             }
         }).start();
+
+        refreshAttendanceSheets();
     }
 
     @Override
@@ -371,7 +388,7 @@ public class DisasterModeActivity extends Activity {
             if (mPreferenceUtil.isLocationEnabled()) {
                 /**
                  * GPSが選択されていてGPSが無効になっている場合、設定画面を表示するか確認する
-                 * 参考:[Android] GSPが有効か確認し、必要であればGPS設定画面を表示する。 | 株式会社ノベラック スタッフBlog
+                 * 参考:[Android] GPSが有効か確認し、必要であればGPS設定画面を表示する。 | 株式会社ノベラック スタッフBlog
                  *      http://www.noveluck.co.jp/blog/archives/159
                  */
                 if (mPreferenceUtil.getLocationProvider() == PreferenceUtil.LOCATION_PROVIDER_NETWORK
@@ -388,7 +405,7 @@ public class DisasterModeActivity extends Activity {
                 stopUpdateLocation();
             }
 
-            if (mAttendanceSheet.size() != 0) {
+            if (attendanceSheets.size() != 0) {
                 readStartButton.setEnabled(true);
                 if (!isReading) {
                     readStartButton.setText(R.string.attendance_read_start_label);
@@ -474,6 +491,10 @@ public class DisasterModeActivity extends Activity {
         case R.id.menu_setting:
             mIntent = new Intent(DisasterModeActivity.this, SettingActivity.class);
             startActivity(mIntent);
+
+            break;
+        case R.id.menu_refresh:
+            refreshAttendanceSheets();
 
             break;
         }
@@ -630,6 +651,41 @@ public class DisasterModeActivity extends Activity {
     }
 
     /**
+     * 出席データを取得する
+     * @return 出席データ
+     */
+    public static AttendanceSheet getAttendanceSheet() {
+        return mAttendanceSheet;
+    }
+
+    /**
+     * CSVファイルを読み込み直す
+     */
+    public void refreshAttendanceSheets() {
+        attendanceSheets = new ArrayList<AttendanceSheet>();
+        File[] csvFiles = listDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String filename) {
+                boolean isCsvFile = false;
+
+                if (filename.endsWith(".csv")) {
+                    isCsvFile = true;
+                }
+
+                return isCsvFile;
+            }
+        });
+        for (File csvFile : csvFiles) {
+            try {
+                attendanceSheets.add(new AttendanceSheet(csvFile, CHARACTER_CODE, getResources()));
+            }
+            catch (IOException e) {
+                Log.e("onCreate", e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
      * NFCタグを読み取った際に呼び出される
      * @param inIntent NFCタグを読み取った際に発生したインテント
      */
@@ -639,21 +695,34 @@ public class DisasterModeActivity extends Activity {
             rawId.append("0");
         }
         String id = rawId.toString();
-        if (isReading && mAttendanceSheet != null && mAttendanceSheet.hasNfcId(id)) {
-            currentAttendance = mAttendanceSheet.get(id);
-            if (currentAttendance.getStatus() == Attendance.ABSENCE) {
-                if (!mPreferenceUtil.isLocationEnabled()) {
-                    currentAttendance.setStatus(Attendance.ATTENDANCE);
-                }
-                else {
-                    currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+        if (isReading && attendanceSheets.size() != 0) {
+            boolean isExisted = false;
+            for (int i = 0; !isExisted && i < attendanceSheets.size(); i++) {
+                AttendanceSheet tempAttendanceSheet = attendanceSheets.get(i);
+                if (tempAttendanceSheet.hasNfcId(id)) {
+                    currentAttendance = tempAttendanceSheet.get(id);
+                    if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                        if (!mPreferenceUtil.isLocationEnabled()) {
+                            currentAttendance.setStatus(Attendance.ATTENDANCE);
+                        }
+                        else {
+                            currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                        }
+
+                        if (!mAttendanceSheet.hasAttendance(currentAttendance)) {
+                            currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
+                            mAttendanceSheet.put(id, currentAttendance);
+                            mAttendanceListAdapter.add(currentAttendance);
+                        }
+                    }
+                    else {
+                        Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                    }
+                    int position = mAttendanceListAdapter.getPosition(currentAttendance);
+                    attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                    isExisted = true;
                 }
             }
-            else {
-                Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
-            }
-            int position = mAttendanceListAdapter.getPosition(currentAttendance);
-            attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
         }
     }
 
