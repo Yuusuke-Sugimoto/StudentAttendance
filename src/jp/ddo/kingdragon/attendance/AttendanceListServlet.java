@@ -2,6 +2,8 @@ package jp.ddo.kingdragon.attendance;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -39,18 +41,23 @@ public class AttendanceListServlet extends HttpServlet {
             pw.println("確認状況<br />");
             pw.println("<table border=\"1\">");
             pw.println("<tr>");
-            pw.println("<td>連番</td>");
-            pw.println("<td>所属</td>");
-            pw.println("<td>学籍番号</td>");
-            pw.println("<td>氏名</td>");
-            pw.println("<td>カナ</td>");
-            pw.println("<td>状態</td>");
-            pw.println("<td>緯度</td>");
-            pw.println("<td>経度</td>");
-            pw.println("<td>高度</td>");
-            pw.println("<td>精度</td>");
+            pw.println("<th>連番</th>");
+            pw.println("<th>所属</th>");
+            pw.println("<th>学籍番号</th>");
+            pw.println("<th>氏名</th>");
+            pw.println("<th>カナ</th>");
+            pw.println("<th>状態</th>");
+            pw.println("<th>確認日時</th>");
+            pw.println("<th>緯度</th>");
+            pw.println("<th>経度</th>");
+            pw.println("<th>高度</th>");
+            pw.println("<th>精度</th>");
+            pw.println("<th>写真</th>");
             pw.println("</tr>");
             for (Attendance mAttendance : mAttendanceSheet.getAttendanceDisplayData()) {
+                long timeStamp = mAttendance.getTimeStamp();
+                SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                String picturePath = mAttendance.getExtra("PicturePath", null);
                 pw.println("<tr>");
                 pw.println("<td>" + mAttendance.getStudentNum() + "</td>");
                 pw.println("<td>" + mAttendance.getClassName() + "</td>");
@@ -58,10 +65,16 @@ public class AttendanceListServlet extends HttpServlet {
                 pw.println("<td>" + mAttendance.getStudentName() + "</td>");
                 pw.println("<td>" + mAttendance.getStudentRuby() + "</td>");
                 pw.println("<td>" + mAttendance.getStatusString() + "</td>");
+                pw.println("<td>" + format.format(new Date(timeStamp)) + "</td>");
                 pw.println("<td>" + mAttendance.getLatitude() + "</td>");
                 pw.println("<td>" + mAttendance.getLongitude() + "</td>");
                 pw.println("<td>" + mAttendance.getAltitude() + "</td>");
                 pw.println("<td>" + mAttendance.getAccuracy() + "</td>");
+                pw.println("<td>");
+                if (picturePath != null) {
+                    pw.println("<a href=\"" + picturePath + "\" title=\"写真\">■</a>");
+                }
+                pw.println("</td>");
                 pw.println("</tr>");
             }
             pw.println("</table>");

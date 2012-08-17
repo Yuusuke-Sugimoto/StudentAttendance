@@ -86,6 +86,30 @@ public class Student implements Serializable {
             }
         }
     }
+    
+    @Override
+    public boolean equals(Object o) {
+        boolean retBool = false;
+        
+        if (o instanceof Student) {
+            Student s = (Student)o;
+            if (studentNo.equals(s.studentNo)
+                && className.equals(s.className)
+                && studentName.equals(s.studentName)
+                && studentRuby.equals(s.studentRuby)) {
+                retBool = true;
+            }
+        }
+        
+        return retBool;
+    }
+    
+    @Override
+    public int hashCode() {
+        int hash = studentNo.hashCode() + className.hashCode() + studentName.hashCode() + studentRuby.hashCode();
+        
+        return hash;
+    }
 
     // アクセッサ
     /**

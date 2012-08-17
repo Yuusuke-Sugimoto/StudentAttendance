@@ -1,5 +1,13 @@
 package jp.ddo.kingdragon.attendance.util;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
+
+import java.io.File;
+import java.io.IOException;
+
 public class Util {
     private Util() {}
 
@@ -24,5 +32,76 @@ public class Util {
         }
 
         return hexString.toString().toUpperCase();
+    }
+    
+    /**
+     * 画像を回転させる<br />
+     * 画像のサイズが大きければ縮小も行う
+     * @param srcBitmap 元となる画像のBitmap
+     * @param rotation 回転角度(90度単位)
+     * @return 回転させた画像のBitmap
+     * @throws IOException 
+     */
+    public static Bitmap rotateImage(Bitmap srcBitmap, float rotation) throws IOException {
+        Matrix mMatrix = new Matrix();
+        mMatrix.postRotate(rotation);
+        Bitmap retBitmap = Bitmap.createBitmap(srcBitmap, 0, 0, srcBitmap.getWidth(), srcBitmap.getHeight(), mMatrix, true);
+        
+        return retBitmap;
+    }
+    
+    /**
+     * 画像を回転させる<br />
+     * 画像のサイズが大きければ縮小も行う
+     * @param inFile 元となる画像ファイル
+     * @return 回転させた画像のBitmap
+     * @throws IOException 
+     */
+    public static Bitmap rotateImage(File inFile) throws IOException {
+        /**
+         * 最大サイズを超える画像の場合、縮小して読み込み
+         * 参考:AndroidでBitmapFactoryを使ってサイズの大きな画像を読み込むサンプル - hoge256ブログ
+         *      http://www.hoge256.net/2009/08/432.html
+         *
+         * 画像を回転させる
+         * 参考:Androidでカメラ撮影し画像を保存する方法 - DRY（日本やアメリカで働くエンジニア日記）
+         *      http://d.hatena.ne.jp/ke-16/20110712/1310433427
+         */
+        BitmapFactory.Options mOptions = new BitmapFactory.Options();
+        mOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(inFile.getAbsolutePath(), mOptions);
+        int widthScale  = (int)Math.ceil((double)mOptions.outWidth / (double)PreferenceUtil.DEFAULT_SIZE_WIDTH);
+        int heightScale = (int)Math.ceil((double)mOptions.outHeight / (double)PreferenceUtil.DEFAULT_SIZE_HEIGHT);
+        int scale = Math.max(widthScale, heightScale);
+
+        mOptions.inJustDecodeBounds = false;
+        mOptions.inSampleSize = scale;
+        Bitmap srcBitmap = BitmapFactory.decodeFile(inFile.getAbsolutePath(), mOptions);
+
+        // 画像の向きを検出する
+        // 画像を正しい向きに修正するためにパラメータを設定
+        int orientation = 0;
+        ExifInterface mExifInterface = new ExifInterface(inFile.getAbsolutePath());
+        orientation = mExifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, 0);
+        
+        float rotation = 0.0f;
+        switch (orientation) {
+        case ExifInterface.ORIENTATION_UNDEFINED:
+        case ExifInterface.ORIENTATION_NORMAL:
+        case ExifInterface.ORIENTATION_ROTATE_180:
+            rotation = 180.0f;
+
+            break;
+        case ExifInterface.ORIENTATION_ROTATE_90:
+            rotation = 90.0f;
+
+            break;
+        case ExifInterface.ORIENTATION_ROTATE_270:
+            rotation = 270.0f;
+
+            break;
+        }
+        
+        return rotateImage(srcBitmap, rotation);
     }
 }

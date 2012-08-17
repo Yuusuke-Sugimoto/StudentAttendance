@@ -56,9 +56,11 @@ import jp.ddo.kingdragon.attendance.util.Util;
  */
 public class DisasterModeActivity extends Activity {
     // 定数の宣言
+    // リクエストコード
+    private static final int REQUEST_TAKE_PICTURE = 0;
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT                = 0;
-    private static final int DIALOG_ATTENDANCE_MENU         = 1;
+    private static final int DIALOG_DISASTER_MENU           = 1;
     private static final int DIALOG_FETCHING_LOCATION       = 2;
     private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 3;
     private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 4;
@@ -219,7 +221,7 @@ public class DisasterModeActivity extends Activity {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 attendanceListView.performItemClick(view, position, id);
-                showDialog(DisasterModeActivity.DIALOG_ATTENDANCE_MENU);
+                showDialog(DisasterModeActivity.DIALOG_DISASTER_MENU);
 
                 return true;
             }
@@ -473,6 +475,19 @@ public class DisasterModeActivity extends Activity {
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+        case DisasterModeActivity.REQUEST_TAKE_PICTURE:
+            if (resultCode == Activity.RESULT_OK) {
+                String picturePath = data.getStringExtra(CameraActivity.PICTURE_PATH);
+                if (picturePath != null) {
+                    currentAttendance.putExtra("PicturePath", picturePath);
+                }
+            }
+        }
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.disaster_mode_menu, menu);
 
@@ -525,19 +540,20 @@ public class DisasterModeActivity extends Activity {
             retDialog = builder.create();
 
             break;
-        case DisasterModeActivity.DIALOG_ATTENDANCE_MENU:
+        case DisasterModeActivity.DIALOG_DISASTER_MENU:
             builder = new AlertDialog.Builder(DisasterModeActivity.this);
             builder.setTitle(R.string.dialog_attendance_menu_title);
-            builder.setItems(R.array.dialog_attendance_menu, new DialogInterface.OnClickListener() {
+            builder.setItems(R.array.dialog_disaster_menu, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    if (!mPreferenceUtil.isLocationEnabled()) {
-                        currentAttendance.setStatus(which);
+                    switch (which) {
+                    case 0:
+                        // 写真を撮影
+                        Intent mIntent = new Intent(DisasterModeActivity.this, CameraActivity.class);
+                        startActivityForResult(mIntent, DisasterModeActivity.REQUEST_TAKE_PICTURE);
+                        
+                        break;
                     }
-                    else {
-                        currentAttendance.setStatus(which, mAttendanceLocation);
-                    }
-                    attendanceListView.invalidateViews();
                 }
             });
             builder.setCancelable(true);
@@ -619,7 +635,7 @@ public class DisasterModeActivity extends Activity {
         }
 
         switch (id) {
-        case DisasterModeActivity.DIALOG_ATTENDANCE_MENU:
+        case DisasterModeActivity.DIALOG_DISASTER_MENU:
             mAlertDialog.setTitle(currentAttendance.getStudentNo() + " " + currentAttendance.getStudentName());
 
             break;
@@ -701,19 +717,16 @@ public class DisasterModeActivity extends Activity {
                 AttendanceSheet tempAttendanceSheet = attendanceSheets.get(i);
                 if (tempAttendanceSheet.hasNfcId(id)) {
                     currentAttendance = tempAttendanceSheet.get(id);
-                    if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                    if (!mAttendanceSheet.hasAttendance(currentAttendance)) {
                         if (!mPreferenceUtil.isLocationEnabled()) {
                             currentAttendance.setStatus(Attendance.ATTENDANCE);
                         }
                         else {
                             currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
                         }
-
-                        if (!mAttendanceSheet.hasAttendance(currentAttendance)) {
-                            currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-                            mAttendanceSheet.put(id, currentAttendance);
-                            mAttendanceListAdapter.add(currentAttendance);
-                        }
+                        currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
+                        mAttendanceSheet.put(id, currentAttendance);
+                        mAttendanceListAdapter.add(currentAttendance);
                     }
                     else {
                         Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();

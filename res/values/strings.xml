@@ -10,9 +10,12 @@
     <string name="attendance_read_start_label">読み取り開始</string>
     <string name="attendance_read_finish_label">読み取り終了</string>
 
-    <string name="disaster_title">災害モード</string>
-
     <string name="listmaker_title">リスト作成画面</string>
+
+    <string name="disaster_title">災害モード</string>
+    
+    <string name="camera_title">カメラ</string>
+    <string name="camera_capture_label">撮影</string>
 
     <string name="file_choose_title">ファイル選択画面</string>
     <string name="file_choose_icon">ファイルアイコン</string>
@@ -105,6 +108,7 @@
     <string name="dialog_create_file_hint">ファイル名を入力</string>
     <string name="dialog_create_directory_title">新規フォルダの作成</string>
     <string name="dialog_create_directory_hint">フォルダ名を入力</string>
+    <string name="dialog_disaster_take_picture">写真を撮影</string>
 
     <string name="notice_location_fetched">現在地を取得しました</string>
     <string name="notice_add_location_disabled">\"位置情報を付加する\"は無効になりました</string>
@@ -120,6 +124,7 @@
     <string name="error_make_save_directory_failed">保存フォルダの作成に失敗しました</string>
     <string name="error_make_web_directory_failed">Webフォルダの作成に失敗しました</string>
     <string name="error_make_servlet_directory_failed">サーブレットフォルダの作成に失敗しました</string>
+    <string name="error_make_media_directory_failed">メディアフォルダの作成に失敗しました</string>
     <string name="error_student_already_readed">既に出席確認済みの学生です</string>
     <string name="error_nfc_id_already_registered">既に他の学生に登録されているNFCタグです</string>
     <string name="error_opening_failed">を開けませんでした</string>
@@ -132,6 +137,8 @@
     <string name="error_directory_create_failed">フォルダの作成に失敗しました。</string>
     <string name="error_illegal_directory_name">フォルダ名に使用できない文字が含まれています。</string>
     <string name="error_directory_name_null">フォルダ名が入力されていません。</string>
+    <string name="error_launch_camera_failed">カメラの起動に失敗しました</string>
+    <string name="error_set_preview_failed">プレビュー画面の設定に失敗しました</string>
 
     <string name="alphabet_and_number">0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</string>
     <string name="zero">0</string>

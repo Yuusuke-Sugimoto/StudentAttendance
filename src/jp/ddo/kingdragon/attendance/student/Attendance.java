@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 import jp.ddo.kingdragon.attendance.R;
 
@@ -53,6 +54,10 @@ public class Attendance implements Serializable {
      * 座標
      */
     private AttendanceLocation mAttendanceLocation;
+    /**
+     * その他情報
+     */
+    private HashMap<String, String> extras;
 
     /**
      * "出席"の文字列表現
@@ -77,10 +82,28 @@ public class Attendance implements Serializable {
         mStudent = inStudent;
         status = Attendance.ABSENCE;
         timeStamp = -1;
+        extras = new HashMap<String, String>();
 
         attendanceString = inResources.getString(R.string.attendance);
         latenessString   = inResources.getString(R.string.lateness);
         leaveEarlyString = inResources.getString(R.string.leave_early);
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        boolean retBool = false;
+        
+        if (o instanceof Attendance) {
+            Attendance a = (Attendance)o;
+            retBool = mStudent.equals(a.mStudent);
+        }
+        
+        return retBool;
+    }
+    
+    @Override
+    public int hashCode() {
+        return mStudent.hashCode();
     }
 
     // アクセッサ
@@ -192,6 +215,14 @@ public class Attendance implements Serializable {
 
         return retStr;
     }
+    
+    /**
+     * 更新日時を取得する
+     * @return 更新日時
+     */
+    public long getTimeStamp() {
+        return timeStamp;
+    }
 
     /**
      * 緯度を取得する
@@ -243,6 +274,32 @@ public class Attendance implements Serializable {
         }
 
         return accuracy;
+    }
+    
+    /**
+     * 情報をセットする
+     * @param key キー
+     * @param value 値
+     */
+    public void putExtra(String key, String value) {
+        extras.put(key, value);
+    }
+    /**
+     * 情報を取得する
+     * @param key キー
+     * @param defaultValue デフォルト値
+     * @return キーに対応する値が存在すればその値 存在しなければデフォルト値
+     */
+    public String getExtra(String key, String defaultValue) {
+        String retValue;
+        if (extras.containsKey(key)) {
+            retValue = extras.get(key);
+        }
+        else {
+            retValue = defaultValue;
+        }
+        
+        return retValue;
     }
 
     /**

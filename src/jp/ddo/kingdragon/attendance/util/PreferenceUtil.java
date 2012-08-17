@@ -2,6 +2,7 @@ package jp.ddo.kingdragon.attendance.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.hardware.Camera;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 
@@ -14,6 +15,18 @@ public class PreferenceUtil {
     // "位置情報の取得方法"用
     public static final int LOCATION_PROVIDER_NETWORK = 0;
     public static final int LOCATION_PROVIDER_GPS     = 1;
+    // "撮影時の向き"の値
+    public static final int ROTATION_AUTO         = 0;
+    public static final int ROTATION_USER         = 1;
+    public static final int ROTATION_PORTRAIT     = 2;
+    public static final int ROTATION_LANDSCAPE    = 3;
+    public static final int ROTATION_NR_LANDSCAPE = 4;
+    // 画像のサイズ
+    public static final int DEFAULT_SIZE_WIDTH  = 2048;
+    public static final int DEFAULT_SIZE_HEIGHT = 1536;
+    // 使用可能な画像サイズの添字
+    public static final int WIDTH  = 0;
+    public static final int HEIGHT = 1;
 
     // 変数の宣言
     /**
@@ -141,6 +154,144 @@ public class PreferenceUtil {
      */
     public boolean isDisasterModeEnabled() {
         return getBoolean("setting_disaster_mode", false);
+    }
+    
+    /**
+     * 対応している画像サイズの一覧を保存したかどうかの状態を保存する
+     * @param isSaved 保存したかどうか
+     */
+    public void putSupportedPictureSizesSaved(boolean isSaved) {
+        putBoolean("SupportedPictureSizeSaved", isSaved);
+    }
+    /**
+     * 対応している画像サイズの一覧を保存したかどうかを取得する
+     * @return 保存済みならばtrue そうでなければfalse
+     */
+    public boolean isSupportedPictureSizesSaved() {
+        return getBoolean("SupportedPictureSizeSaved", false);
+    }
+    
+    /**
+     * 対応しているプレビューサイズの一覧を保存したかどうかの状態を保存する
+     * @param isSaved 保存したかどうか
+     */
+    public void putSupportedPreviewSizesSaved(boolean isSaved) {
+        putBoolean("SupportedPreviewSizeSaved", isSaved);
+    }
+    /**
+     * 対応しているプレビューサイズの一覧を保存したかどうかを取得する
+     * @return 保存済みならばtrue そうでなければfalse
+     */
+    public boolean isSupportedPreviewSizesSaved() {
+        return getBoolean("SupportedPreviewSizeSaved", false);
+    }
+
+    /**
+     * "撮影時の向き"の設定値を取得する
+     * @return "撮影時の向き"の設定値 未設定ならば0
+     */
+    public int getRotationSetting() {
+        return Integer.parseInt(getString("setting_rotation", "0"));
+    }
+    
+    /**
+     * "撮影する画像のサイズ"の設定値を取得する
+     * @return "撮影する画像のサイズ"の設定値 未設定ならば0
+     */
+    public int getSelectedPictureSize() {
+        return Integer.parseInt(getString("setting_picture_size", "0"));
+    }
+
+    /**
+     * "撮影時にAFを行う"が有効かどうかを調べる
+     * @return 有効ならばtrue 無効または未設定ならばfalse
+     */
+    public boolean isTakeAutoFocusEnable() {
+        return getBoolean("setting_use_take_autofocus", false);
+    }
+
+    /**
+     * "タップ時にAFを行う"が有効かどうかを調べる
+     * @return 有効ならばtrue 無効または未設定ならばfalse
+     */
+    public boolean isTapAutoFocusEnable() {
+        return getBoolean("setting_use_tap_autofocus", false);
+    }
+    
+    /**
+     * 使用可能な画像サイズの一覧を保存する
+     * @param pictureSizes 使用可能な画像サイズの一覧
+     */
+    public void putSupportedPictureSizes(Camera.Size[] pictureSizes) {
+        putInt("NumOfSizes", pictureSizes.length);
+        for (int i = 0; i < pictureSizes.length; i++) {
+            putInt("Size" + i + "_Width", pictureSizes[i].width);
+            putInt("Size" + i + "_Height", pictureSizes[i].height);
+        }
+    }
+    /**
+     * 画像サイズを取得する
+     * @param index 画像サイズの添字
+     * @return 画像サイズ
+     */
+    public int[] getSupportedPictureSize(int index) {
+        int[] pictureSize = new int[2];
+        pictureSize[WIDTH]  = getInt("Size" + index + "_Width", 0);
+        pictureSize[HEIGHT] = getInt("Size" + index + "_Height", 0);
+        
+        return pictureSize;
+    }
+    /**
+     * 使用可能な画像サイズの一覧を取得する
+     * @return 使用可能な画像サイズの一覧
+     */
+    public int[][] getSupportedPictureSizes() {
+        int numOfSizes = getInt("NumOfSizes", 0);
+        int[][] pictureSizes = new int[numOfSizes][2];
+        for (int i = 0; i < pictureSizes.length; i++) {
+            pictureSizes[i][WIDTH]  = getInt("Size" + i + "_Width", 0);
+            pictureSizes[i][HEIGHT] = getInt("Size" + i + "_Height", 0);
+        }
+        
+        return pictureSizes;
+    }
+    
+    /**
+     * 使用可能なプレビューサイズの一覧を保存する
+     * @param previewSizes 使用可能なプレビューサイズの一覧
+     */
+    public void putSupportedPreviewSizes(Camera.Size[] previewSizes) {
+        putInt("NumOfPreviewSizes", previewSizes.length);
+        for (int i = 0; i < previewSizes.length; i++) {
+            putInt("PreviewSize" + i + "_Width", previewSizes[i].width);
+            putInt("PreviewSize" + i + "_Height", previewSizes[i].height);
+        }
+    }
+    /**
+     * プレビューサイズを取得する
+     * @param index プレビューサイズの添字
+     * @return プレビューサイズ
+     */
+    public int[] getSupportedPreviewSize(int index) {
+        int[] previewSize = new int[2];
+        previewSize[WIDTH]  = getInt("PreviewSize" + index + "_Width", 0);
+        previewSize[HEIGHT] = getInt("PreviewSize" + index + "_Height", 0);
+        
+        return previewSize;
+    }
+    /**
+     * 使用可能なプレビューサイズの一覧を取得する
+     * @return 使用可能なプレビューサイズの一覧
+     */
+    public int[][] getSupportedPreviewSizes() {
+        int numOfPreviewSizes = getInt("NumOfPreviewSizes", 0);
+        int[][] previewSizes = new int[numOfPreviewSizes][2];
+        for (int i = 0; i < previewSizes.length; i++) {
+            previewSizes[i][WIDTH]  = getInt("PreviewSize" + i + "_Width", 0);
+            previewSizes[i][HEIGHT] = getInt("PreviewSize" + i + "_Height", 0);
+        }
+        
+        return previewSizes;
     }
 
     /**

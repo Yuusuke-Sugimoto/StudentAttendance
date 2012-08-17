@@ -418,7 +418,7 @@ public class StudentAttendanceActivity extends Activity {
 
             break;
         case R.id.menu_save:
-            if (mAttendanceSheet != null) {
+            if (mAttendanceSheet.size() != 0) {
                 // ファイル名を生成
                 StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName() + ".csv");
                 // 科目名と授業時間を置換

@@ -582,7 +582,9 @@ public class StudentListMakerActivity extends Activity {
 
             break;
         case StudentListMakerActivity.DIALOG_ASK_OVERWRITE:
-            mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
+            if (saveFile != null) {
+                mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
+            }
 
             break;
         }

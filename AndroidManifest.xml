@@ -14,11 +14,14 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-feature android:name="android.hardware.nfc" />
 
     <application android:icon="@drawable/ic_launcher"
@@ -42,6 +45,11 @@
                   android:label="@string/disaster_title"
                   android:launchMode="singleTop"
                   android:configChanges="keyboard|keyboardHidden" />
+        
+        <activity android:name=".CameraActivity"
+                  android:label="@string/camera_title"
+                  android:screenOrientation="portrait"
+                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
 
         <activity android:name=".filechoose.FileChooseActivity"
                   android:label="@string/file_choose_title"

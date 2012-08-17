@@ -27,4 +27,8 @@
         <item>@string/dialog_student_menu_nfc_id_remove</item>
         <item>@string/dialog_student_menu_remove</item>
     </string-array>
+
+    <string-array name="dialog_disaster_menu">
+        <item>@string/dialog_disaster_take_picture</item>
+    </string-array>
 </resources>
