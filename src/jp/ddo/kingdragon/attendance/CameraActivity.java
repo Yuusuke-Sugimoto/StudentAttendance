@@ -10,6 +10,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.os.Environment;
@@ -48,8 +50,13 @@ import jp.ddo.kingdragon.attendance.util.Util;
 public class CameraActivity extends Activity implements SurfaceHolder.Callback, Camera.PictureCallback,
                                                         SensorEventListener {
     // 定数の宣言
-    public static final String PICTURE_PATH = "PicturePath";
-    
+    // 撮影モード
+    public static final int CAPTURE_MODE_PHOTO = 0;
+    public static final int CAPTURE_MODE_MOVIE = 1;
+    // Intent用
+    public static final String CAPTURE_MODE = "CaptureMode";
+    public static final String MEDIA_PATH   = "MediaPath";
+
     // 変数の宣言
     /**
      * 撮影中かどうか
@@ -94,9 +101,21 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
      */
     private Camera.Parameters params;
     /**
+     * 動画の撮影に使用
+     */
+    private MediaRecorder recorder;
+    /**
      * 表示中の画面の向き
      */
     private int rotation;
+    /**
+     * 撮影した動画ファイル
+     */
+    private File destMovieFile;
+    /**
+     * 撮影モード
+     */
+    private int captureMode;
 
     /**
      * 設定内容の読み取り/変更に使用
@@ -142,7 +161,10 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
 
         mPreferenceUtil = new PreferenceUtil(CameraActivity.this);
 
-        rotation = 90;
+        Intent mIntent = getIntent();
+        captureMode = mIntent.getIntExtra(CAPTURE_MODE, CAPTURE_MODE_PHOTO);
+
+        rotation = 0;
         magneticValues = null;
         accelValues = null;
         degrees = new int[3];
@@ -162,24 +184,49 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             @Override
             public void onClick(View v) {
                 if (isCameraLaunched) {
-                    if (!isCapturing) {
-                        synchronized (CameraActivity.class) {
+                    switch (captureMode) {
+                        case CameraActivity.CAPTURE_MODE_PHOTO: {
                             if (!isCapturing) {
-                                // 撮影中でなければ撮影
-                                isCapturing = true;
-                                captureButton.setEnabled(false);
-                                if (!mPreferenceUtil.isTakeAutoFocusEnable() || isFocused) {
-                                    mCamera.takePicture(null, null, null, CameraActivity.this);
-                                }
-                                else {
-                                    mCamera.autoFocus(new Camera.AutoFocusCallback() {
-                                        @Override
-                                        public void onAutoFocus(boolean success, Camera camera) {
+                                synchronized (CameraActivity.class) {
+                                    if (!isCapturing) {
+                                        // 撮影中でなければ撮影
+                                        isCapturing = true;
+                                        captureButton.setEnabled(false);
+                                        if (!mPreferenceUtil.isTakeAutoFocusEnable() || isFocused) {
                                             mCamera.takePicture(null, null, null, CameraActivity.this);
                                         }
-                                    });
+                                        else {
+                                            mCamera.autoFocus(new Camera.AutoFocusCallback() {
+                                                @Override
+                                                public void onAutoFocus(boolean success, Camera camera) {
+                                                    mCamera.takePicture(null, null, null, CameraActivity.this);
+                                                }
+                                            });
+                                        }
+                                    }
                                 }
                             }
+
+                            break;
+                        }
+                        case CameraActivity.CAPTURE_MODE_MOVIE: {
+                            if (isCapturing) {
+                                recorder.stop();
+                                recorder.reset();
+                                recorder.release();
+                                mCamera.lock();
+                                isCapturing = false;
+                                isCameraLaunched = false;
+                                surfaceChanged(preview.getHolder(), 0, 0, 0);
+                                onMovieTaken(destMovieFile);
+                            }
+                            else {
+                                initRecorder();
+                                recorder.start();
+                                isCapturing = true;
+                            }
+
+                            break;
                         }
                     }
                 }
@@ -193,7 +240,8 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             @Override
             public void onClick(View v) {
                 // 画面がタッチされたらオートフォーカスを実行
-                if (isCameraLaunched && mPreferenceUtil.isTapAutoFocusEnable() && !isFocusing) {
+                if (isCameraLaunched && mPreferenceUtil.isTapAutoFocusEnable() && !isFocusing
+                    && captureMode == CameraActivity.CAPTURE_MODE_PHOTO) {
                     // オートフォーカス中でなければオートフォーカスを実行
                     // フラグを更新
                     isFocusing = true;
@@ -212,7 +260,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         });
 
         // 設定情報にデフォルト値をセットする
-        PreferenceManager.setDefaultValues(CameraActivity.this, R.xml.preference, false);
+        PreferenceManager.setDefaultValues(CameraActivity.this, R.xml.camera_preference, false);
 
         // 傾きを検出するための設定
         mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
@@ -239,6 +287,14 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
 
         if (mCamera != null) {
             // カメラのリソースを利用中であれば解放する
+            if (captureMode == CameraActivity.CAPTURE_MODE_MOVIE && isCapturing) {
+                recorder.stop();
+                recorder.reset();
+                recorder.release();
+                mCamera.lock();
+                isCapturing = false;
+                onMovieTaken(destMovieFile);
+            }
             mCamera.stopPreview();
             mCamera.setPreviewCallback(null);
             mCamera.release();
@@ -259,16 +315,16 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
     public boolean onOptionsItemSelected(MenuItem item) {
         boolean retBool = false;
 
-        Intent mIntent;
         switch (item.getItemId()) {
-        case R.id.menu_setting:
-            // 設定画面を開く
-            mIntent = new Intent(CameraActivity.this, SettingActivity.class);
-            startActivity(mIntent);
+            case R.id.menu_setting: {
+                // 設定画面を開く
+                Intent mIntent = new Intent(CameraActivity.this, CameraSettingActivity.class);
+                startActivity(mIntent);
 
-            retBool = true;
+                retBool = true;
 
-            break;
+                break;
+            }
         }
 
         return retBool;
@@ -306,14 +362,14 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
                 }
             }
         }
-        
+
         MediaScannerConnection.scanFile(CameraActivity.this, new String[] {destFile.getAbsolutePath()},
                                         new String[] {"image/jpeg"}, null);
-        
+
         Intent mIntent = new Intent();
-        mIntent.putExtra(CameraActivity.PICTURE_PATH, mediaDir.getName() + "/" + destFile.getName());
+        mIntent.putExtra(CameraActivity.MEDIA_PATH, mediaDir.getName() + "/" + destFile.getName());
         setResult(Activity.RESULT_OK, mIntent);
-        
+
         finish();
     }
 
@@ -365,25 +421,27 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
 
             // 保存する画像サイズを決定
             Camera.Size picSize = null;
-            List<Camera.Size> pictureSizes;
-            int selectedPicSize = mPreferenceUtil.getSelectedPictureSize();
-            if (selectedPicSize != -1) {
-                int[] pictureSize = mPreferenceUtil.getSupportedPictureSize(selectedPicSize);
-                picSize = mCamera.new Size(pictureSize[PreferenceUtil.WIDTH], pictureSize[PreferenceUtil.HEIGHT]);
-            }
-            else {
-                pictureSizes = params.getSupportedPictureSizes();
-                picSize = pictureSizes.get(0);
-                for (int i = 1; i < pictureSizes.size(); i++) {
-                    Camera.Size tempSize = pictureSizes.get(i);
-                    if (picSize.width * picSize.height > PreferenceUtil.DEFAULT_SIZE_WIDTH * PreferenceUtil.DEFAULT_SIZE_HEIGHT
-                        || picSize.width * picSize.height < tempSize.width * tempSize.height) {
-                        // DEFAULT_SIZE_WIDTH x DEFAULT_SIZE_HEIGHT以下で一番大きな画像サイズを選択
-                        picSize = tempSize;
+            if (captureMode == CameraActivity.CAPTURE_MODE_PHOTO) {
+                List<Camera.Size> pictureSizes;
+                int selectedPicSize = mPreferenceUtil.getSelectedPictureSize();
+                if (selectedPicSize != -1) {
+                    int[] pictureSize = mPreferenceUtil.getSupportedPictureSize(selectedPicSize);
+                    picSize = mCamera.new Size(pictureSize[PreferenceUtil.WIDTH], pictureSize[PreferenceUtil.HEIGHT]);
+                }
+                else {
+                    pictureSizes = params.getSupportedPictureSizes();
+                    picSize = pictureSizes.get(0);
+                    for (int i = 1; i < pictureSizes.size(); i++) {
+                        Camera.Size tempSize = pictureSizes.get(i);
+                        if (picSize.width * picSize.height > PreferenceUtil.DEFAULT_SIZE_WIDTH * PreferenceUtil.DEFAULT_SIZE_HEIGHT
+                            || picSize.width * picSize.height < tempSize.width * tempSize.height) {
+                            // DEFAULT_SIZE_WIDTH x DEFAULT_SIZE_HEIGHT以下で一番大きな画像サイズを選択
+                            picSize = tempSize;
+                        }
                     }
                 }
+                params.setPictureSize(picSize.width, picSize.height);
             }
-            params.setPictureSize(picSize.width, picSize.height);
 
             // 画像サイズを元にプレビューサイズを決定
             WindowManager manager = (WindowManager)getSystemService(WINDOW_SERVICE);
@@ -395,10 +453,14 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             for (int i = 1; i < previewSizes.size(); i++) {
                 Camera.Size tempSize = previewSizes.get(i);
                 if (preSize.width * preSize.height > mDisplay.getWidth() * mDisplay.getHeight()
-                   && (preSize.width * preSize.height < tempSize.width * tempSize.height)
-                       && (Math.abs((double)picSize.width / (double)picSize.height - (double)preSize.width / (double)preSize.height)
-                           >= Math.abs((double)picSize.width / (double)picSize.height - (double)tempSize.width / (double)tempSize.height))) {
+                    || captureMode == CameraActivity.CAPTURE_MODE_PHOTO
+                       && (preSize.width * preSize.height < tempSize.width * tempSize.height)
+                           && (Math.abs((double)picSize.width / (double)picSize.height - (double)preSize.width / (double)preSize.height)
+                               >= Math.abs((double)picSize.width / (double)picSize.height - (double)tempSize.width / (double)tempSize.height))
+                    || captureMode == CameraActivity.CAPTURE_MODE_MOVIE
+                       && (preSize.width * preSize.height < tempSize.width * tempSize.height)) {
                     // ディスプレイのサイズ以下で一番保存サイズの比に近く、かつ一番大きなプレビューサイズを選択
+                    // 動画モードの場合はディスプレイのサイズ以下かつ一番大きなプレビューサイズを選択
                     preSize = tempSize;
                 }
             }
@@ -407,30 +469,27 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             // プレビューサイズを元にSurfaceViewのサイズを決定
             // プレビューサイズとSurfaceViewのサイズで縦横の関係が逆になっている
             ViewGroup.LayoutParams lParams = preview.getLayoutParams();
-            if (preSize.width <= mDisplay.getHeight() && preSize.height <= mDisplay.getWidth()) {
-                lParams.width  = preSize.height;
-                lParams.height = preSize.width;
+            if (preSize.width <= mDisplay.getWidth() && preSize.height <= mDisplay.getHeight()) {
+                lParams.width  = preSize.width;
+                lParams.height = preSize.height;
             }
             else {
                 lParams.width  = mDisplay.getWidth();
                 lParams.height = mDisplay.getHeight();
                 if ((double)preSize.width / (double)preSize.height
-                    < (double)mDisplay.getHeight() / (double)mDisplay.getWidth()) {
-                     // 横の長さに合わせる
-                     lParams.height = preSize.width * mDisplay.getWidth() / preSize.height;
-                 }
-                 else if ((double)preSize.width / (double)preSize.height
-                          > (double)mDisplay.getHeight() / (double)mDisplay.getWidth()) {
-                     // 縦の長さに合わせる
-                     lParams.width  = preSize.height * mDisplay.getHeight() / preSize.width;
-                 }
+                    < (double)mDisplay.getWidth() / (double)mDisplay.getHeight()) {
+                    // 縦の長さに合わせる
+                    lParams.width  = preSize.width * mDisplay.getHeight() / preSize.height;
+                }
+                else if ((double)preSize.width / (double)preSize.height
+                         > (double)mDisplay.getWidth() / (double)mDisplay.getHeight()) {
+                    // 横の長さに合わせる
+                    lParams.height = preSize.height * mDisplay.getWidth() / preSize.width;
+                }
             }
             preview.setLayoutParams(lParams);
             params.setRotation(rotation);
             mCamera.setParameters(params);
-
-            // 画面の表示方向を変更
-            mCamera.setDisplayOrientation(90);
 
             isCameraLaunched = true;
         }
@@ -439,7 +498,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             mCamera.setPreviewDisplay(preview.getHolder());
             mCamera.startPreview();
         }
-        catch (IOException e) {
+        catch (Exception e) {
             Toast.makeText(CameraActivity.this, R.string.error_set_preview_failed, Toast.LENGTH_SHORT).show();
             Log.e("surfaceChanged", e.getMessage(), e);
 
@@ -459,14 +518,16 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
     @Override
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()) {
-        case Sensor.TYPE_MAGNETIC_FIELD:
-            magneticValues = event.values.clone();
+            case Sensor.TYPE_MAGNETIC_FIELD: {
+                magneticValues = event.values.clone();
 
-            break;
-        case Sensor.TYPE_ACCELEROMETER:
-            accelValues = event.values.clone();
+                break;
+            }
+            case Sensor.TYPE_ACCELEROMETER: {
+                accelValues = event.values.clone();
 
-            break;
+                break;
+            }
         }
 
         float[] radians = new float[3];
@@ -482,7 +543,10 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         }
 
         int rotationSetting = mPreferenceUtil.getRotationSetting();
-        if (rotationSetting == PreferenceUtil.ROTATION_USER) {
+        if (captureMode == CameraActivity.CAPTURE_MODE_MOVIE) {
+            rotationSetting = PreferenceUtil.ROTATION_NR_LANDSCAPE;
+        }
+        else if (rotationSetting == PreferenceUtil.ROTATION_USER) {
             // "端末の設定に従う"が選択されている場合、端末の設定を取得する
             if (Settings.System.getInt(getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 1) == 1) {
                 rotationSetting = PreferenceUtil.ROTATION_AUTO;
@@ -550,8 +614,8 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         }
 
         // ボタンを回転
-        float beginRotation = (450 - rotation) % 360;
-        float destRotation  = (450 - inRotation) % 360;
+        float beginRotation = 360 - rotation;
+        float destRotation  = 360 - inRotation;
         if (Math.abs(beginRotation - destRotation) >= 270) {
             if (beginRotation < destRotation) {
                 beginRotation += 360;
@@ -567,5 +631,89 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         captureButton.startAnimation(animation);
 
         rotation = inRotation;
+    }
+
+    /**
+     * MediaRecorderを初期化する
+     */
+    public void initRecorder() {
+        /**
+         * 動画を撮影する
+         * 参考:Camera | Android Developers
+         *      http://developer.android.com/guide/topics/media/camera.html
+         *
+         *      MediaRecorder | Android Developers
+         *      http://developer.android.com/reference/android/media/MediaRecorder.html
+         *
+         *      MediaRecorderの解像度設定: とくぼーのブログ
+         *      http://tokubo.cocolog-nifty.com/blog/2011/07/mediarecorder-4.html
+         */
+        mCamera.unlock();
+
+        recorder = new MediaRecorder();
+        recorder.setCamera(mCamera);
+        recorder.setVideoSource(MediaRecorder.VideoSource.DEFAULT);
+        recorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+
+        int movieQuality = CamcorderProfile.QUALITY_LOW;
+        if (mPreferenceUtil.getMovieQuality() == PreferenceUtil.QUALITY_HIGH) {
+            movieQuality = CamcorderProfile.QUALITY_HIGH;
+        }
+        CamcorderProfile profile = CamcorderProfile.get(movieQuality);
+        if (mPreferenceUtil.getMovieQuality() == PreferenceUtil.QUALITY_LOW) {
+            profile.audioCodec = MediaRecorder.AudioEncoder.AAC;
+        }
+        Camera.Size preSize = params.getPreviewSize();
+        profile.videoFrameWidth  = preSize.width;
+        profile.videoFrameHeight = preSize.height;
+        recorder.setProfile(profile);
+
+        // ファイル名を生成
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String ext = "mp4";
+        if (profile.fileFormat == MediaRecorder.OutputFormat.THREE_GPP) {
+            ext = "3gp";
+        }
+        String fileName = "SA_" + dateFormat.format(new Date()) + "." + ext;
+        destMovieFile = new File(mediaDir, fileName);
+        recorder.setOutputFile(destMovieFile.getAbsolutePath());
+
+        recorder.setPreviewDisplay(preview.getHolder().getSurface());
+        try {
+            recorder.prepare();
+        }
+        catch (IllegalStateException e) {
+            Log.e("surfaceChanged", e.getMessage(), e);
+            destMovieFile.delete();
+
+            finish();
+        }
+        catch (IOException e) {
+            Log.e("surfaceChanged", e.getMessage(), e);
+            destMovieFile.delete();
+
+            finish();
+        }
+    }
+
+    /**
+     * 動画撮影完了時に呼び出される
+     */
+    public void onMovieTaken(File movieFile) {
+        // 生成したファイル名で新規ファイルを登録
+        String[] splittedName = movieFile.getName().split("\\.");
+        String ext = splittedName[splittedName.length - 1];
+        if (ext.equals("3gp")) {
+            ext = "3gpp";
+        }
+
+        MediaScannerConnection.scanFile(CameraActivity.this, new String[] {movieFile.getAbsolutePath()},
+                                        new String[] {"video/" + ext}, null);
+
+        Intent mIntent = new Intent();
+        mIntent.putExtra(CameraActivity.MEDIA_PATH, mediaDir.getName() + "/" + destMovieFile.getName());
+        setResult(Activity.RESULT_OK, mIntent);
+
+        finish();
     }
 }

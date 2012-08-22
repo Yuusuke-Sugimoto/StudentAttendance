@@ -150,13 +150,14 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-        case SettingActivity.REQUEST_CHANGE_ATTENDANCE_DIR:
-            if (resultCode == Activity.RESULT_OK) {
-                String filePath = data.getStringExtra("filePath");
-                mPreferenceUtil.putAttendanceDir(filePath);
-            }
+            case SettingActivity.REQUEST_CHANGE_ATTENDANCE_DIR: {
+                if (resultCode == Activity.RESULT_OK) {
+                    String filePath = data.getStringExtra("filePath");
+                    mPreferenceUtil.putAttendanceDir(filePath);
+                }
 
-            break;
+                break;
+            }
         }
     }
 
@@ -164,19 +165,18 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
     public Dialog onCreateDialog(int id) {
         Dialog retDialog = null;
 
-        AlertDialog.Builder builder;
-
         switch (id) {
-        case SettingActivity.DIALOG_ILLEGAL_FILE_NAME:
-            builder = new AlertDialog.Builder(SettingActivity.this);
-            builder.setTitle(R.string.error);
-            builder.setMessage(R.string.error_illegal_file_name);
-            builder.setIcon(android.R.drawable.ic_dialog_alert);
-            builder.setPositiveButton(android.R.string.ok, null);
-            builder.setCancelable(true);
-            retDialog = builder.create();
+            case SettingActivity.DIALOG_ILLEGAL_FILE_NAME: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
+                builder.setTitle(R.string.error);
+                builder.setMessage(R.string.error_illegal_file_name);
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
 
-            break;
+                break;
+            }
         }
 
         return retDialog;

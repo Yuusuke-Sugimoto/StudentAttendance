@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/setting_photo_title">
+        <ListPreference android:title="@string/setting_rotation_title"
+                        android:key="setting_rotation"
+                        android:defaultValue="0"
+                        android:summary="@string/setting_rotation_auto"
+                        android:dialogTitle="@string/setting_rotation_title"
+                        android:entries="@array/setting_rotation_labels"
+                        android:entryValues="@array/setting_rotation_values" />
+        <ListPreference android:title="@string/setting_picture_size_title"
+                        android:key="setting_picture_size"
+                        android:summary="@string/setting_picture_size_summary"
+                        android:dialogTitle="@string/setting_picture_size_title" />
+        <CheckBoxPreference android:title="@string/setting_use_take_autofocus_title"
+                            android:key="setting_use_take_autofocus"
+                            android:defaultValue="false"
+                            android:summary="@string/setting_use_take_autofocus_summary" />
+        <CheckBoxPreference android:title="@string/setting_use_tap_autofocus_title"
+                            android:key="setting_use_tap_autofocus"
+                            android:defaultValue="true"
+                            android:summary="@string/setting_use_tap_autofocus_summary" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/setting_movie_title">
+        <ListPreference android:title="@string/setting_movie_quality_title"
+                        android:key="setting_movie_quality"
+                        android:defaultValue="0"
+                        android:summary="@string/setting_movie_quality_low"
+                        android:dialogTitle="@string/setting_movie_quality_title"
+                        android:entries="@array/setting_movie_quality_labels"
+                        android:entryValues="@array/setting_movie_quality_values" />
+    </PreferenceCategory>
+</PreferenceScreen>

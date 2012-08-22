@@ -366,25 +366,26 @@ public class StudentAttendanceActivity extends Activity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-        case StudentAttendanceActivity.REQUEST_CHOOSE_OPEN_FILE:
-            if (resultCode == Activity.RESULT_OK) {
-                String fileName = data.getStringExtra("fileName");
-                String filePath = data.getStringExtra("filePath");
-                try {
-                    mAttendanceSheet = new AttendanceSheet(new File(filePath), CHARACTER_CODE, getResources());
-                    mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, mAttendanceSheet.getAttendanceDisplayData());
-                    attendanceListView.setAdapter(mAttendanceListAdapter);
-                    isReading = false;
-                    isSaved = false;
-                    Toast.makeText(StudentAttendanceActivity.this, fileName + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
+            case StudentAttendanceActivity.REQUEST_CHOOSE_OPEN_FILE: {
+                if (resultCode == Activity.RESULT_OK) {
+                    String fileName = data.getStringExtra("fileName");
+                    String filePath = data.getStringExtra("filePath");
+                    try {
+                        mAttendanceSheet = new AttendanceSheet(new File(filePath), CHARACTER_CODE, getResources());
+                        mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, mAttendanceSheet.getAttendanceDisplayData());
+                        attendanceListView.setAdapter(mAttendanceListAdapter);
+                        isReading = false;
+                        isSaved = false;
+                        Toast.makeText(StudentAttendanceActivity.this, fileName + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
+                    }
+                    catch (IOException e) {
+                        Toast.makeText(StudentAttendanceActivity.this, fileName + getString(R.string.error_opening_failed), Toast.LENGTH_SHORT).show();
+                        Log.e("onActivityResult", e.getMessage(), e);
+                    }
                 }
-                catch (IOException e) {
-                    Toast.makeText(StudentAttendanceActivity.this, fileName + getString(R.string.error_opening_failed), Toast.LENGTH_SHORT).show();
-                    Log.e("onActivityResult", e.getMessage(), e);
-                }
-            }
 
-            break;
+                break;
+            }
         }
     }
 
@@ -397,82 +398,84 @@ public class StudentAttendanceActivity extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Intent mIntent;
-
         switch (item.getItemId()) {
-        case R.id.menu_make_list:
-            showDialog(StudentAttendanceActivity.DIALOG_ASK_OPEN_LIST_MAKER);
+            case R.id.menu_make_list: {
+                showDialog(StudentAttendanceActivity.DIALOG_ASK_OPEN_LIST_MAKER);
 
-            break;
-        case R.id.menu_setting:
-            mIntent = new Intent(StudentAttendanceActivity.this, SettingActivity.class);
-            startActivity(mIntent);
+                break;
+            }
+            case R.id.menu_setting: {
+                Intent mIntent = new Intent(StudentAttendanceActivity.this, SettingActivity.class);
+                startActivity(mIntent);
 
-            break;
-        case R.id.menu_open:
-            mIntent = new Intent(StudentAttendanceActivity.this, FileChooseActivity.class);
-            mIntent.putExtra("initDirPath", listDir.getAbsolutePath());
-            mIntent.putExtra("filter", ".*");
-            mIntent.putExtra("extension", "csv");
-            startActivityForResult(mIntent, StudentAttendanceActivity.REQUEST_CHOOSE_OPEN_FILE);
+                break;
+            }
+            case R.id.menu_open: {
+                Intent mIntent = new Intent(StudentAttendanceActivity.this, FileChooseActivity.class);
+                mIntent.putExtra("initDirPath", listDir.getAbsolutePath());
+                mIntent.putExtra("filter", ".*");
+                mIntent.putExtra("extension", "csv");
+                startActivityForResult(mIntent, StudentAttendanceActivity.REQUEST_CHOOSE_OPEN_FILE);
 
-            break;
-        case R.id.menu_save:
-            if (mAttendanceSheet.size() != 0) {
-                // ファイル名を生成
-                StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName() + ".csv");
-                // 科目名と授業時間を置換
-                int subjectPos;
-                while ((subjectPos = rawFileName.indexOf("%S")) != -1) {
-                    rawFileName.replace(subjectPos, subjectPos + 2, mAttendanceSheet.getSubject());
-                }
-                int timePos;
-                while ((timePos = rawFileName.indexOf("%t")) != -1) {
-                    rawFileName.replace(timePos, timePos + 2, mAttendanceSheet.getTime());
-                }
+                break;
+            }
+            case R.id.menu_save: {
+                if (mAttendanceSheet.size() != 0) {
+                    // ファイル名を生成
+                    StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName() + ".csv");
+                    // 科目名と授業時間を置換
+                    int subjectPos;
+                    while ((subjectPos = rawFileName.indexOf("%S")) != -1) {
+                        rawFileName.replace(subjectPos, subjectPos + 2, mAttendanceSheet.getSubject());
+                    }
+                    int timePos;
+                    while ((timePos = rawFileName.indexOf("%t")) != -1) {
+                        rawFileName.replace(timePos, timePos + 2, mAttendanceSheet.getTime());
+                    }
 
-                // 年月日時分秒を置換
-                SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
-                String dateString = format.format(new Date());
-                int yearPos;
-                while ((yearPos = rawFileName.indexOf("%y")) != -1) {
-                    rawFileName.replace(yearPos, yearPos + 2, dateString.substring(0, 4));
-                }
-                int monthPos;
-                while ((monthPos = rawFileName.indexOf("%M")) != -1) {
-                    rawFileName.replace(monthPos, monthPos + 2, dateString.substring(4, 6));
-                }
-                int dayPos;
-                while ((dayPos = rawFileName.indexOf("%d")) != -1) {
-                    rawFileName.replace(dayPos, dayPos + 2, dateString.substring(6, 8));
-                }
-                int hourPos;
-                while ((hourPos = rawFileName.indexOf("%h")) != -1) {
-                    rawFileName.replace(hourPos, hourPos + 2, dateString.substring(8, 10));
-                }
-                int minutePos;
-                while ((minutePos = rawFileName.indexOf("%m")) != -1) {
-                    rawFileName.replace(minutePos, minutePos + 2, dateString.substring(10, 12));
-                }
-                int secondPos;
-                while ((secondPos = rawFileName.indexOf("%s")) != -1) {
-                    rawFileName.replace(secondPos, secondPos + 2, dateString.substring(12, 14));
-                }
+                    // 年月日時分秒を置換
+                    SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
+                    String dateString = format.format(new Date());
+                    int yearPos;
+                    while ((yearPos = rawFileName.indexOf("%y")) != -1) {
+                        rawFileName.replace(yearPos, yearPos + 2, dateString.substring(0, 4));
+                    }
+                    int monthPos;
+                    while ((monthPos = rawFileName.indexOf("%M")) != -1) {
+                        rawFileName.replace(monthPos, monthPos + 2, dateString.substring(4, 6));
+                    }
+                    int dayPos;
+                    while ((dayPos = rawFileName.indexOf("%d")) != -1) {
+                        rawFileName.replace(dayPos, dayPos + 2, dateString.substring(6, 8));
+                    }
+                    int hourPos;
+                    while ((hourPos = rawFileName.indexOf("%h")) != -1) {
+                        rawFileName.replace(hourPos, hourPos + 2, dateString.substring(8, 10));
+                    }
+                    int minutePos;
+                    while ((minutePos = rawFileName.indexOf("%m")) != -1) {
+                        rawFileName.replace(minutePos, minutePos + 2, dateString.substring(10, 12));
+                    }
+                    int secondPos;
+                    while ((secondPos = rawFileName.indexOf("%s")) != -1) {
+                        rawFileName.replace(secondPos, secondPos + 2, dateString.substring(12, 14));
+                    }
 
-                String fileName = rawFileName.toString();
-                saveFile = new File(saveDir, fileName);
-                if (saveFile.exists()) {
-                    showDialog(StudentAttendanceActivity.DIALOG_ASK_OVERWRITE);
+                    String fileName = rawFileName.toString();
+                    saveFile = new File(saveDir, fileName);
+                    if (saveFile.exists()) {
+                        showDialog(StudentAttendanceActivity.DIALOG_ASK_OVERWRITE);
+                    }
+                    else {
+                        saveCsvFile(saveFile, StudentAttendanceActivity.CHARACTER_CODE);
+                    }
                 }
                 else {
-                    saveCsvFile(saveFile, StudentAttendanceActivity.CHARACTER_CODE);
+                    Toast.makeText(StudentAttendanceActivity.this, R.string.error_saving_data_null, Toast.LENGTH_SHORT).show();
                 }
-            }
-            else {
-                Toast.makeText(StudentAttendanceActivity.this, R.string.error_saving_data_null, Toast.LENGTH_SHORT).show();
-            }
 
-            break;
+                break;
+            }
         }
 
         return true;
@@ -482,123 +485,127 @@ public class StudentAttendanceActivity extends Activity {
     public Dialog onCreateDialog(final int id) {
         Dialog retDialog = null;
 
-        AlertDialog.Builder builder;
-
         switch (id) {
-        case StudentAttendanceActivity.DIALOG_ASK_EXIT_WITHOUT_SAVING:
-            builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
-            builder.setIcon(android.R.drawable.ic_dialog_alert);
-            builder.setTitle(R.string.dialog_ask);
-            builder.setMessage(R.string.dialog_ask_exit_without_saving);
-            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    StudentAttendanceActivity.super.onBackPressed();
-                }
-            });
-            builder.setNegativeButton(android.R.string.no, null);
-            builder.setCancelable(true);
-            retDialog = builder.create();
-
-            break;
-        case StudentAttendanceActivity.DIALOG_ATTENDANCE_MENU:
-            builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
-            builder.setTitle(R.string.dialog_attendance_menu_title);
-            builder.setItems(R.array.dialog_attendance_menu, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (!mPreferenceUtil.isLocationEnabled()) {
-                        currentAttendance.setStatus(which);
+            case StudentAttendanceActivity.DIALOG_ASK_EXIT_WITHOUT_SAVING: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setTitle(R.string.dialog_ask);
+                builder.setMessage(R.string.dialog_ask_exit_without_saving);
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        StudentAttendanceActivity.super.onBackPressed();
                     }
-                    else {
-                        currentAttendance.setStatus(which, mAttendanceLocation);
+                });
+                builder.setNegativeButton(android.R.string.no, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_ATTENDANCE_MENU: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+                builder.setTitle(R.string.dialog_attendance_menu_title);
+                builder.setItems(R.array.dialog_attendance_menu, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (!mPreferenceUtil.isLocationEnabled()) {
+                            currentAttendance.setStatus(which);
+                        }
+                        else {
+                            currentAttendance.setStatus(which, mAttendanceLocation);
+                        }
+                        attendanceListView.invalidateViews();
+                        isSaved = false;
                     }
-                    attendanceListView.invalidateViews();
-                    isSaved = false;
-                }
-            });
-            builder.setCancelable(true);
-            retDialog = builder.create();
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
 
-            break;
-        case StudentAttendanceActivity.DIALOG_ASK_OVERWRITE:
-            builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
-            builder.setIcon(android.R.drawable.ic_dialog_alert);
-            builder.setTitle(R.string.dialog_ask);
-            builder.setMessage("");
-            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    saveCsvFile(saveFile, StudentAttendanceActivity.CHARACTER_CODE);
-                }
-            });
-            builder.setNegativeButton(android.R.string.no, null);
-            builder.setCancelable(true);
-            retDialog = builder.create();
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_ASK_OVERWRITE: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setTitle(R.string.dialog_ask);
+                builder.setMessage("");
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        saveCsvFile(saveFile, StudentAttendanceActivity.CHARACTER_CODE);
+                    }
+                });
+                builder.setNegativeButton(android.R.string.no, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
 
-            break;
-        case StudentAttendanceActivity.DIALOG_FETCHING_LOCATION:
-            ProgressDialog mProgressDialog = new ProgressDialog(StudentAttendanceActivity.this);
-            mProgressDialog.setMessage(getString(R.string.dialog_fetching_location));
-            mProgressDialog.setCancelable(true);
-            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    mPreferenceUtil.putLocationEnabled(false);
-                    stopUpdateLocation();
-                    Toast.makeText(StudentAttendanceActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
-                }
-            });
-            retDialog = mProgressDialog;
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_FETCHING_LOCATION: {
+                ProgressDialog mProgressDialog = new ProgressDialog(StudentAttendanceActivity.this);
+                mProgressDialog.setMessage(getString(R.string.dialog_fetching_location));
+                mProgressDialog.setCancelable(true);
+                mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        mPreferenceUtil.putLocationEnabled(false);
+                        stopUpdateLocation();
+                        Toast.makeText(StudentAttendanceActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                retDialog = mProgressDialog;
 
-            break;
-        case StudentAttendanceActivity.DIALOG_ASK_OPEN_LIST_MAKER:
-            builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
-            builder.setIcon(android.R.drawable.ic_dialog_alert);
-            builder.setTitle(R.string.dialog_ask);
-            builder.setMessage(R.string.dialog_ask_open_list_maker);
-            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Intent mIntent = new Intent(StudentAttendanceActivity.this, StudentListMakerActivity.class);
-                    startActivity(mIntent);
-                }
-            });
-            builder.setNegativeButton(android.R.string.no, null);
-            builder.setCancelable(true);
-            retDialog = builder.create();
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_ASK_OPEN_LIST_MAKER: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setTitle(R.string.dialog_ask);
+                builder.setMessage(R.string.dialog_ask_open_list_maker);
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent mIntent = new Intent(StudentAttendanceActivity.this, StudentListMakerActivity.class);
+                        startActivity(mIntent);
+                    }
+                });
+                builder.setNegativeButton(android.R.string.no, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
 
-            break;
-        case StudentAttendanceActivity.DIALOG_ASK_OPEN_GPS_PREFERENCE:
-            builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
-            builder.setIcon(android.R.drawable.ic_dialog_alert);
-            builder.setTitle(R.string.dialog_ask);
-            builder.setMessage(R.string.dialog_ask_open_gps_preference);
-            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Intent mIntent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    startActivity(mIntent);
-                }
-            });
-            builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
-            builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    mPreferenceUtil.putLocationEnabled(false);
-                    stopUpdateLocation();
-                    Toast.makeText(StudentAttendanceActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
-                }
-            });
-            builder.setCancelable(true);
-            retDialog = builder.create();
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_ASK_OPEN_GPS_PREFERENCE: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setTitle(R.string.dialog_ask);
+                builder.setMessage(R.string.dialog_ask_open_gps_preference);
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent mIntent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(mIntent);
+                    }
+                });
+                builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        mPreferenceUtil.putLocationEnabled(false);
+                        stopUpdateLocation();
+                        Toast.makeText(StudentAttendanceActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
 
-            break;
+                break;
+            }
         }
 
         return(retDialog);
@@ -612,14 +619,16 @@ public class StudentAttendanceActivity extends Activity {
         }
 
         switch (id) {
-        case StudentAttendanceActivity.DIALOG_ATTENDANCE_MENU:
-            mAlertDialog.setTitle(currentAttendance.getStudentNo() + " " + currentAttendance.getStudentName());
+            case StudentAttendanceActivity.DIALOG_ATTENDANCE_MENU: {
+                mAlertDialog.setTitle(currentAttendance.getStudentNo() + " " + currentAttendance.getStudentName());
 
-            break;
-        case StudentAttendanceActivity.DIALOG_ASK_OVERWRITE:
-            mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_ASK_OVERWRITE: {
+                mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
 
-            break;
+                break;
+            }
         }
     }
 

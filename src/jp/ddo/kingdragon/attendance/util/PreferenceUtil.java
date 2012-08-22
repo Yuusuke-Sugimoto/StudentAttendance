@@ -27,6 +27,9 @@ public class PreferenceUtil {
     // 使用可能な画像サイズの添字
     public static final int WIDTH  = 0;
     public static final int HEIGHT = 1;
+    // 動画の画質
+    public static final int QUALITY_LOW  = 0;
+    public static final int QUALITY_HIGH = 1;
 
     // 変数の宣言
     /**
@@ -155,7 +158,7 @@ public class PreferenceUtil {
     public boolean isDisasterModeEnabled() {
         return getBoolean("setting_disaster_mode", false);
     }
-    
+
     /**
      * 対応している画像サイズの一覧を保存したかどうかの状態を保存する
      * @param isSaved 保存したかどうか
@@ -170,7 +173,7 @@ public class PreferenceUtil {
     public boolean isSupportedPictureSizesSaved() {
         return getBoolean("SupportedPictureSizeSaved", false);
     }
-    
+
     /**
      * 対応しているプレビューサイズの一覧を保存したかどうかの状態を保存する
      * @param isSaved 保存したかどうか
@@ -193,7 +196,7 @@ public class PreferenceUtil {
     public int getRotationSetting() {
         return Integer.parseInt(getString("setting_rotation", "0"));
     }
-    
+
     /**
      * "撮影する画像のサイズ"の設定値を取得する
      * @return "撮影する画像のサイズ"の設定値 未設定ならば0
@@ -217,7 +220,7 @@ public class PreferenceUtil {
     public boolean isTapAutoFocusEnable() {
         return getBoolean("setting_use_tap_autofocus", false);
     }
-    
+
     /**
      * 使用可能な画像サイズの一覧を保存する
      * @param pictureSizes 使用可能な画像サイズの一覧
@@ -238,7 +241,7 @@ public class PreferenceUtil {
         int[] pictureSize = new int[2];
         pictureSize[WIDTH]  = getInt("Size" + index + "_Width", 0);
         pictureSize[HEIGHT] = getInt("Size" + index + "_Height", 0);
-        
+
         return pictureSize;
     }
     /**
@@ -252,10 +255,10 @@ public class PreferenceUtil {
             pictureSizes[i][WIDTH]  = getInt("Size" + i + "_Width", 0);
             pictureSizes[i][HEIGHT] = getInt("Size" + i + "_Height", 0);
         }
-        
+
         return pictureSizes;
     }
-    
+
     /**
      * 使用可能なプレビューサイズの一覧を保存する
      * @param previewSizes 使用可能なプレビューサイズの一覧
@@ -276,7 +279,7 @@ public class PreferenceUtil {
         int[] previewSize = new int[2];
         previewSize[WIDTH]  = getInt("PreviewSize" + index + "_Width", 0);
         previewSize[HEIGHT] = getInt("PreviewSize" + index + "_Height", 0);
-        
+
         return previewSize;
     }
     /**
@@ -290,8 +293,16 @@ public class PreferenceUtil {
             previewSizes[i][WIDTH]  = getInt("PreviewSize" + i + "_Width", 0);
             previewSizes[i][HEIGHT] = getInt("PreviewSize" + i + "_Height", 0);
         }
-        
+
         return previewSizes;
+    }
+
+    /**
+     * "撮影する動画の画質"の設定値を取得する
+     * @return "撮影する動画の画質"の設定値 未設定ならば0
+     */
+    public int getMovieQuality() {
+        return Integer.parseInt(getString("setting_movie_quality", "0"));
     }
 
     /**

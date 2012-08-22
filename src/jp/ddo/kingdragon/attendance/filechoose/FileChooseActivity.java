@@ -222,19 +222,22 @@ public class FileChooseActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case R.id.menu_show_invisible_file:
-            isShowingInvisibleFile = !isShowingInvisibleFile;
-            showFileList(currentDir);
+            case R.id.menu_show_invisible_file: {
+                isShowingInvisibleFile = !isShowingInvisibleFile;
+                showFileList(currentDir);
 
-            break;
-        case R.id.menu_create_file:
-            showDialog(FileChooseActivity.DIALOG_CREATE_FILE);
+                break;
+            }
+            case R.id.menu_create_file: {
+                showDialog(FileChooseActivity.DIALOG_CREATE_FILE);
 
-            break;
-        case R.id.menu_create_directory:
-            showDialog(FileChooseActivity.DIALOG_CREATE_DIRECTORY);
+                break;
+            }
+            case R.id.menu_create_directory: {
+                showDialog(FileChooseActivity.DIALOG_CREATE_DIRECTORY);
 
-            break;
+                break;
+            }
         }
 
         return true;
@@ -244,135 +247,137 @@ public class FileChooseActivity extends Activity {
     public Dialog onCreateDialog(int id) {
         Dialog retDialog = null;
 
-        AlertDialog.Builder builder;
-
         switch (id) {
-        case FileChooseActivity.DIALOG_CREATE_FILE:
-            builder = new AlertDialog.Builder(FileChooseActivity.this);
-            builder.setTitle(R.string.dialog_create_file_title);
+            case FileChooseActivity.DIALOG_CREATE_FILE: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(FileChooseActivity.this);
+                builder.setTitle(R.string.dialog_create_file_title);
 
-            LayoutInflater inflater = LayoutInflater.from(FileChooseActivity.this);
-            layoutForCreateFile = (LinearLayout)inflater.inflate(R.layout.dialog_create_file, null);
-            editTextForFileName = (EditText)layoutForCreateFile.findViewById(R.id.dialog_file_name);
-            textViewForExtension = (TextView)layoutForCreateFile.findViewById(R.id.dialog_file_extension);
+                LayoutInflater inflater = LayoutInflater.from(FileChooseActivity.this);
+                layoutForCreateFile = (LinearLayout)inflater.inflate(R.layout.dialog_create_file, null);
+                editTextForFileName = (EditText)layoutForCreateFile.findViewById(R.id.dialog_file_name);
+                textViewForExtension = (TextView)layoutForCreateFile.findViewById(R.id.dialog_file_extension);
 
-            builder.setView(layoutForCreateFile);
-            builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    StringBuilder fileNameBuilder = new StringBuilder(editTextForFileName.getEditableText().toString());
-                    if (fileNameBuilder.length() != 0) {
-                        if (extension.matches("[A-Za-z0-9]*")) {
-                            // 拡張子が1つだけ設定されている時はその拡張子を付加する
-                            fileNameBuilder.append("." + extension);
-                        }
-                        String fileName = fileNameBuilder.toString();
-                        if (!fileName.matches(".*(<|>|:|\\*|\\?|\"|/|\\\\|\\||\u00a5).*")) {
-                            // 使用不可能な文字列(< > : * ? " / \ |)が含まれていなければファイルを作成
-                            File mFile = new File(currentDir, fileName);
-                            try {
-                                if (mFile.createNewFile()) {
-                                    showFileList(currentDir);
-                                    editTextForFileName.setText("");
-                                    Toast.makeText(FileChooseActivity.this, fileName + getString(R.string.notice_file_created), Toast.LENGTH_SHORT).show();
-                                }
-                                else {
-                                    showDialog(FileChooseActivity.DIALOG_FILE_ALREADY_EXISTS);
-                                }
+                builder.setView(layoutForCreateFile);
+                builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        StringBuilder fileNameBuilder = new StringBuilder(editTextForFileName.getEditableText().toString());
+                        if (fileNameBuilder.length() != 0) {
+                            if (extension.matches("[A-Za-z0-9]*")) {
+                                // 拡張子が1つだけ設定されている時はその拡張子を付加する
+                                fileNameBuilder.append("." + extension);
                             }
-                            catch (IOException e) {
-                                showDialog(FileChooseActivity.DIALOG_FILE_CREATE_FAILED);
-                                Log.e("onCreateDialog", e.getMessage(), e);
-                            }
-                        }
-                        else {
-                            showDialog(FileChooseActivity.DIALOG_ILLEGAL_FILE_NAME);
-                        }
-                    }
-                    else {
-                        showDialog(FileChooseActivity.DIALOG_FILE_NAME_IS_NULL);
-                    }
-                }
-            });
-            builder.setNegativeButton(android.R.string.cancel, null);
-            builder.setCancelable(true);
-            retDialog = builder.create();
-
-            break;
-        case FileChooseActivity.DIALOG_FILE_ALREADY_EXISTS:
-        case FileChooseActivity.DIALOG_FILE_CREATE_FAILED:
-        case FileChooseActivity.DIALOG_ILLEGAL_FILE_NAME:
-        case FileChooseActivity.DIALOG_FILE_NAME_IS_NULL:
-            builder = new AlertDialog.Builder(FileChooseActivity.this);
-            builder.setTitle(R.string.error);
-            builder.setMessage("");
-            builder.setIcon(android.R.drawable.ic_dialog_alert);
-            builder.setPositiveButton(android.R.string.ok, null);
-            builder.setCancelable(true);
-            retDialog = builder.create();
-            retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    showDialog(FileChooseActivity.DIALOG_CREATE_FILE);
-                }
-            });
-
-            break;
-        case FileChooseActivity.DIALOG_CREATE_DIRECTORY:
-            builder = new AlertDialog.Builder(FileChooseActivity.this);
-            builder.setTitle(R.string.dialog_create_directory_title);
-            editTextForDirectoryName = new EditText(FileChooseActivity.this);
-            editTextForDirectoryName.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-            builder.setView(editTextForDirectoryName);
-            builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    String directoryName = editTextForDirectoryName.getEditableText().toString();
-                    if (directoryName.length() != 0) {
-                        if (!directoryName.matches(".*(<|>|:|\\*|\\?|\"|/|\\\\|\\||\u00a5).*")) {
-                            // 使用不可能な文字列(< > : * ? " / \ |)が含まれていなければフォルダを作成
-                            File mDir = new File(currentDir, directoryName);
-                            if (mDir.mkdir()) {
-                                showFileList(currentDir);
-                                editTextForDirectoryName.setText("");
-                                Toast.makeText(FileChooseActivity.this, directoryName + getString(R.string.notice_file_created), Toast.LENGTH_SHORT).show();
+                            String fileName = fileNameBuilder.toString();
+                            if (!fileName.matches(".*(<|>|:|\\*|\\?|\"|/|\\\\|\\||\u00a5).*")) {
+                                // 使用不可能な文字列(< > : * ? " / \ |)が含まれていなければファイルを作成
+                                File mFile = new File(currentDir, fileName);
+                                try {
+                                    if (mFile.createNewFile()) {
+                                        showFileList(currentDir);
+                                        editTextForFileName.setText("");
+                                        Toast.makeText(FileChooseActivity.this, fileName + getString(R.string.notice_file_created), Toast.LENGTH_SHORT).show();
+                                    }
+                                    else {
+                                        showDialog(FileChooseActivity.DIALOG_FILE_ALREADY_EXISTS);
+                                    }
+                                }
+                                catch (IOException e) {
+                                    showDialog(FileChooseActivity.DIALOG_FILE_CREATE_FAILED);
+                                    Log.e("onCreateDialog", e.getMessage(), e);
+                                }
                             }
                             else {
-                                showDialog(FileChooseActivity.DIALOG_DIRECTORY_CREATE_FAILED);
+                                showDialog(FileChooseActivity.DIALOG_ILLEGAL_FILE_NAME);
                             }
                         }
                         else {
-                            showDialog(FileChooseActivity.DIALOG_ILLEGAL_DIRECTORY_NAME);
+                            showDialog(FileChooseActivity.DIALOG_FILE_NAME_IS_NULL);
                         }
                     }
-                    else {
-                        showDialog(FileChooseActivity.DIALOG_DIRECTORY_NAME_IS_NULL);
+                });
+                builder.setNegativeButton(android.R.string.cancel, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case FileChooseActivity.DIALOG_FILE_ALREADY_EXISTS:
+            case FileChooseActivity.DIALOG_FILE_CREATE_FAILED:
+            case FileChooseActivity.DIALOG_ILLEGAL_FILE_NAME:
+            case FileChooseActivity.DIALOG_FILE_NAME_IS_NULL: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(FileChooseActivity.this);
+                builder.setTitle(R.string.error);
+                builder.setMessage("");
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+                retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        showDialog(FileChooseActivity.DIALOG_CREATE_FILE);
                     }
-                }
-            });
-            builder.setNegativeButton(android.R.string.cancel, null);
-            builder.setCancelable(true);
-            retDialog = builder.create();
+                });
 
-            break;
-        case FileChooseActivity.DIALOG_DIRECTORY_CREATE_FAILED:
-        case FileChooseActivity.DIALOG_ILLEGAL_DIRECTORY_NAME:
-        case FileChooseActivity.DIALOG_DIRECTORY_NAME_IS_NULL:
-            builder = new AlertDialog.Builder(FileChooseActivity.this);
-            builder.setTitle(R.string.error);
-            builder.setMessage("");
-            builder.setIcon(android.R.drawable.ic_dialog_alert);
-            builder.setPositiveButton(android.R.string.ok, null);
-            builder.setCancelable(true);
-            retDialog = builder.create();
-            retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    showDialog(FileChooseActivity.DIALOG_CREATE_DIRECTORY);
-                }
-            });
+                break;
+            }
+            case FileChooseActivity.DIALOG_CREATE_DIRECTORY: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(FileChooseActivity.this);
+                builder.setTitle(R.string.dialog_create_directory_title);
+                editTextForDirectoryName = new EditText(FileChooseActivity.this);
+                editTextForDirectoryName.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+                builder.setView(editTextForDirectoryName);
+                builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String directoryName = editTextForDirectoryName.getEditableText().toString();
+                        if (directoryName.length() != 0) {
+                            if (!directoryName.matches(".*(<|>|:|\\*|\\?|\"|/|\\\\|\\||\u00a5).*")) {
+                                // 使用不可能な文字列(< > : * ? " / \ |)が含まれていなければフォルダを作成
+                                File mDir = new File(currentDir, directoryName);
+                                if (mDir.mkdir()) {
+                                    showFileList(currentDir);
+                                    editTextForDirectoryName.setText("");
+                                    Toast.makeText(FileChooseActivity.this, directoryName + getString(R.string.notice_file_created), Toast.LENGTH_SHORT).show();
+                                }
+                                else {
+                                    showDialog(FileChooseActivity.DIALOG_DIRECTORY_CREATE_FAILED);
+                                }
+                            }
+                            else {
+                                showDialog(FileChooseActivity.DIALOG_ILLEGAL_DIRECTORY_NAME);
+                            }
+                        }
+                        else {
+                            showDialog(FileChooseActivity.DIALOG_DIRECTORY_NAME_IS_NULL);
+                        }
+                    }
+                });
+                builder.setNegativeButton(android.R.string.cancel, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
 
-            break;
+                break;
+            }
+            case FileChooseActivity.DIALOG_DIRECTORY_CREATE_FAILED:
+            case FileChooseActivity.DIALOG_ILLEGAL_DIRECTORY_NAME:
+            case FileChooseActivity.DIALOG_DIRECTORY_NAME_IS_NULL: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(FileChooseActivity.this);
+                builder.setTitle(R.string.error);
+                builder.setMessage("");
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+                retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        showDialog(FileChooseActivity.DIALOG_CREATE_DIRECTORY);
+                    }
+                });
+
+                break;
+            }
         }
 
         return retDialog;
@@ -386,43 +391,51 @@ public class FileChooseActivity extends Activity {
         }
 
         switch (id) {
-        case FileChooseActivity.DIALOG_CREATE_FILE:
-            layoutForCreateFile.removeView(textViewForExtension);
-            if (extension.matches("[A-Za-z0-9]*")) {
-                // 拡張子が1つだけ設定されている時はその拡張子を付加する
-                textViewForExtension.setText("." + extension);
-                layoutForCreateFile.addView(textViewForExtension);
+            case FileChooseActivity.DIALOG_CREATE_FILE: {
+                layoutForCreateFile.removeView(textViewForExtension);
+                if (extension.matches("[A-Za-z0-9]*")) {
+                    // 拡張子が1つだけ設定されている時はその拡張子を付加する
+                    textViewForExtension.setText("." + extension);
+                    layoutForCreateFile.addView(textViewForExtension);
+                }
+
+                break;
             }
+            case FileChooseActivity.DIALOG_FILE_ALREADY_EXISTS: {
+                mAlertDialog.setMessage(getString(R.string.error_file_already_exists));
 
-            break;
-        case FileChooseActivity.DIALOG_FILE_ALREADY_EXISTS:
-            mAlertDialog.setMessage(getString(R.string.error_file_already_exists));
+                break;
+            }
+            case FileChooseActivity.DIALOG_FILE_CREATE_FAILED: {
+                mAlertDialog.setMessage(getString(R.string.error_file_create_failed));
 
-            break;
-        case FileChooseActivity.DIALOG_FILE_CREATE_FAILED:
-            mAlertDialog.setMessage(getString(R.string.error_file_create_failed));
+                break;
+            }
+            case FileChooseActivity.DIALOG_ILLEGAL_FILE_NAME: {
+                mAlertDialog.setMessage(getString(R.string.error_illegal_file_name));
 
-            break;
-        case FileChooseActivity.DIALOG_ILLEGAL_FILE_NAME:
-            mAlertDialog.setMessage(getString(R.string.error_illegal_file_name));
+                break;
+            }
+            case FileChooseActivity.DIALOG_FILE_NAME_IS_NULL: {
+                mAlertDialog.setMessage(getString(R.string.error_file_name_null));
 
-            break;
-        case FileChooseActivity.DIALOG_FILE_NAME_IS_NULL:
-            mAlertDialog.setMessage(getString(R.string.error_file_name_null));
+                break;
+            }
+            case FileChooseActivity.DIALOG_DIRECTORY_CREATE_FAILED: {
+                mAlertDialog.setMessage(getString(R.string.error_directory_create_failed));
 
-            break;
-        case FileChooseActivity.DIALOG_DIRECTORY_CREATE_FAILED:
-            mAlertDialog.setMessage(getString(R.string.error_directory_create_failed));
+                break;
+            }
+            case FileChooseActivity.DIALOG_ILLEGAL_DIRECTORY_NAME: {
+                mAlertDialog.setMessage(getString(R.string.error_illegal_directory_name));
 
-            break;
-        case FileChooseActivity.DIALOG_ILLEGAL_DIRECTORY_NAME:
-            mAlertDialog.setMessage(getString(R.string.error_illegal_directory_name));
+                break;
+            }
+            case FileChooseActivity.DIALOG_DIRECTORY_NAME_IS_NULL: {
+                mAlertDialog.setMessage(getString(R.string.error_directory_name_null));
 
-            break;
-        case FileChooseActivity.DIALOG_DIRECTORY_NAME_IS_NULL:
-            mAlertDialog.setMessage(getString(R.string.error_directory_name_null));
-
-            break;
+                break;
+            }
         }
     }
 

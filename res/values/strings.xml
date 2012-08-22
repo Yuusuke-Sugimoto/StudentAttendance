@@ -13,7 +13,7 @@
     <string name="listmaker_title">リスト作成画面</string>
 
     <string name="disaster_title">災害モード</string>
-    
+
     <string name="camera_title">カメラ</string>
     <string name="camera_capture_label">撮影</string>
 
@@ -53,6 +53,26 @@
     <string name="setting_license_summary">このアプリに使用されている各ライセンスを表示することができます。</string>
     <string name="setting_license_apache_title">Apache License</string>
     <string name="setting_license_apache_summary">Apache Licenseを表示します。</string>
+
+    <string name="setting_photo_title">写真の設定</string>
+    <string name="setting_capture_mode_title">撮影モード</string>
+    <string name="setting_capture_mode_photo">写真</string>
+    <string name="setting_capture_mode_movie">動画</string>
+    <string name="setting_rotation_title">写真撮影時の向き</string>
+    <string name="setting_rotation_auto">自動で切り替える</string>
+    <string name="setting_rotation_user">端末の設定に従う</string>
+    <string name="setting_rotation_portrait">ポートレート(縦)</string>
+    <string name="setting_rotation_landscape">ランドスケープ(横)</string>
+    <string name="setting_use_take_autofocus_title">撮影時にAFを行う</string>
+    <string name="setting_use_take_autofocus_summary">オートフォーカスが行われていない場合、撮影時にオートフォーカスを行います。端末により、撮影時にアプリが強制終了される場合があります。</string>
+    <string name="setting_use_tap_autofocus_title">タップ時にAFを行う</string>
+    <string name="setting_use_tap_autofocus_summary">画面タップ時にオートフォーカスを行います。</string>
+    <string name="setting_picture_size_title">撮影する画像のサイズ</string>
+    <string name="setting_picture_size_summary">端末とサイズの組み合わせによっては、撮影後に一時的にプレビューが乱れることがあります。</string>
+    <string name="setting_movie_title">動画の設定</string>
+    <string name="setting_movie_quality_title">撮影する動画の画質</string>
+    <string name="setting_movie_quality_low">低画質</string>
+    <string name="setting_movie_quality_high">高画質</string>
 
     <string name="header_student_num">連番</string>
     <string name="header_student_no">学籍番号</string>
@@ -108,7 +128,8 @@
     <string name="dialog_create_file_hint">ファイル名を入力</string>
     <string name="dialog_create_directory_title">新規フォルダの作成</string>
     <string name="dialog_create_directory_hint">フォルダ名を入力</string>
-    <string name="dialog_disaster_take_picture">写真を撮影</string>
+    <string name="dialog_disaster_capture_photo">写真を撮影</string>
+    <string name="dialog_disaster_capture_movie">動画を撮影</string>
 
     <string name="notice_location_fetched">現在地を取得しました</string>
     <string name="notice_add_location_disabled">\"位置情報を付加する\"は無効になりました</string>
@@ -143,4 +164,6 @@
     <string name="alphabet_and_number">0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</string>
     <string name="zero">0</string>
     <string name="one">1</string>
+    <string name="two">2</string>
+    <string name="three">3</string>
 </resources>

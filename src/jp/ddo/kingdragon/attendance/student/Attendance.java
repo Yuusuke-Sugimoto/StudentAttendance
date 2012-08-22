@@ -20,22 +20,14 @@ public class Attendance implements Serializable {
      * シリアルバージョンUID
      */
     private static final long serialVersionUID = -139773677012287047L;
-    /**
-     * 出席
-     */
+    // 出席種別
     public static final int ATTENDANCE  = 0;
-    /**
-     * 遅刻
-     */
     public static final int LATENESS    = 1;
-    /**
-     * 早退
-     */
     public static final int LEAVE_EARLY = 2;
-    /**
-     * 欠席
-     */
     public static final int ABSENCE     = 3;
+    // 各情報用
+    public static final String PHOTO_PATH = "PhotoPath";
+    public static final String MOVIE_PATH = "MoviePath";
 
     // 変数の宣言
     /**
@@ -88,19 +80,19 @@ public class Attendance implements Serializable {
         latenessString   = inResources.getString(R.string.lateness);
         leaveEarlyString = inResources.getString(R.string.leave_early);
     }
-    
+
     @Override
     public boolean equals(Object o) {
         boolean retBool = false;
-        
+
         if (o instanceof Attendance) {
             Attendance a = (Attendance)o;
             retBool = mStudent.equals(a.mStudent);
         }
-        
+
         return retBool;
     }
-    
+
     @Override
     public int hashCode() {
         return mStudent.hashCode();
@@ -199,23 +191,26 @@ public class Attendance implements Serializable {
         String retStr = "";
 
         switch (status) {
-        case Attendance.ATTENDANCE:
-            retStr = attendanceString;
+            case Attendance.ATTENDANCE: {
+                retStr = attendanceString;
 
-            break;
-        case Attendance.LATENESS:
-            retStr = latenessString;
+                break;
+            }
+            case Attendance.LATENESS: {
+                retStr = latenessString;
 
-            break;
-        case Attendance.LEAVE_EARLY:
-            retStr = leaveEarlyString;
+                break;
+            }
+            case Attendance.LEAVE_EARLY: {
+                retStr = leaveEarlyString;
 
-            break;
+                break;
+            }
         }
 
         return retStr;
     }
-    
+
     /**
      * 更新日時を取得する
      * @return 更新日時
@@ -275,7 +270,7 @@ public class Attendance implements Serializable {
 
         return accuracy;
     }
-    
+
     /**
      * 情報をセットする
      * @param key キー
@@ -298,7 +293,7 @@ public class Attendance implements Serializable {
         else {
             retValue = defaultValue;
         }
-        
+
         return retValue;
     }
 

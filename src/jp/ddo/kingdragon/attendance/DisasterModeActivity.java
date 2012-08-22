@@ -43,6 +43,9 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 
 import dalvik.system.DexClassLoader;
 
+import jp.ddo.kingdragon.attendance.servlet.SearchStudentServlet;
+import jp.ddo.kingdragon.attendance.servlet.StudentListServlet;
+import jp.ddo.kingdragon.attendance.servlet.ShowMovieServlet;
 import jp.ddo.kingdragon.attendance.student.Attendance;
 import jp.ddo.kingdragon.attendance.student.AttendanceListAdapter;
 import jp.ddo.kingdragon.attendance.student.AttendanceLocation;
@@ -57,7 +60,8 @@ import jp.ddo.kingdragon.attendance.util.Util;
 public class DisasterModeActivity extends Activity {
     // 定数の宣言
     // リクエストコード
-    private static final int REQUEST_TAKE_PICTURE = 0;
+    private static final int REQUEST_CAPTURE_PHOTO = 0;
+    private static final int REQUEST_CAPTURE_MOVIE = 1;
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT                = 0;
     private static final int DIALOG_DISASTER_MENU           = 1;
@@ -328,7 +332,9 @@ public class DisasterModeActivity extends Activity {
         mHandlerList.addHandler(mResourceHandler);
 
         ServletContextHandler mServletContextHandler = new ServletContextHandler();
-        mServletContextHandler.addServlet(AttendanceListServlet.class, "/AttendanceListServlet");
+        mServletContextHandler.addServlet(SearchStudentServlet.class, "/SearchStudent");
+        mServletContextHandler.addServlet(StudentListServlet.class, "/StudentList");
+        mServletContextHandler.addServlet(ShowMovieServlet.class, "/ShowMovie");
 //        File[] dexFiles = servletDir.listFiles(new FilenameFilter() {
 //            @Override
 //            public boolean accept(File dir, String filename) {
@@ -477,12 +483,25 @@ public class DisasterModeActivity extends Activity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-        case DisasterModeActivity.REQUEST_TAKE_PICTURE:
-            if (resultCode == Activity.RESULT_OK) {
-                String picturePath = data.getStringExtra(CameraActivity.PICTURE_PATH);
-                if (picturePath != null) {
-                    currentAttendance.putExtra("PicturePath", picturePath);
+            case DisasterModeActivity.REQUEST_CAPTURE_PHOTO: {
+                if (resultCode == Activity.RESULT_OK) {
+                    String photoPath = data.getStringExtra(CameraActivity.MEDIA_PATH);
+                    if (photoPath != null) {
+                        currentAttendance.putExtra(Attendance.PHOTO_PATH, photoPath);
+                    }
                 }
+
+                break;
+            }
+            case DisasterModeActivity.REQUEST_CAPTURE_MOVIE: {
+                if (resultCode == Activity.RESULT_OK) {
+                    String moviePath = data.getStringExtra(CameraActivity.MEDIA_PATH);
+                    if (moviePath != null) {
+                        currentAttendance.putExtra(Attendance.MOVIE_PATH, moviePath);
+                    }
+                }
+
+                break;
             }
         }
     }
@@ -496,22 +515,23 @@ public class DisasterModeActivity extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Intent mIntent;
-
         switch (item.getItemId()) {
-        case R.id.menu_make_list:
-            showDialog(DisasterModeActivity.DIALOG_ASK_OPEN_LIST_MAKER);
+            case R.id.menu_make_list: {
+                showDialog(DisasterModeActivity.DIALOG_ASK_OPEN_LIST_MAKER);
 
-            break;
-        case R.id.menu_setting:
-            mIntent = new Intent(DisasterModeActivity.this, SettingActivity.class);
-            startActivity(mIntent);
+                break;
+            }
+            case R.id.menu_setting: {
+                Intent mIntent = new Intent(DisasterModeActivity.this, SettingActivity.class);
+                startActivity(mIntent);
 
-            break;
-        case R.id.menu_refresh:
-            refreshAttendanceSheets();
+                break;
+            }
+            case R.id.menu_refresh: {
+                refreshAttendanceSheets();
 
-            break;
+                break;
+            }
         }
 
         return true;
@@ -521,107 +541,120 @@ public class DisasterModeActivity extends Activity {
     public Dialog onCreateDialog(final int id) {
         Dialog retDialog = null;
 
-        AlertDialog.Builder builder;
-
         switch (id) {
-        case DisasterModeActivity.DIALOG_ASK_EXIT:
-            builder = new AlertDialog.Builder(DisasterModeActivity.this);
-            builder.setIcon(android.R.drawable.ic_dialog_alert);
-            builder.setTitle(R.string.dialog_ask);
-            builder.setMessage(R.string.dialog_ask_exit_without_saving);
-            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    DisasterModeActivity.super.onBackPressed();
-                }
-            });
-            builder.setNegativeButton(android.R.string.no, null);
-            builder.setCancelable(true);
-            retDialog = builder.create();
-
-            break;
-        case DisasterModeActivity.DIALOG_DISASTER_MENU:
-            builder = new AlertDialog.Builder(DisasterModeActivity.this);
-            builder.setTitle(R.string.dialog_attendance_menu_title);
-            builder.setItems(R.array.dialog_disaster_menu, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    switch (which) {
-                    case 0:
-                        // 写真を撮影
-                        Intent mIntent = new Intent(DisasterModeActivity.this, CameraActivity.class);
-                        startActivityForResult(mIntent, DisasterModeActivity.REQUEST_TAKE_PICTURE);
-                        
-                        break;
+            case DisasterModeActivity.DIALOG_ASK_EXIT: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setTitle(R.string.dialog_ask);
+                builder.setMessage(R.string.dialog_ask_exit_without_saving);
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        DisasterModeActivity.super.onBackPressed();
                     }
-                }
-            });
-            builder.setCancelable(true);
-            retDialog = builder.create();
+                });
+                builder.setNegativeButton(android.R.string.no, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
 
-            break;
-        case DisasterModeActivity.DIALOG_FETCHING_LOCATION:
-            ProgressDialog mProgressDialog = new ProgressDialog(DisasterModeActivity.this);
-            mProgressDialog.setMessage(getString(R.string.dialog_fetching_location));
-            mProgressDialog.setCancelable(true);
-            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    mPreferenceUtil.putLocationEnabled(false);
-                    stopUpdateLocation();
-                    Toast.makeText(DisasterModeActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
-                }
-            });
-            retDialog = mProgressDialog;
+                break;
+            }
+            case DisasterModeActivity.DIALOG_DISASTER_MENU: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
+                builder.setTitle(R.string.dialog_attendance_menu_title);
+                builder.setItems(R.array.dialog_disaster_menu, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0: {
+                                // 写真を撮影
+                                Intent mIntent = new Intent(DisasterModeActivity.this, CameraActivity.class);
+                                mIntent.putExtra(CameraActivity.CAPTURE_MODE, CameraActivity.CAPTURE_MODE_PHOTO);
+                                startActivityForResult(mIntent, DisasterModeActivity.REQUEST_CAPTURE_PHOTO);
 
-            break;
-        case DisasterModeActivity.DIALOG_ASK_OPEN_LIST_MAKER:
-            builder = new AlertDialog.Builder(DisasterModeActivity.this);
-            builder.setIcon(android.R.drawable.ic_dialog_alert);
-            builder.setTitle(R.string.dialog_ask);
-            builder.setMessage(R.string.dialog_ask_open_list_maker);
-            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Intent mIntent = new Intent(DisasterModeActivity.this, StudentListMakerActivity.class);
-                    startActivity(mIntent);
-                }
-            });
-            builder.setNegativeButton(android.R.string.no, null);
-            builder.setCancelable(true);
-            retDialog = builder.create();
+                                break;
+                            }
+                            case 1: {
+                                // 動画を撮影
+                                Intent mIntent = new Intent(DisasterModeActivity.this, CameraActivity.class);
+                                mIntent.putExtra(CameraActivity.CAPTURE_MODE, CameraActivity.CAPTURE_MODE_MOVIE);
+                                startActivityForResult(mIntent, DisasterModeActivity.REQUEST_CAPTURE_MOVIE);
 
-            break;
-        case DisasterModeActivity.DIALOG_ASK_OPEN_GPS_PREFERENCE:
-            builder = new AlertDialog.Builder(DisasterModeActivity.this);
-            builder.setIcon(android.R.drawable.ic_dialog_alert);
-            builder.setTitle(R.string.dialog_ask);
-            builder.setMessage(R.string.dialog_ask_open_gps_preference);
-            builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Intent mIntent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    startActivity(mIntent);
-                }
-            });
-            builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
-            builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    mPreferenceUtil.putLocationEnabled(false);
-                    stopUpdateLocation();
-                    Toast.makeText(DisasterModeActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
-                }
-            });
-            builder.setCancelable(true);
-            retDialog = builder.create();
+                                break;
+                            }
+                        }
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
 
-            break;
+                break;
+            }
+            case DisasterModeActivity.DIALOG_FETCHING_LOCATION: {
+                ProgressDialog mProgressDialog = new ProgressDialog(DisasterModeActivity.this);
+                mProgressDialog.setMessage(getString(R.string.dialog_fetching_location));
+                mProgressDialog.setCancelable(true);
+                mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        mPreferenceUtil.putLocationEnabled(false);
+                        stopUpdateLocation();
+                        Toast.makeText(DisasterModeActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                retDialog = mProgressDialog;
+
+                break;
+            }
+            case DisasterModeActivity.DIALOG_ASK_OPEN_LIST_MAKER: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setTitle(R.string.dialog_ask);
+                builder.setMessage(R.string.dialog_ask_open_list_maker);
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent mIntent = new Intent(DisasterModeActivity.this, StudentListMakerActivity.class);
+                        startActivity(mIntent);
+                    }
+                });
+                builder.setNegativeButton(android.R.string.no, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case DisasterModeActivity.DIALOG_ASK_OPEN_GPS_PREFERENCE: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setTitle(R.string.dialog_ask);
+                builder.setMessage(R.string.dialog_ask_open_gps_preference);
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent mIntent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(mIntent);
+                    }
+                });
+                builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        mPreferenceUtil.putLocationEnabled(false);
+                        stopUpdateLocation();
+                        Toast.makeText(DisasterModeActivity.this, R.string.notice_add_location_disabled, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
         }
 
         return(retDialog);
@@ -635,10 +668,11 @@ public class DisasterModeActivity extends Activity {
         }
 
         switch (id) {
-        case DisasterModeActivity.DIALOG_DISASTER_MENU:
-            mAlertDialog.setTitle(currentAttendance.getStudentNo() + " " + currentAttendance.getStudentName());
+            case DisasterModeActivity.DIALOG_DISASTER_MENU: {
+                mAlertDialog.setTitle(currentAttendance.getStudentNo() + " " + currentAttendance.getStudentName());
 
-            break;
+                break;
+            }
         }
     }
 

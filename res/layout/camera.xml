@@ -7,12 +7,12 @@
                  android:layout_height="match_parent"
                  android:layout_centerInParent="true"
                  android:keepScreenOn="true" />
-    
+
     <ImageButton android:id="@+id/capture"
                  android:layout_width="70dip"
                  android:layout_height="70dip"
-                 android:layout_centerHorizontal="true"
-                 android:layout_alignParentBottom="true"
+                 android:layout_centerVertical="true"
+                 android:layout_alignParentRight="true"
                  android:src="@android:drawable/ic_menu_camera"
                  android:contentDescription="@string/camera_capture_label" />
 </RelativeLayout>

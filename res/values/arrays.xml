@@ -9,6 +9,28 @@
         <item>@string/one</item>
     </string-array>
 
+    <string-array name="setting_rotation_labels">
+        <item>@string/setting_rotation_auto</item>
+        <item>@string/setting_rotation_user</item>
+        <item>@string/setting_rotation_portrait</item>
+        <item>@string/setting_rotation_landscape</item>
+    </string-array>
+    <string-array name="setting_rotation_values">
+        <item>@string/zero</item>
+        <item>@string/one</item>
+        <item>@string/two</item>
+        <item>@string/three</item>
+    </string-array>
+
+    <string-array name="setting_movie_quality_labels">
+        <item>@string/setting_movie_quality_low</item>
+        <item>@string/setting_movie_quality_high</item>
+    </string-array>
+    <string-array name="setting_movie_quality_values">
+        <item>@string/zero</item>
+        <item>@string/one</item>
+    </string-array>
+
     <string-array name="dialog_attendance_menu">
         <item>@string/attendance</item>
         <item>@string/lateness</item>
@@ -29,6 +51,7 @@
     </string-array>
 
     <string-array name="dialog_disaster_menu">
-        <item>@string/dialog_disaster_take_picture</item>
+        <item>@string/dialog_disaster_capture_photo</item>
+        <item>@string/dialog_disaster_capture_movie</item>
     </string-array>
 </resources>
