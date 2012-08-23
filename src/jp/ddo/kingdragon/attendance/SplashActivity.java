@@ -5,6 +5,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 
+/**
+ * スプラッシュ画面
+ * 参考:Androidアプリでスプラッシュ画面を表示させる方法 - MIRAI THE FUTURE
+ *      http://d.hatena.ne.jp/yamamotodaisaku/20100126/1264504434
+ * @author 杉本祐介
+ */
 public class SplashActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
