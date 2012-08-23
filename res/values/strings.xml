@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">StudentAttendance</string>
+    <string name="app_name">MAMSA</string>
     <string name="attendance">出席</string>
     <string name="lateness">遅刻</string>
     <string name="leave_early">早退</string>

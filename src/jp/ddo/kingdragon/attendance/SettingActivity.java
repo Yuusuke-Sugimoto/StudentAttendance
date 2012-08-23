@@ -3,18 +3,21 @@ package jp.ddo.kingdragon.attendance;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.util.Log;
+
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
 
 import jp.ddo.kingdragon.attendance.filechoose.FileChooseActivity;
 import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
@@ -109,15 +112,33 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
             }
         });
 
-        WifiManager mWifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
-        WifiInfo mWifiInfo = mWifiManager.getConnectionInfo();
-        int ipAddress = mWifiInfo.getIpAddress();
-        String strIpAddress = (ipAddress & 0xff) + "."
-                              + ((ipAddress >> 8)  & 0xff) + "."
-                              + ((ipAddress >> 16) & 0xff) + "."
-                              + ((ipAddress >> 24) & 0xff);
+        /**
+         * 端末のIPアドレスを取得する
+         * 参考:自分のIPアドレスを取得する - マイペースなプログラミング日記
+         *      http://d.hatena.ne.jp/d-kami/20100803/1280819590
+         */
+        String ipAddress = null;
+        try {
+            Enumeration<NetworkInterface> netInterfaces = NetworkInterface.getNetworkInterfaces();
+            while (ipAddress == null && netInterfaces.hasMoreElements()) {
+                NetworkInterface netInterface = netInterfaces.nextElement();
+                Enumeration<InetAddress> addresses = netInterface.getInetAddresses();
+                while (ipAddress == null && addresses.hasMoreElements()) {
+                    String address = addresses.nextElement().getHostAddress();
+                    if (address.matches("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}") && !address.equals("0.0.0.0") && !address.equals("127.0.0.1")) {
+                        ipAddress = address;
+                    }
+                }
+            }
+        }
+        catch (SocketException e) {
+            Log.e("onCreate", e.getMessage(), e);
+        }
+        if (ipAddress == null) {
+            ipAddress = "0.0.0.0";
+        }
         Preference ipAddressPreference = (Preference)findPreference("setting_ip_address");
-        ipAddressPreference.setSummary(strIpAddress);
+        ipAddressPreference.setSummary(ipAddress);
 
         Preference apacheLicensePreference = (Preference)findPreference("setting_license_apache");
         apacheLicensePreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {

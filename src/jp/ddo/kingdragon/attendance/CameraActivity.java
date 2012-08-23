@@ -13,6 +13,7 @@ import android.hardware.SensorManager;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -342,7 +343,14 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         // 生成したファイル名で新規ファイルを登録
         FileOutputStream fos = null;
         try {
-            Bitmap mBitmap = Util.rotateImage(BitmapFactory.decodeByteArray(data, 0, data.length), rotation);
+            Bitmap mBitmap;
+            if (Build.MODEL.equals("Galaxy Nexus")) {
+                // Galaxy Nexusでは回転済みの画像が渡されるため。
+                mBitmap = Util.rotateImage(BitmapFactory.decodeByteArray(data, 0, data.length), 0.0f);
+            }
+            else {
+                mBitmap = Util.rotateImage(BitmapFactory.decodeByteArray(data, 0, data.length), rotation);
+            }
             fos = new FileOutputStream(destFile.getAbsolutePath());
             mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
         }
@@ -467,7 +475,6 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             params.setPreviewSize(preSize.width, preSize.height);
 
             // プレビューサイズを元にSurfaceViewのサイズを決定
-            // プレビューサイズとSurfaceViewのサイズで縦横の関係が逆になっている
             ViewGroup.LayoutParams lParams = preview.getLayoutParams();
             if (preSize.width <= mDisplay.getWidth() && preSize.height <= mDisplay.getHeight()) {
                 lParams.width  = preSize.width;
@@ -496,6 +503,13 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
 
         try {
             mCamera.setPreviewDisplay(preview.getHolder());
+            if (Build.MODEL.equals("Galaxy Nexus")) {
+                try {
+                    // Galaxy Nexusにおいてウェイトを入れないと動作しなかったため。
+                    Thread.sleep(300);
+                }
+                catch (InterruptedException e) {}
+            }
             mCamera.startPreview();
         }
         catch (Exception e) {
@@ -661,6 +675,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         }
         CamcorderProfile profile = CamcorderProfile.get(movieQuality);
         if (mPreferenceUtil.getMovieQuality() == PreferenceUtil.QUALITY_LOW) {
+            profile.videoCodec = MediaRecorder.VideoEncoder.H264;
             profile.audioCodec = MediaRecorder.AudioEncoder.AAC;
         }
         Camera.Size preSize = params.getPreviewSize();
@@ -683,13 +698,13 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             recorder.prepare();
         }
         catch (IllegalStateException e) {
-            Log.e("surfaceChanged", e.getMessage(), e);
+            Log.e("initRecorder", e.getMessage(), e);
             destMovieFile.delete();
 
             finish();
         }
         catch (IOException e) {
-            Log.e("surfaceChanged", e.getMessage(), e);
+            Log.e("initRecorder", e.getMessage(), e);
             destMovieFile.delete();
 
             finish();

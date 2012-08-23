@@ -44,8 +44,8 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import dalvik.system.DexClassLoader;
 
 import jp.ddo.kingdragon.attendance.servlet.SearchStudentServlet;
-import jp.ddo.kingdragon.attendance.servlet.StudentListServlet;
 import jp.ddo.kingdragon.attendance.servlet.ShowMovieServlet;
+import jp.ddo.kingdragon.attendance.servlet.StudentListServlet;
 import jp.ddo.kingdragon.attendance.student.Attendance;
 import jp.ddo.kingdragon.attendance.student.AttendanceListAdapter;
 import jp.ddo.kingdragon.attendance.student.AttendanceLocation;

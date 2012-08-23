@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
 
 import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
 
@@ -49,11 +50,18 @@ public class CameraSettingActivity extends PreferenceActivity implements OnShare
             }
         }
 
-        ListPreference pictureSizePreference = (ListPreference)findPreference("setting_picture_size");
+        PreferenceCategory generalCategory = (PreferenceCategory)findPreference("setting_photo");
+        ListPreference pictureSizePreference = new ListPreference(CameraSettingActivity.this);
+        pictureSizePreference.setTitle(R.string.setting_picture_size_title);
+        pictureSizePreference.setKey("setting_picture_size");
         pictureSizePreference.setDefaultValue(String.valueOf(defValueForPictureSize));
         pictureSizePreference.setSummary(entryLabelsForPictureSize[defValueForPictureSize] + "\n" + getString(R.string.setting_picture_size_summary));
+        pictureSizePreference.setDialogTitle(R.string.setting_picture_size_title);
         pictureSizePreference.setEntries(entryLabelsForPictureSize);
         pictureSizePreference.setEntryValues(entryValuesForPictureSize);
+        pictureSizePreference.setOrder(1);
+
+        generalCategory.addPreference(pictureSizePreference);
     }
 
     @Override
