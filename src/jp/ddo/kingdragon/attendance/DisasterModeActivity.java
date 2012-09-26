@@ -54,7 +54,7 @@ import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
 import jp.ddo.kingdragon.attendance.util.Util;
 
 /**
- * JettyをAndroidアプリに組み込むテスト用のアプリ
+ * 災害モード
  * @author 杉本祐介
  */
 public class DisasterModeActivity extends Activity {
@@ -65,9 +65,10 @@ public class DisasterModeActivity extends Activity {
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT                = 0;
     private static final int DIALOG_DISASTER_MENU           = 1;
-    private static final int DIALOG_FETCHING_LOCATION       = 2;
-    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 3;
-    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 4;
+    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 2;
+    private static final int DIALOG_FETCHING_LOCATION       = 3;
+    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 4;
+    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 5;
     /**
      * 使用する文字コード
      */
@@ -527,6 +528,11 @@ public class DisasterModeActivity extends Activity {
 
                 break;
             }
+            case R.id.menu_add_attendance: {
+                showDialog(DisasterModeActivity.DIALOG_ADD_ATTENDANCE_MENU);
+
+                break;
+            }
             case R.id.menu_refresh: {
                 refreshAttendanceSheets();
 
@@ -580,6 +586,37 @@ public class DisasterModeActivity extends Activity {
                                 mIntent.putExtra(CameraActivity.CAPTURE_MODE, CameraActivity.CAPTURE_MODE_MOVIE);
                                 startActivityForResult(mIntent, DisasterModeActivity.REQUEST_CAPTURE_MOVIE);
 
+                                break;
+                            }
+                        }
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case DisasterModeActivity.DIALOG_ADD_ATTENDANCE_MENU: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
+                builder.setTitle(R.string.dialog_add_attendance_menu_title);
+                builder.setItems(R.array.dialog_add_attendance_menu, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0: {
+                                // リストから追加する
+                                for (AttendanceSheet sheet : attendanceSheets) {
+                                    Log.w("onCreateDialog", sheet.getSubject());
+                                }
+
+                                break;
+                            }
+                            case 1: {
+                                // 学籍番号で検索する
+                                break;
+                            }
+                            case 2: {
+                                // 手動で登録する
                                 break;
                             }
                         }

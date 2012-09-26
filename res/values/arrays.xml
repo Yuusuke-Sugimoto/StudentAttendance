@@ -51,7 +51,13 @@
     </string-array>
 
     <string-array name="dialog_disaster_menu">
-        <item>@string/dialog_disaster_capture_photo</item>
-        <item>@string/dialog_disaster_capture_movie</item>
+        <item>@string/dialog_disaster_menu_capture_photo</item>
+        <item>@string/dialog_disaster_menu_capture_movie</item>
+    </string-array>
+
+    <string-array name="dialog_add_attendance_menu">
+        <item>@string/dialog_add_attendance_menu_list</item>
+        <item>@string/dialog_add_attendance_menu_search</item>
+        <item>@string/dialog_add_attendance_menu_manual</item>
     </string-array>
 </resources>

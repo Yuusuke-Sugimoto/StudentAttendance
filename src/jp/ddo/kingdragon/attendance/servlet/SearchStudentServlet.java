@@ -14,6 +14,10 @@ import jp.ddo.kingdragon.attendance.DisasterModeActivity;
 import jp.ddo.kingdragon.attendance.student.Attendance;
 import jp.ddo.kingdragon.attendance.student.AttendanceSheet;
 
+/**
+ * 学生の検索を行うサーブレット
+ * @author 杉本祐介
+ */
 public class SearchStudentServlet extends HttpServlet {
     // 定数の宣言
     /**

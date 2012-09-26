@@ -90,6 +90,7 @@
     <string name="menu_hide_invisible_file">隠しファイルを隠す</string>
     <string name="menu_create_file">新規ファイルを作成する</string>
     <string name="menu_create_directory">新規フォルダを作成する</string>
+    <string name="menu_add_attendance">出席データを追加する</string>
     <string name="menu_refresh">リストを再読み込み</string>
 
     <string name="dialog_ask">確認</string>
@@ -128,8 +129,12 @@
     <string name="dialog_create_file_hint">ファイル名を入力</string>
     <string name="dialog_create_directory_title">新規フォルダの作成</string>
     <string name="dialog_create_directory_hint">フォルダ名を入力</string>
-    <string name="dialog_disaster_capture_photo">写真を撮影</string>
-    <string name="dialog_disaster_capture_movie">動画を撮影</string>
+    <string name="dialog_disaster_menu_capture_photo">写真を撮影</string>
+    <string name="dialog_disaster_menu_capture_movie">動画を撮影</string>
+    <string name="dialog_add_attendance_menu_title">出席データの追加</string>
+    <string name="dialog_add_attendance_menu_list">リストから追加する</string>
+    <string name="dialog_add_attendance_menu_search">学籍番号で検索する</string>
+    <string name="dialog_add_attendance_menu_manual">手動で登録する</string>
 
     <string name="notice_location_fetched">現在地を取得しました</string>
     <string name="notice_add_location_disabled">\"位置情報を付加する\"は無効になりました</string>

@@ -8,6 +8,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * 動画の表示を行うサーブレット
+ * @author 杉本祐介
+ */
 public class ShowMovieServlet extends HttpServlet {
     // 定数の宣言
     /**
