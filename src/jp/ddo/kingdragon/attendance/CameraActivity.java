@@ -346,10 +346,10 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             Bitmap mBitmap;
             if (Build.MODEL.equals("Galaxy Nexus")) {
                 // Galaxy Nexusでは回転済みの画像が渡されるため。
-                mBitmap = Util.rotateImage(BitmapFactory.decodeByteArray(data, 0, data.length), 0.0f);
+                mBitmap = Util.rotateBitmap(BitmapFactory.decodeByteArray(data, 0, data.length), 0.0f);
             }
             else {
-                mBitmap = Util.rotateImage(BitmapFactory.decodeByteArray(data, 0, data.length), rotation);
+                mBitmap = Util.rotateBitmap(BitmapFactory.decodeByteArray(data, 0, data.length), rotation);
             }
             fos = new FileOutputStream(destFile.getAbsolutePath());
             mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);

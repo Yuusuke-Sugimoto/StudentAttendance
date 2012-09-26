@@ -135,6 +135,7 @@
     <string name="dialog_add_attendance_menu_list">リストから追加する</string>
     <string name="dialog_add_attendance_menu_search">学籍番号で検索する</string>
     <string name="dialog_add_attendance_menu_manual">手動で登録する</string>
+    <string name="dialog_csv_file_list_title">追加元リストの選択</string>
 
     <string name="notice_location_fetched">現在地を取得しました</string>
     <string name="notice_add_location_disabled">\"位置情報を付加する\"は無効になりました</string>

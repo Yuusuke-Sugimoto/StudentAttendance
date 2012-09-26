@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.DialogInterface.OnDismissListener;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -50,6 +51,7 @@ import jp.ddo.kingdragon.attendance.student.Attendance;
 import jp.ddo.kingdragon.attendance.student.AttendanceListAdapter;
 import jp.ddo.kingdragon.attendance.student.AttendanceLocation;
 import jp.ddo.kingdragon.attendance.student.AttendanceSheet;
+import jp.ddo.kingdragon.attendance.student.Student;
 import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
 import jp.ddo.kingdragon.attendance.util.Util;
 
@@ -66,9 +68,11 @@ public class DisasterModeActivity extends Activity {
     private static final int DIALOG_ASK_EXIT                = 0;
     private static final int DIALOG_DISASTER_MENU           = 1;
     private static final int DIALOG_ADD_ATTENDANCE_MENU     = 2;
-    private static final int DIALOG_FETCHING_LOCATION       = 3;
-    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 4;
-    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 5;
+    private static final int DIALOG_CSV_FILE_LIST           = 3;
+    private static final int DIALOG_STUDENT_LIST            = 4;
+    private static final int DIALOG_FETCHING_LOCATION       = 5;
+    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 6;
+    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 7;
     /**
      * 使用する文字コード
      */
@@ -105,6 +109,10 @@ public class DisasterModeActivity extends Activity {
      * 現在扱っている出席データ
      */
     private Attendance currentAttendance;
+    /**
+     * リストから追加する際に選択されたシート
+     */
+    private AttendanceSheet selectedSheet;
     /**
      * 出席データの一覧を表示するビュー
      */
@@ -171,7 +179,7 @@ public class DisasterModeActivity extends Activity {
 
     // コレクションの宣言
     /**
-     * リストディレクトリから読み取った全てのリストを格納するリスト
+     * リストディレクトリから読み取った全てのシートを格納するリスト
      */
     private ArrayList<AttendanceSheet> attendanceSheets;
 
@@ -185,6 +193,7 @@ public class DisasterModeActivity extends Activity {
         isFetchingLocation = false;
 
         currentAttendance = null;
+        selectedSheet = null;
         mAttendanceSheet = new AttendanceSheet();
         mAttendanceLocation = null;
         mPreferenceUtil = new PreferenceUtil(DisasterModeActivity.this);
@@ -194,6 +203,7 @@ public class DisasterModeActivity extends Activity {
             isReading = savedInstanceState.getBoolean("IsReading");
             isFetchingLocation = savedInstanceState.getBoolean("IsFetchingLocation");
             currentAttendance = (Attendance)savedInstanceState.getSerializable("CurrentAttendance");
+            selectedSheet = (AttendanceSheet)savedInstanceState.getSerializable("SelectedSheet");
             mAttendanceSheet = (AttendanceSheet)savedInstanceState.getSerializable("AttendanceSheet");
             ArrayList<Attendance> attendanceDisplayData = (ArrayList<Attendance>)savedInstanceState.getSerializable("AttendanceDisplayData");
             mAttendanceListAdapter = new AttendanceListAdapter(DisasterModeActivity.this, 0, attendanceDisplayData);
@@ -605,10 +615,10 @@ public class DisasterModeActivity extends Activity {
                         switch (which) {
                             case 0: {
                                 // リストから追加する
-                                for (AttendanceSheet sheet : attendanceSheets) {
-                                    Log.w("onCreateDialog", sheet.getSubject());
+                                if (attendanceSheets.size() != 0) {
+                                    showDialog(DisasterModeActivity.DIALOG_CSV_FILE_LIST);
                                 }
-
+                                
                                 break;
                             }
                             case 1: {
@@ -624,6 +634,69 @@ public class DisasterModeActivity extends Activity {
                 });
                 builder.setCancelable(true);
                 retDialog = builder.create();
+
+                break;
+            }
+            case DisasterModeActivity.DIALOG_CSV_FILE_LIST: {
+                selectedSheet = null;
+                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
+                builder.setTitle(R.string.dialog_csv_file_list_title);
+                String[] subjects = new String[attendanceSheets.size()];
+                for (int i = 0; i < attendanceSheets.size(); i++) {
+                    subjects[i] = attendanceSheets.get(i).getSubject();
+                }
+                builder.setItems(subjects, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        selectedSheet = attendanceSheets.get(which);
+                        showDialog(DisasterModeActivity.DIALOG_STUDENT_LIST);
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
+                retDialog.setOnDismissListener(new OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        removeDialog(id);
+                    }
+                });
+
+                break;
+            }
+            case DisasterModeActivity.DIALOG_STUDENT_LIST: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
+                builder.setTitle(selectedSheet.getSubject());
+                final ArrayList<Attendance> mSheet = selectedSheet.getAttendanceDisplayData();
+                String[] students = new String[mSheet.size()];
+                for (int i = 0; i < mSheet.size(); i++) {
+                    Attendance mAttendance = mSheet.get(i);
+                    students[i] = mAttendance.getStudentNo() + " " + mAttendance.getStudentName();
+                }
+                builder.setItems(students, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        currentAttendance = mSheet.get(which);
+                        if (!mPreferenceUtil.isLocationEnabled()) {
+                            currentAttendance.setStatus(Attendance.ATTENDANCE);
+                        }
+                        else {
+                            currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                        }
+                        currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
+                        mAttendanceSheet.put(currentAttendance.getStudentNo(), currentAttendance);
+                        mAttendanceListAdapter.add(currentAttendance);
+                        int position = mAttendanceListAdapter.getPosition(currentAttendance);
+                        attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
+                retDialog.setOnDismissListener(new OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        removeDialog(id);
+                    }
+                });
 
                 break;
             }
@@ -732,6 +805,7 @@ public class DisasterModeActivity extends Activity {
         outState.putBoolean("IsReading", isReading);
         outState.putBoolean("IsFetchingLocation", isFetchingLocation);
         outState.putSerializable("CurrentAttendance", currentAttendance);
+        outState.putSerializable("SelectedSheet", selectedSheet);
         outState.putSerializable("AttendanceSheet", mAttendanceSheet);
         outState.putSerializable("AttendanceDisplayData", mAttendanceSheet.getAttendanceDisplayData());
         outState.putSerializable("AttendanceLocation", mAttendanceLocation);

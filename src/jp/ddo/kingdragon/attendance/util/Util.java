@@ -35,14 +35,13 @@ public class Util {
     }
 
     /**
-     * 画像を回転させる<br />
-     * 画像のサイズが大きければ縮小も行う
+     * 画像を回転させる
      * @param srcBitmap 元となる画像のBitmap
-     * @param rotation 回転角度(90度単位)
+     * @param rotation 回転角度
      * @return 回転させた画像のBitmap
      * @throws IOException
      */
-    public static Bitmap rotateImage(Bitmap srcBitmap, float rotation) throws IOException {
+    public static Bitmap rotateBitmap(Bitmap srcBitmap, float rotation) {
         Matrix mMatrix = new Matrix();
         mMatrix.postRotate(rotation);
         Bitmap retBitmap = Bitmap.createBitmap(srcBitmap, 0, 0, srcBitmap.getWidth(), srcBitmap.getHeight(), mMatrix, true);
@@ -86,8 +85,6 @@ public class Util {
 
         float rotation = 0.0f;
         switch (orientation) {
-            case ExifInterface.ORIENTATION_UNDEFINED:
-            case ExifInterface.ORIENTATION_NORMAL:
             case ExifInterface.ORIENTATION_ROTATE_180: {
                 rotation = 180.0f;
 
@@ -105,6 +102,6 @@ public class Util {
             }
         }
 
-        return rotateImage(srcBitmap, rotation);
+        return rotateBitmap(srcBitmap, rotation);
     }
 }
