@@ -16,4 +16,12 @@
           android:title="@string/menu_refresh"
           android:icon="@drawable/ic_menu_refresh"
           android:numericShortcut="4" />
+    <item android:id="@+id/menu_open"
+          android:title="@string/menu_read_from_csv_file"
+          android:icon="@android:drawable/ic_menu_set_as"
+          android:numericShortcut="5" />
+    <item android:id="@+id/menu_save"
+          android:title="@string/menu_save"
+          android:icon="@android:drawable/ic_menu_save"
+          android:numericShortcut="6" />
 </menu>

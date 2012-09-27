@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -326,6 +327,9 @@ public class FileChooseActivity extends Activity {
                 builder.setTitle(R.string.dialog_create_directory_title);
                 editTextForDirectoryName = new EditText(FileChooseActivity.this);
                 editTextForDirectoryName.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+                editTextForDirectoryName.setInputType(InputType.TYPE_CLASS_TEXT);
+                editTextForDirectoryName.setMaxLines(1);
+                editTextForDirectoryName.setHint(R.string.dialog_create_directory_hint);
                 builder.setView(editTextForDirectoryName);
                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override

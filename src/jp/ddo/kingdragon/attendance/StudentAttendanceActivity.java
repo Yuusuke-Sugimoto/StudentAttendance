@@ -278,7 +278,7 @@ public class StudentAttendanceActivity extends Activity {
                     }
                     catch (IllegalArgumentException e) {}
                     mAttendanceLocation = new AttendanceLocation(location.getLatitude(), location.getLongitude(),
-                                                                 location.getAltitude(), location.getAccuracy());
+                                                                 location.getAccuracy());
                     Toast.makeText(StudentAttendanceActivity.this, R.string.notice_location_fetched, Toast.LENGTH_SHORT).show();
                 }
             }
@@ -675,14 +675,14 @@ public class StudentAttendanceActivity extends Activity {
             }
             else {
                 mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(), mPreferenceUtil.isLongitudeEnabled(),
-                                             mPreferenceUtil.isAltitudeEnabled(), mPreferenceUtil.isAccuracyEnabled());
+                                             mPreferenceUtil.isAccuracyEnabled());
             }
             isSaved = true;
             Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
         }
         catch (IOException e) {
             Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
-            Log.e("onActivityResult", e.getMessage(), e);
+            Log.e("saveCsvFile", e.getMessage(), e);
         }
     }
 
@@ -697,7 +697,7 @@ public class StudentAttendanceActivity extends Activity {
         }
         String id = rawId.toString();
         if (isReading && mAttendanceSheet.hasNfcId(id)) {
-            currentAttendance = mAttendanceSheet.get(id);
+            currentAttendance = mAttendanceSheet.getByNfcId(id);
             if (currentAttendance.getStatus() == Attendance.ABSENCE) {
                 if (!mPreferenceUtil.isLocationEnabled()) {
                     currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());

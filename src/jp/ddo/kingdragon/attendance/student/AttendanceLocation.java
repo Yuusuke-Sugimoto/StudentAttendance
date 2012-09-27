@@ -23,10 +23,6 @@ public class AttendanceLocation implements Serializable {
      */
     private final double longitude;
     /**
-     * 高度
-     */
-    private final double altitude;
-    /**
      * 精度
      */
     private final float accuracy;
@@ -47,19 +43,8 @@ public class AttendanceLocation implements Serializable {
      * @param accuracy 精度
      */
     public AttendanceLocation(double latitude, double longitude, float accuracy) {
-        this(latitude, longitude, -1.0, accuracy);
-    }
-    /**
-     * 緯度、経度、高度、精度がセットされたインスタンスを生成する
-     * @param latitude 緯度
-     * @param longitude 経度
-     * @param altitude 高度
-     * @param accuracy 精度
-     */
-    public AttendanceLocation(double latitude, double longitude, double altitude, float accuracy) {
         this.latitude = latitude;
         this.longitude = longitude;
-        this.altitude = altitude;
         this.accuracy = accuracy;
     }
 
@@ -71,6 +56,7 @@ public class AttendanceLocation implements Serializable {
     public double getLatitude() {
         return latitude;
     }
+
     /**
      * 経度を取得する
      * @return 経度
@@ -78,13 +64,7 @@ public class AttendanceLocation implements Serializable {
     public double getLongitude() {
         return longitude;
     }
-    /**
-     * 高度を取得する
-     * @return 高度 セットされていなければ-1.0
-     */
-    public double getAltitude() {
-        return altitude;
-    }
+
     /**
      * 精度を取得する
      * @return 精度 セットされていなければ-1.0f

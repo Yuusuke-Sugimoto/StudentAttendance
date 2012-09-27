@@ -229,12 +229,6 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
             }
             locationFormatSummary.append(getString(R.string.setting_location_format_longitude_title));
         }
-        if (mPreferenceUtil.isAltitudeEnabled()) {
-            if (locationFormatSummary.length() != 0) {
-                locationFormatSummary.append(",");
-            }
-            locationFormatSummary.append(getString(R.string.setting_location_format_altitude_title));
-        }
         if (mPreferenceUtil.isAccuracyEnabled()) {
             if (locationFormatSummary.length() != 0) {
                 locationFormatSummary.append(",");

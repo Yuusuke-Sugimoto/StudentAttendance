@@ -106,14 +106,6 @@ public class PreferenceUtil {
     }
 
     /**
-     * "高度"が有効かどうかを取得する
-     * @return 有効ならばtrue 無効または未設定ならばfalse
-     */
-    public boolean isAltitudeEnabled() {
-        return getBoolean("setting_location_format_altitude", false);
-    }
-
-    /**
      * "精度"が有効かどうかを取得する
      * @return 有効ならばtrue 無効または未設定ならばfalse
      */

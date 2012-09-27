@@ -27,10 +27,6 @@
                                 android:key="setting_location_format_longitude"
                                 android:defaultValue="true"
                                 android:summary="@string/setting_location_format_longitude_summary" />
-            <CheckBoxPreference android:title="@string/setting_location_format_altitude_title"
-                                android:key="setting_location_format_altitude"
-                                android:defaultValue="true"
-                                android:summary="@string/setting_location_format_altitude_summary" />
             <CheckBoxPreference android:title="@string/setting_location_format_accuracy_title"
                                 android:key="setting_location_format_accuracy"
                                 android:defaultValue="true"

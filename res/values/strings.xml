@@ -36,8 +36,6 @@
     <string name="setting_location_format_latitude_summary">緯度を出力します。</string>
     <string name="setting_location_format_longitude_title">経度</string>
     <string name="setting_location_format_longitude_summary">経度を出力します。</string>
-    <string name="setting_location_format_altitude_title">高度</string>
-    <string name="setting_location_format_altitude_summary">高度を出力します。</string>
     <string name="setting_location_format_accuracy_title">精度</string>
     <string name="setting_location_format_accuracy_summary">精度を出力します。</string>
     <string name="setting_save_title">保存設定</string>
@@ -92,6 +90,7 @@
     <string name="menu_create_directory">新規フォルダを作成する</string>
     <string name="menu_add_attendance">出席データを追加する</string>
     <string name="menu_refresh">リストを再読み込み</string>
+    <string name="menu_read_from_csv_file">追加読み込み</string>
 
     <string name="dialog_ask">確認</string>
     <string name="dialog_ask_exit_without_saving">保存せずに終了してもよろしいですか?</string>
@@ -136,6 +135,9 @@
     <string name="dialog_add_attendance_menu_search">学籍番号で検索する</string>
     <string name="dialog_add_attendance_menu_manual">手動で登録する</string>
     <string name="dialog_csv_file_list_title">追加元リストの選択</string>
+    <string name="dialog_search_student_no_title">学籍番号での検索</string>
+    <string name="dialog_search_student_no_hint">学籍番号を入力</string>
+    <string name="dialog_input_student_info_title">手動での登録</string>
 
     <string name="notice_location_fetched">現在地を取得しました</string>
     <string name="notice_add_location_disabled">\"位置情報を付加する\"は無効になりました</string>
@@ -164,6 +166,7 @@
     <string name="error_directory_create_failed">フォルダの作成に失敗しました。</string>
     <string name="error_illegal_directory_name">フォルダ名に使用できない文字が含まれています。</string>
     <string name="error_directory_name_null">フォルダ名が入力されていません。</string>
+    <string name="error_list_file_not_found">リストファイルが見つかりません</string>
     <string name="error_launch_camera_failed">カメラの起動に失敗しました</string>
     <string name="error_set_preview_failed">プレビュー画面の設定に失敗しました</string>
 

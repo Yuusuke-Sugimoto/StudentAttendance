@@ -1,9 +1,7 @@
 package jp.ddo.kingdragon.attendance.student;
 
 import android.content.res.Resources;
-
-import au.com.bytecode.opencsv.CSVParser;
-import au.com.bytecode.opencsv.CSVWriter;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,9 +13,15 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+
+import au.com.bytecode.opencsv.CSVParser;
+import au.com.bytecode.opencsv.CSVWriter;
+
+import jp.ddo.kingdragon.attendance.R;
 
 /**
  * 出席リストを管理するクラス
@@ -42,9 +46,13 @@ public class AttendanceSheet implements Serializable {
 
     // コレクションの宣言
     /**
-     * 現在管理している出席データのリスト
+     * 現在管理している出席データをNFCタグをキーとして格納したリスト
      */
-    private LinkedHashMap<String, Attendance> attendances;
+    private LinkedHashMap<String, Attendance> attendancesNfcId;
+    /**
+     * 現在管理している出席データを学籍番号をキーとして格納したリスト
+     */
+    private LinkedHashMap<String, Attendance> attendancesStudentNo;
 
     // コンストラクタ
     /**
@@ -53,7 +61,8 @@ public class AttendanceSheet implements Serializable {
     public AttendanceSheet() {
         subject = "";
         time = "";
-        attendances = new LinkedHashMap<String, Attendance>();
+        attendancesNfcId = new LinkedHashMap<String, Attendance>();
+        attendancesStudentNo = new LinkedHashMap<String, Attendance>();
     }
     /**
      * CSVファイルからシートを生成する
@@ -85,55 +94,128 @@ public class AttendanceSheet implements Serializable {
                 isSubjectRecord = false;
             }
             else if (isStudentRecord) {
-                String[] nfcIds;
-                if (values.length == 6) {
-                    // NFCのタグのIDが1つ
-                    if (values[5].length() != 0) {
-                        nfcIds = new String[] {values[5]};
-                    }
-                    else {
-                        nfcIds = new String[0];
-                    }
-                }
-                else if (values.length > 6) {
-                    // NFCタグのIDが複数セットされている場合は配列に直す
-                    ArrayList<String> tempNfcIds = new ArrayList<String>();
-                    for (int i = 5; i < values.length; i++) {
-                        if (values[i].length() != 0) {
-                            tempNfcIds.add(values[i]);
-                        }
-                    }
-                    nfcIds = tempNfcIds.toArray(new String[tempNfcIds.size()]);
-                }
-                else {
-                    // NFCのタグのIDが未登録
-                    nfcIds = new String[0];
-                }
-                int num;
+                Attendance mAttendance;
+                int num = -1;
                 if (values[0].length() != 0) {
                     // 連番が設定されている場合
                     try {
                         num = Integer.parseInt(values[0]);
                     }
-                    catch (Exception ex) {
-                        num = -1;
+                    catch (NumberFormatException e) {}
+                }
+
+                if (values.length >= 6 && !values[5].matches("[A-Za-z0-9]+")) {
+                    // values[5]が正規表現にマッチしなければ出席データが格納されたCSVファイル
+                    mAttendance = new Attendance(new Student(values[2], num, values[1],
+                                                             values[3], values[4], (String[])null),
+                                                 inResources);
+                    AttendanceLocation mAttendanceLocation = null;
+                    if (values.length >= 8) {
+                        double latitude = -1.0;
+                        double longitude = -1.0;
+                        float accuracy = -1.0f;
+
+                        try {
+                            latitude = Double.parseDouble(values[7]);
+                        }
+                        catch (NumberFormatException e) {}
+                        if (values.length >= 9) {
+                            try {
+                                longitude = Double.parseDouble(values[8]);
+                            }
+                            catch (NumberFormatException e) {}
+                            if (values.length >= 10) {
+                                try {
+                                    accuracy = Float.parseFloat(values[9]);
+                                }
+                                catch (NumberFormatException e) {}
+                                if (values.length >= 11) {
+                                    if (values[10].length() != 0) {
+                                        mAttendance.putExtra(Attendance.PHOTO_PATH, values[10]);
+                                    }
+                                    if (values.length >= 12) {
+                                        if (values[11].length() != 0) {
+                                            mAttendance.putExtra(Attendance.MOVIE_PATH, values[11]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        mAttendanceLocation = new AttendanceLocation(latitude, longitude, accuracy);
+                    }
+                    if (values[5].length() != 0) {
+                        if (values[5].equals(inResources.getString(R.string.attendance))) {
+                            if (mAttendanceLocation != null) {
+                                mAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                            }
+                            else {
+                                mAttendance.setStatus(Attendance.ATTENDANCE);
+                            }
+                        }
+                        else if (values[5].equals(inResources.getString(R.string.lateness))) {
+                            if (mAttendanceLocation != null) {
+                                mAttendance.setStatus(Attendance.LATENESS, mAttendanceLocation);
+                            }
+                            else {
+                                mAttendance.setStatus(Attendance.LATENESS);
+                            }
+                        }
+                        else if (values[5].equals(inResources.getString(R.string.leave_early))) {
+                            if (mAttendanceLocation != null) {
+                                mAttendance.setStatus(Attendance.LEAVE_EARLY, mAttendanceLocation);
+                            }
+                            else {
+                                mAttendance.setStatus(Attendance.LEAVE_EARLY);
+                            }
+                        }
+
+                        try {
+                            mAttendance.setTimeStamp(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(values[6]).getTime());
+                        }
+                        catch (ParseException e) {
+                            Log.e("AttendanceSheet", e.getMessage(), e);
+                        }
                     }
                 }
                 else {
-                    num = -1;
-                }
-                Attendance mAttendance = new Attendance(new Student(values[2], num, values[1],
-                                                                    values[3], values[4], nfcIds),
-                                                        inResources);
-                // ID1個ごとにリストに追加する
-                if (nfcIds.length > 0) {
-                    for (String id : nfcIds) {
-                        attendances.put(id, mAttendance);
+                    String[] nfcIds;
+                    if (values.length == 6) {
+                        // NFCのタグのIDが1つ
+                        if (values[5].length() != 0) {
+                            nfcIds = new String[] {values[5]};
+                        }
+                        else {
+                            nfcIds = new String[0];
+                        }
+                    }
+                    else if (values.length > 6) {
+                        // NFCタグのIDが複数セットされている場合は配列に直す
+                        ArrayList<String> tempNfcIds = new ArrayList<String>();
+                        for (int i = 5; i < values.length; i++) {
+                            if (values[i].length() != 0) {
+                                tempNfcIds.add(values[i]);
+                            }
+                        }
+                        nfcIds = tempNfcIds.toArray(new String[tempNfcIds.size()]);
+                    }
+                    else {
+                        // NFCのタグのIDが未登録
+                        nfcIds = new String[0];
+                    }
+                    mAttendance = new Attendance(new Student(values[2], num, values[1],
+                                                             values[3], values[4], nfcIds),
+                                                 inResources);
+                    // ID1個ごとにリストに追加する
+                    if (nfcIds.length > 0) {
+                        for (String id : nfcIds) {
+                            attendancesNfcId.put(id, mAttendance);
+                        }
+                    }
+                    else {
+                        attendancesNfcId.put(values[2], mAttendance);
                     }
                 }
-                else {
-                    attendances.put(values[2], mAttendance);
-                }
+                attendancesStudentNo.put(values[2], mAttendance);
             }
 
             if (values[0].equals("科目")) {
@@ -183,7 +265,8 @@ public class AttendanceSheet implements Serializable {
      * @param mAttendance 出席データ
      */
     public void put(String nfcId, Attendance mAttendance) {
-        attendances.put(nfcId, mAttendance);
+        attendancesNfcId.put(nfcId, mAttendance);
+        attendancesStudentNo.put(mAttendance.getStudentNo(), mAttendance);
     }
 
     /**
@@ -191,9 +274,7 @@ public class AttendanceSheet implements Serializable {
      * @return 出席データの表示用のリスト
      */
     public ArrayList<Attendance> getAttendanceDisplayData() {
-        LinkedHashSet<Attendance> hashSet = new LinkedHashSet<Attendance>(attendances.values());
-
-        return new ArrayList<Attendance>(hashSet);
+        return new ArrayList<Attendance>(attendancesStudentNo.values());
     }
 
     /**
@@ -201,8 +282,17 @@ public class AttendanceSheet implements Serializable {
      * @param id NFCタグのID
      * @return 出席データ
      */
-    public Attendance get(String id) {
-        return attendances.get(id);
+    public Attendance getByNfcId(String id) {
+        return attendancesNfcId.get(id);
+    }
+
+    /**
+     * 引数で渡された学籍番号を持つ出席データを取得する
+     * @param studentNo 学籍番号
+     * @return 出席データ
+     */
+    public Attendance getByStudentNo(String studentNo) {
+        return attendancesStudentNo.get(studentNo);
     }
 
     /**
@@ -210,9 +300,7 @@ public class AttendanceSheet implements Serializable {
      * @return 現在の出席データの数
      */
     public int size() {
-        LinkedHashSet<Attendance> hashSet = new LinkedHashSet<Attendance>(attendances.values());
-
-        return hashSet.size();
+        return attendancesStudentNo.size();
     }
 
     /**
@@ -221,7 +309,16 @@ public class AttendanceSheet implements Serializable {
      * @return 存在したならばtrue 存在しなければfalse
      */
     public boolean hasNfcId(String id) {
-        return attendances.containsKey(id);
+        return attendancesNfcId.containsKey(id);
+    }
+
+    /**
+     * 引数で渡された学籍番号をもつ出席データが存在するかどうかを調べる
+     * @param studentNo 学籍番号
+     * @return 存在したならばtrue 存在しなければfalse
+     */
+    public boolean hasStudentNo(String studentNo) {
+        return attendancesStudentNo.containsKey(studentNo);
     }
 
     /**
@@ -230,7 +327,7 @@ public class AttendanceSheet implements Serializable {
      * @return 存在したならばtrue 存在しなければfalse
      */
     public boolean hasAttendance(Attendance mAttendance) {
-        return attendances.containsValue(mAttendance);
+        return attendancesNfcId.containsValue(mAttendance);
     }
 
     /**
@@ -242,7 +339,7 @@ public class AttendanceSheet implements Serializable {
      * @throws IOException
      */
     public void saveCsvFile(File csvFile, String encode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
-        saveCsvFile(csvFile, encode, false, false, false, false);
+        saveCsvFile(csvFile, encode, false, false, false);
     }
 
     /**
@@ -258,15 +355,14 @@ public class AttendanceSheet implements Serializable {
      * @throws UnsupportedEncodingException
      * @throws IOException
      */
-    public void saveCsvFile(File csvFile, String encode, boolean isLatitudeEnabled, boolean isLongitudeEnabled, boolean isAltitudeEnabled,
+    public void saveCsvFile(File csvFile, String encode, boolean isLatitudeEnabled, boolean isLongitudeEnabled,
                             boolean isAccuracyEnabled) throws UnsupportedEncodingException, FileNotFoundException, IOException {
-        LinkedHashSet<Attendance> hashSet = new LinkedHashSet<Attendance>(attendances.values());
         CSVWriter writer = new CSVWriter(new OutputStreamWriter(new FileOutputStream(csvFile), encode));
         writer.writeNext(new String[] {"科目", "授業時間", "受講者数"});
-        writer.writeNext(new String[] {subject, time, String.valueOf(hashSet.size())});
+        writer.writeNext(new String[] {subject, time, String.valueOf(attendancesStudentNo.size())});
         writer.writeNext(new String[] {"", "所属", "学籍番号", "氏名", "カナ"});
-        for (Attendance mAttendance : hashSet) {
-            writer.writeNext(mAttendance.getAttendanceData(isLatitudeEnabled, isLongitudeEnabled, isAltitudeEnabled, isAccuracyEnabled));
+        for (Attendance mAttendance : attendancesStudentNo.values()) {
+            writer.writeNext(mAttendance.getAttendanceData(isLatitudeEnabled, isLongitudeEnabled, isAccuracyEnabled));
         }
         writer.flush();
         writer.close();

@@ -169,7 +169,7 @@ public class Attendance implements Serializable {
     public void setStatus(int status, AttendanceLocation inAttendanceLocation) {
         if (status >= Attendance.ATTENDANCE && status <= Attendance.ABSENCE) {
             this.status = status;
-            timeStamp = System.currentTimeMillis();
+            setTimeStamp(System.currentTimeMillis());
             mAttendanceLocation = inAttendanceLocation;
         }
         else {
@@ -212,6 +212,14 @@ public class Attendance implements Serializable {
     }
 
     /**
+     * 更新日時をセットする
+     * @param timeStamp 更新日時
+     */
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    /**
      * 更新日時を取得する
      * @return 更新日時
      */
@@ -243,19 +251,6 @@ public class Attendance implements Serializable {
         }
 
         return longitude;
-    }
-
-    /**
-     * 高度を取得する
-     * @return 高度
-     */
-    public double getAltitude() {
-        double altitude = -1.0;
-        if (mAttendanceLocation != null) {
-            altitude = mAttendanceLocation.getAltitude();
-        }
-
-        return altitude;
     }
 
     /**
@@ -302,7 +297,7 @@ public class Attendance implements Serializable {
      * @return 出席データの内容を配列に格納したもの
      */
     public String[] getAttendanceData() {
-        return getAttendanceData(false, false, false, false);
+        return getAttendanceData(false, false, false);
     }
 
     /**
@@ -310,7 +305,7 @@ public class Attendance implements Serializable {
      * 位置情報を付加する。
      * @return 出席データの内容を配列に格納したもの
      */
-    public String[] getAttendanceData(boolean isLatitudeEnabled, boolean isLongitudeEnabled, boolean isAltitudeEnabled, boolean isAccuracyEnabled) {
+    public String[] getAttendanceData(boolean isLatitudeEnabled, boolean isLongitudeEnabled, boolean isAccuracyEnabled) {
         ArrayList<String> attendanceData = new ArrayList<String>();
         if (getStudentNum() != -1) {
             attendanceData.add(String.valueOf(getStudentNum()));
@@ -329,14 +324,32 @@ public class Attendance implements Serializable {
             if (isLatitudeEnabled) {
                 attendanceData.add(String.valueOf(mAttendanceLocation.getLatitude()));
             }
+            else {
+                attendanceData.add("");
+            }
             if (isLongitudeEnabled) {
                 attendanceData.add(String.valueOf(mAttendanceLocation.getLongitude()));
             }
-            if (isAltitudeEnabled) {
-                attendanceData.add(String.valueOf(mAttendanceLocation.getAltitude()));
+            else {
+                attendanceData.add("");
             }
             if (isAccuracyEnabled) {
                 attendanceData.add(String.valueOf(mAttendanceLocation.getAccuracy()));
+            }
+            else {
+                attendanceData.add("");
+            }
+            if (extras.containsKey(Attendance.PHOTO_PATH)) {
+                attendanceData.add(extras.get(Attendance.PHOTO_PATH));
+            }
+            else {
+                attendanceData.add("");
+            }
+            if (extras.containsKey(Attendance.MOVIE_PATH)) {
+                attendanceData.add(extras.get(Attendance.MOVIE_PATH));
+            }
+            else {
+                attendanceData.add("");
             }
         }
 

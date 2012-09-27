@@ -83,7 +83,6 @@ public class StudentListServlet extends HttpServlet {
                 pw.println("<th>確認日時</th>");
                 pw.println("<th>緯度</th>");
                 pw.println("<th>経度</th>");
-                pw.println("<th>高度</th>");
                 pw.println("<th>精度</th>");
                 pw.println("<th>その他</th>");
                 pw.println("</tr>");
@@ -112,11 +111,6 @@ public class StudentListServlet extends HttpServlet {
                     pw.println("<td>");
                     if (mAttendance.getLongitude() != -1.0) {
                         pw.println(mAttendance.getLongitude());
-                    }
-                    pw.println("</td>");
-                    pw.println("<td>");
-                    if (mAttendance.getAltitude() != -1.0) {
-                        pw.println(mAttendance.getAltitude());
                     }
                     pw.println("</td>");
                     pw.println("<td>");
