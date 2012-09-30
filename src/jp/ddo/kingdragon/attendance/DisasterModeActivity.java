@@ -34,10 +34,11 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 
 import org.eclipse.jetty.server.Server;
@@ -1126,18 +1127,19 @@ public class DisasterModeActivity extends Activity {
      */
     public void refreshAttendanceSheets() {
         attendanceSheets = new ArrayList<AttendanceSheet>();
-        File[] csvFiles = listDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String filename) {
-                boolean isCsvFile = false;
-
-                if (filename.endsWith(".csv")) {
-                    isCsvFile = true;
-                }
-
-                return isCsvFile;
+        ArrayList<File> csvFiles = new ArrayList<File>();
+        for (File mFile : listDir.listFiles()) {
+            if (mFile.getName().endsWith(".csv")) {
+                csvFiles.add(mFile);
             }
-        });
+        }
+        Comparator<File> mComparator = new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                return o1.getName().toLowerCase().compareTo(o2.getName().toLowerCase());
+            }
+        };
+        Collections.sort(csvFiles, mComparator);
         for (File csvFile : csvFiles) {
             try {
                 attendanceSheets.add(new AttendanceSheet(csvFile, CHARACTER_CODE, getResources()));
