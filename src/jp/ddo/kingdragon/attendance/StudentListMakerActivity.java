@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.DialogInterface.OnDismissListener;
 import android.nfc.NfcAdapter;
 import android.nfc.tech.TagTechnology;
 import android.os.Bundle;
@@ -25,6 +26,8 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import jp.ddo.kingdragon.attendance.filechoose.FileChooseActivity;
 import jp.ddo.kingdragon.attendance.student.Student;
@@ -49,7 +52,12 @@ public class StudentListMakerActivity extends Activity {
     private static final int DIALOG_ASK_REMOVE_NFC_ID         = 4;
     private static final int DIALOG_ASK_REMOVE_STUDENT        = 5;
     private static final int DIALOG_EDIT_INFO                 = 6;
-    private static final int DIALOG_ASK_OVERWRITE             = 7;
+    private static final int DIALOG_ADD_STUDENT_MENU          = 7;
+    private static final int DIALOG_CSV_FILE_LIST             = 8;
+    private static final int DIALOG_STUDENT_LIST              = 9;
+    private static final int DIALOG_SEARCH_STUDENT_NO         = 10;
+    private static final int DIALOG_INPUT_STUDENT_INFO        = 11;
+    private static final int DIALOG_ASK_OVERWRITE             = 12;
     /**
      * 使用する文字コード
      */
@@ -81,6 +89,10 @@ public class StudentListMakerActivity extends Activity {
      * 現在扱っている学生データ
      */
     private Student currentStudent;
+    /**
+     * リストから追加する際に選択されたシート
+     */
+    private StudentSheet selectedSheet;
     /**
      * 学生の一覧を表示するビュー
      */
@@ -140,6 +152,12 @@ public class StudentListMakerActivity extends Activity {
      * 対応させるタグの一覧
      */
     private String[][] techs;
+
+    // コレクションの宣言
+    /**
+     * リストディレクトリから読み取った全てのシートを格納するリスト
+     */
+    private ArrayList<StudentSheet> studentSheets;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -220,6 +238,8 @@ public class StudentListMakerActivity extends Activity {
         filters = new IntentFilter[] {mFilter};
         // どの種類のタグでも対応できるようにTagTechnologyクラスを指定する
         techs = new String[][] {new String[] {TagTechnology.class.getName()}};
+
+        refreshStudentSheets();
     }
 
     @Override
@@ -302,6 +322,16 @@ public class StudentListMakerActivity extends Activity {
             }
             case R.id.menu_edit_info: {
                 showDialog(StudentListMakerActivity.DIALOG_EDIT_INFO);
+
+                break;
+            }
+            case R.id.menu_add_attendance: {
+                showDialog(StudentListMakerActivity.DIALOG_ADD_STUDENT_MENU);
+
+                break;
+            }
+            case R.id.menu_refresh: {
+                refreshStudentSheets();
 
                 break;
             }
@@ -445,6 +475,10 @@ public class StudentListMakerActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        String[] nfcIds = currentStudent.getNfcIds();
+                        for (int i = 0; i < nfcIds.length; i++) {
+                            mStudentSheet.removeReadedNfcId(nfcIds[i]);
+                        }
                         currentStudent.removeAllNfcIds();
                         studentListView.invalidateViews();
                         isSaved = false;
@@ -500,6 +534,169 @@ public class StudentListMakerActivity extends Activity {
                         String time = editTextForTime.getEditableText().toString();
                         mStudentSheet.setTime(time);
                         isSaved = false;
+                    }
+                });
+                builder.setNegativeButton(android.R.string.cancel, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case StudentListMakerActivity.DIALOG_ADD_STUDENT_MENU: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+                builder.setTitle(R.string.dialog_add_attendance_menu_title);
+                builder.setItems(R.array.dialog_add_attendance_menu, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0: {
+                                // リストから追加する
+                                if (studentSheets.size() != 0) {
+                                    showDialog(StudentListMakerActivity.DIALOG_CSV_FILE_LIST);
+                                }
+                                else {
+                                    Toast.makeText(StudentListMakerActivity.this, R.string.error_list_file_not_found, Toast.LENGTH_SHORT).show();
+                                }
+
+                                break;
+                            }
+                            case 1: {
+                                // 学籍番号で検索する
+                                showDialog(StudentListMakerActivity.DIALOG_SEARCH_STUDENT_NO);
+
+                                break;
+                            }
+                            case 2: {
+                                // 手動で登録する
+                                showDialog(StudentListMakerActivity.DIALOG_INPUT_STUDENT_INFO);
+
+                                break;
+                            }
+                        }
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case StudentListMakerActivity.DIALOG_CSV_FILE_LIST: {
+                selectedSheet = null;
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+                builder.setTitle(R.string.dialog_csv_file_list_title);
+                String[] subjects = new String[studentSheets.size()];
+                for (int i = 0; i < studentSheets.size(); i++) {
+                    subjects[i] = studentSheets.get(i).getSubject();
+                }
+                builder.setItems(subjects, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        selectedSheet = studentSheets.get(which);
+                        showDialog(StudentListMakerActivity.DIALOG_STUDENT_LIST);
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
+                retDialog.setOnDismissListener(new OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        removeDialog(id);
+                    }
+                });
+
+                break;
+            }
+            case StudentListMakerActivity.DIALOG_STUDENT_LIST: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+                builder.setTitle(selectedSheet.getSubject());
+                final ArrayList<Student> mSheet = selectedSheet.getStudentDisplayData();
+                String[] students = new String[mSheet.size()];
+                for (int i = 0; i < mSheet.size(); i++) {
+                    Student mStudent = mSheet.get(i);
+                    students[i] = mStudent.getStudentNo() + " " + mStudent.getStudentName();
+                }
+                builder.setItems(students, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        currentStudent = mSheet.get(which);
+                        if (!mStudentSheet.hasStudentNo(currentStudent.getStudentNo())) {
+                            currentStudent.setStudentNum(mStudentSheet.size() + 1);
+                            mStudentSheet.add(currentStudent);
+                            mStudentListAdapter.add(currentStudent);
+                            isSaved = false;
+                        }
+                        else {
+                            Toast.makeText(StudentListMakerActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                        }
+                        int position = mStudentListAdapter.getPosition(currentStudent);
+                        studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
+                retDialog.setOnDismissListener(new OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        removeDialog(id);
+                    }
+                });
+
+                break;
+            }
+            case StudentListMakerActivity.DIALOG_SEARCH_STUDENT_NO: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+                builder.setTitle(R.string.dialog_search_student_no_title);
+
+                LayoutInflater inflater = LayoutInflater.from(StudentListMakerActivity.this);
+                editTextForStudentNo = (EditText)inflater.inflate(R.layout.dialog_search_student_no, null);
+
+                builder.setView(editTextForStudentNo);
+                builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String studentNo = editTextForStudentNo.getText().toString().toUpperCase();
+                        onStudentNoReaded(studentNo);
+                    }
+                });
+                builder.setNegativeButton(android.R.string.cancel, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case StudentListMakerActivity.DIALOG_INPUT_STUDENT_INFO: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+                builder.setTitle(R.string.dialog_input_student_info_title);
+
+                LayoutInflater inflater = LayoutInflater.from(StudentListMakerActivity.this);
+                View mView = inflater.inflate(R.layout.dialog_input_student_info, null);
+//                editTextForStudentNum  = (EditText)mView.findViewById(R.id.dialog_student_num);
+                editTextForStudentNo   = (EditText)mView.findViewById(R.id.dialog_student_no);
+                editTextForClassName   = (EditText)mView.findViewById(R.id.dialog_class_name);
+                editTextForStudentName = (EditText)mView.findViewById(R.id.dialog_student_name);
+                editTextForStudentRuby = (EditText)mView.findViewById(R.id.dialog_student_ruby);
+
+                builder.setView(mView);
+                builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String studentNo = editTextForStudentNo.getEditableText().toString();
+                        String className = editTextForClassName.getEditableText().toString();
+                        String studentName = editTextForStudentName.getEditableText().toString();
+                        String studentRuby = editTextForStudentRuby.getEditableText().toString();
+
+                        if (!mStudentSheet.hasStudentNo(studentNo)) {
+                            currentStudent = new Student(studentNo, mStudentSheet.size() + 1, className,
+                                                         studentName, studentRuby, (String[])null);
+                            mStudentSheet.add(currentStudent);
+                            mStudentListAdapter.add(currentStudent);
+                            isSaved = false;
+                        }
+                        else {
+                            currentStudent = mStudentSheet.get(studentNo);
+                        }
+                        int position = mStudentListAdapter.getPosition(currentStudent);
+                        studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
                     }
                 });
                 builder.setNegativeButton(android.R.string.cancel, null);
@@ -594,6 +791,20 @@ public class StudentListMakerActivity extends Activity {
 
                 break;
             }
+            case StudentListMakerActivity.DIALOG_SEARCH_STUDENT_NO: {
+                editTextForStudentNo.setText("");
+
+                break;
+            }
+            case StudentListMakerActivity.DIALOG_INPUT_STUDENT_INFO: {
+//                editTextForStudentNum.setText("");
+                editTextForStudentNo.setText("");
+                editTextForClassName.setText("");
+                editTextForStudentName.setText("");
+                editTextForStudentRuby.setText("");
+
+                break;
+            }
             case StudentListMakerActivity.DIALOG_ASK_OVERWRITE: {
                 if (saveFile != null) {
                     mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
@@ -670,6 +881,34 @@ public class StudentListMakerActivity extends Activity {
     }
 
     /**
+     * CSVファイルを読み込み直す
+     */
+    public void refreshStudentSheets() {
+        studentSheets = new ArrayList<StudentSheet>();
+        ArrayList<File> csvFiles = new ArrayList<File>();
+        for (File mFile : listDir.listFiles()) {
+            if (mFile.getName().endsWith(".csv")) {
+                csvFiles.add(mFile);
+            }
+        }
+        Comparator<File> mComparator = new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                return o1.getName().toLowerCase().compareTo(o2.getName().toLowerCase());
+            }
+        };
+        Collections.sort(csvFiles, mComparator);
+        for (File csvFile : csvFiles) {
+            try {
+                studentSheets.add(new StudentSheet(csvFile, CHARACTER_CODE));
+            }
+            catch (IOException e) {
+                Log.e("refreshStudentSheets", e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
      * 文字が入力された際に呼び出される
      * @param c 入力された文字
      */
@@ -677,7 +916,6 @@ public class StudentListMakerActivity extends Activity {
         if (Character.isLetter(c)) {
             inputBuffer.setLength(0);
             c = Character.toUpperCase(c);
-            currentStudent = new Student();
         }
         inputBuffer.append(c);
         if (inputBuffer.length() == 6) {
@@ -690,19 +928,34 @@ public class StudentListMakerActivity extends Activity {
      * @param studentNo 学籍番号
      */
     public void onStudentNoReaded(String studentNo) {
-        int position;
         if (mStudentSheet.hasStudentNo(studentNo)) {
             // 既に学籍番号に対応するデータが存在する場合はその行を選択する
-            position = mStudentListAdapter.getPosition(mStudentSheet.get(studentNo));
+            currentStudent = mStudentSheet.get(studentNo);
         }
         else {
-            // 存在しない場合は追加する
-            currentStudent.setStudentNo(studentNo);
+            // 存在しない場合は他のリストを検索する
+            boolean isExisted = false;
+            if (studentSheets.size() != 0) {
+                for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
+                    StudentSheet tempStudentSheet = studentSheets.get(i);
+                    if (tempStudentSheet.hasStudentNo(studentNo)) {
+                        currentStudent = tempStudentSheet.get(studentNo);
+                        currentStudent.setStudentNum(mStudentSheet.size() + 1);
+                        mStudentSheet.add(currentStudent);
+                        mStudentListAdapter.add(currentStudent);
+                        isExisted = true;
+                    }
+                }
+            }
+            if (!isExisted) {
+                // 他のリストにも存在しない場合は学籍番号のみで追加する
+                currentStudent = new Student(studentNo);
+            }
             mStudentSheet.add(currentStudent);
             mStudentListAdapter.add(currentStudent);
-            position = mStudentListAdapter.getCount() - 1;
             isSaved = false;
         }
+        int position = mStudentListAdapter.getPosition(currentStudent);
         studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
     }
 

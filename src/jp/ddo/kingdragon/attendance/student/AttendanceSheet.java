@@ -264,7 +264,7 @@ public class AttendanceSheet implements Serializable {
      * @param nfcId NFCタグのID
      * @param mAttendance 出席データ
      */
-    public void put(String nfcId, Attendance mAttendance) {
+    public void add(String nfcId, Attendance mAttendance) {
         attendancesNfcId.put(nfcId, mAttendance);
         attendancesStudentNo.put(mAttendance.getStudentNo(), mAttendance);
     }

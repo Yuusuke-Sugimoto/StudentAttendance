@@ -150,10 +150,6 @@ public class DisasterModeActivity extends Activity {
      */
     private Button readStartButton;
     /**
-     * 検索時の学籍番号入力用のEditText
-     */
-    private EditText editTextForStudentNoSearch;
-    /**
      * 学籍番号用のEditText
      */
     private EditText editTextForStudentNo;
@@ -580,7 +576,7 @@ public class DisasterModeActivity extends Activity {
                                 if (!mAttendanceSheet.hasAttendance(mAttendance)) {
                                     currentAttendance = mAttendance;
                                     currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-                                    mAttendanceSheet.put(currentAttendance.getStudentNo(), currentAttendance);
+                                    mAttendanceSheet.add(currentAttendance.getStudentNo(), currentAttendance);
                                     mAttendanceListAdapter.add(currentAttendance);
                                 }
                             }
@@ -839,7 +835,7 @@ public class DisasterModeActivity extends Activity {
                                 currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
                             }
                             currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-                            mAttendanceSheet.put(currentAttendance.getStudentNo(), currentAttendance);
+                            mAttendanceSheet.add(currentAttendance.getStudentNo(), currentAttendance);
                             mAttendanceListAdapter.add(currentAttendance);
                             isSaved = false;
                         }
@@ -866,9 +862,9 @@ public class DisasterModeActivity extends Activity {
                 builder.setTitle(R.string.dialog_search_student_no_title);
 
                 LayoutInflater inflater = LayoutInflater.from(DisasterModeActivity.this);
-                editTextForStudentNoSearch = (EditText)inflater.inflate(R.layout.dialog_search_student_no, null);
+                editTextForStudentNo = (EditText)inflater.inflate(R.layout.dialog_search_student_no, null);
 
-                builder.setView(editTextForStudentNoSearch);
+                builder.setView(editTextForStudentNo);
                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -876,7 +872,7 @@ public class DisasterModeActivity extends Activity {
                         if (!isReading) {
                             isReading = true;
                         }
-                        String studentNo = editTextForStudentNoSearch.getText().toString().toUpperCase();
+                        String studentNo = editTextForStudentNo.getText().toString().toUpperCase();
                         onStudentNoReaded(studentNo);
                         isReading = beforeReadingFlag;
                     }
@@ -916,7 +912,7 @@ public class DisasterModeActivity extends Activity {
                                 currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
                             }
                             currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-                            mAttendanceSheet.put(studentNo, currentAttendance);
+                            mAttendanceSheet.add(studentNo, currentAttendance);
                             mAttendanceListAdapter.add(currentAttendance);
                             isSaved = false;
                         }
@@ -1034,11 +1030,16 @@ public class DisasterModeActivity extends Activity {
                 break;
             }
             case DisasterModeActivity.DIALOG_SEARCH_STUDENT_NO: {
-                editTextForStudentNoSearch.setText("");
+                editTextForStudentNo.setText("");
 
                 break;
             }
             case DisasterModeActivity.DIALOG_INPUT_STUDENT_INFO: {
+                editTextForStudentNo.setText("");
+                editTextForClassName.setText("");
+                editTextForStudentName.setText("");
+                editTextForStudentRuby.setText("");
+
                 break;
             }
         }
@@ -1170,32 +1171,41 @@ public class DisasterModeActivity extends Activity {
      * @param studentNo 学籍番号
      */
     public void onStudentNoReaded(String studentNo) {
-        if (isReading && attendanceSheets.size() != 0) {
-            boolean isExisted = false;
-            for (int i = 0; !isExisted && i < attendanceSheets.size(); i++) {
-                AttendanceSheet tempAttendanceSheet = attendanceSheets.get(i);
-                if (tempAttendanceSheet.hasStudentNo(studentNo)) {
-                    currentAttendance = tempAttendanceSheet.getByStudentNo(studentNo);
-                    if (!mAttendanceSheet.hasAttendance(currentAttendance)) {
-                        if (!mPreferenceUtil.isLocationEnabled()) {
-                            currentAttendance.setStatus(Attendance.ATTENDANCE);
-                        }
-                        else {
-                            currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
-                        }
-                        currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-                        mAttendanceSheet.put(studentNo, currentAttendance);
-                        mAttendanceListAdapter.add(currentAttendance);
-                        isSaved = false;
-                    }
-                    else {
-                        Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
-                    }
-                    int position = mAttendanceListAdapter.getPosition(currentAttendance);
-                    attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
-                    isExisted = true;
-                }
+        if (isReading) {
+            if (mAttendanceSheet.hasStudentNo(studentNo)) {
+                // 既に学籍番号に対応するデータが存在する場合はその行を選択する
+                currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
+                Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
             }
+            else {
+                // 存在しない場合は他のリストを検索する
+                boolean isExisted = false;
+                if (attendanceSheets.size() != 0) {
+                    for (int i = 0; !isExisted && i < attendanceSheets.size(); i++) {
+                        AttendanceSheet tempAttendanceSheet = attendanceSheets.get(i);
+                        if (tempAttendanceSheet.hasStudentNo(studentNo)) {
+                            currentAttendance = tempAttendanceSheet.getByStudentNo(studentNo);
+                            isExisted = true;
+                        }
+                    }
+                }
+                if (!isExisted) {
+                    // 他のリストにも存在しない場合は学籍番号のみで追加する
+                    currentAttendance = new Attendance(new Student(studentNo), getResources());
+                }
+                if (!mPreferenceUtil.isLocationEnabled()) {
+                    currentAttendance.setStatus(Attendance.ATTENDANCE);
+                }
+                else {
+                    currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                }
+                currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
+                mAttendanceSheet.add(studentNo, currentAttendance);
+                mAttendanceListAdapter.add(currentAttendance);
+                isSaved = false;
+            }
+            int position = mAttendanceListAdapter.getPosition(currentAttendance);
+            attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
         }
     }
 
@@ -1223,7 +1233,7 @@ public class DisasterModeActivity extends Activity {
                             currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
                         }
                         currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-                        mAttendanceSheet.put(id, currentAttendance);
+                        mAttendanceSheet.add(id, currentAttendance);
                         mAttendanceListAdapter.add(currentAttendance);
                         isSaved = false;
                     }
