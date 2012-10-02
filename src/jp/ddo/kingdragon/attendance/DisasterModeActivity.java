@@ -33,8 +33,14 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,9 +88,13 @@ public class DisasterModeActivity extends Activity {
     private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 10;
 
     /**
-     * 使用する文字コード
+     * CSVファイルへの保存に使用する文字コード
      */
     private static final String CHARACTER_CODE = "Shift_JIS";
+    /**
+     * サーバへの送信に使用する文字コード
+     */
+    private static final String CHARACTER_CODE_FOR_SEND = "Shift_JIS";
     /**
      * ポート番号
      */
@@ -271,7 +281,6 @@ public class DisasterModeActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 currentAttendance = (Attendance)parent.getItemAtPosition(position);
-                attendanceListView.setSelection(position);
                 attendanceListView.invalidateViews();
             }
         });
@@ -288,6 +297,7 @@ public class DisasterModeActivity extends Activity {
             int position = mAttendanceListAdapter.getPosition(currentAttendance);
             if (position != -1) {
                 attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                attendanceListView.setSelection(position);
             }
         }
 
@@ -570,14 +580,13 @@ public class DisasterModeActivity extends Activity {
                     String fileName = data.getStringExtra("fileName");
                     String filePath = data.getStringExtra("filePath");
                     try {
-                        AttendanceSheet tempAttendanceSheet = new AttendanceSheet(new File(filePath), CHARACTER_CODE, getResources());
+                        AttendanceSheet tempAttendanceSheet = new AttendanceSheet(new File(filePath), DisasterModeActivity.CHARACTER_CODE,
+                                                                                  getResources());
                         for (Attendance mAttendance : tempAttendanceSheet.getAttendanceDisplayData()) {
                             if (mAttendance.getStatus() != Attendance.ABSENCE) {
-                                if (!mAttendanceSheet.hasAttendance(mAttendance)) {
+                                if (!mAttendanceSheet.hasStudentNo(mAttendance.getStudentNo())) {
                                     currentAttendance = mAttendance;
-                                    currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-                                    mAttendanceSheet.add(currentAttendance.getStudentNo(), currentAttendance);
-                                    mAttendanceListAdapter.add(currentAttendance);
+                                    addAttendance(currentAttendance.getStudentNo(), currentAttendance);
                                 }
                             }
                         }
@@ -827,23 +836,24 @@ public class DisasterModeActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         currentAttendance = mSheet.get(which);
-                        if (!mAttendanceSheet.hasAttendance(currentAttendance)) {
+                        int position;
+                        if (!mAttendanceSheet.hasStudentNo(currentAttendance.getStudentNo())) {
                             if (!mPreferenceUtil.isLocationEnabled()) {
                                 currentAttendance.setStatus(Attendance.ATTENDANCE);
                             }
                             else {
                                 currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
                             }
-                            currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-                            mAttendanceSheet.add(currentAttendance.getStudentNo(), currentAttendance);
-                            mAttendanceListAdapter.add(currentAttendance);
+                            addAttendance(currentAttendance.getStudentNo(), currentAttendance);
+                            position = mAttendanceListAdapter.getCount() - 1;
                             isSaved = false;
                         }
                         else {
+                            position = mAttendanceListAdapter.getPosition(currentAttendance);
                             Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
                         }
-                        int position = mAttendanceListAdapter.getPosition(currentAttendance);
                         attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                        attendanceListView.setSelection(position);
                     }
                 });
                 builder.setCancelable(true);
@@ -904,23 +914,24 @@ public class DisasterModeActivity extends Activity {
                         String studentRuby = editTextForStudentRuby.getEditableText().toString();
                         currentAttendance = new Attendance(new Student(studentNo, -1, className, studentName,
                                                            studentRuby, (String[])null), getResources());
-                        if (!mAttendanceSheet.hasAttendance(currentAttendance)) {
+                        int position;
+                        if (!mAttendanceSheet.hasStudentNo(currentAttendance.getStudentNo())) {
                             if (!mPreferenceUtil.isLocationEnabled()) {
                                 currentAttendance.setStatus(Attendance.ATTENDANCE);
                             }
                             else {
                                 currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
                             }
-                            currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-                            mAttendanceSheet.add(studentNo, currentAttendance);
-                            mAttendanceListAdapter.add(currentAttendance);
+                            addAttendance(studentNo, currentAttendance);
+                            position = mAttendanceListAdapter.getCount() - 1;
                             isSaved = false;
                         }
                         else {
+                            position = mAttendanceListAdapter.getPosition(currentAttendance);
                             Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
                         }
-                        int position = mAttendanceListAdapter.getPosition(currentAttendance);
                         attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                        attendanceListView.setSelection(position);
                     }
                 });
                 builder.setNegativeButton(android.R.string.cancel, null);
@@ -1143,7 +1154,7 @@ public class DisasterModeActivity extends Activity {
         Collections.sort(csvFiles, mComparator);
         for (File csvFile : csvFiles) {
             try {
-                attendanceSheets.add(new AttendanceSheet(csvFile, CHARACTER_CODE, getResources()));
+                attendanceSheets.add(new AttendanceSheet(csvFile, DisasterModeActivity.CHARACTER_CODE, getResources()));
             }
             catch (IOException e) {
                 Log.e("refreshAttendanceSheets", e.getMessage(), e);
@@ -1172,9 +1183,11 @@ public class DisasterModeActivity extends Activity {
      */
     public void onStudentNoReaded(String studentNo) {
         if (isReading) {
+            int position;
             if (mAttendanceSheet.hasStudentNo(studentNo)) {
                 // 既に学籍番号に対応するデータが存在する場合はその行を選択する
                 currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
+                position = mAttendanceListAdapter.getPosition(currentAttendance);
                 Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
             }
             else {
@@ -1199,13 +1212,12 @@ public class DisasterModeActivity extends Activity {
                 else {
                     currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
                 }
-                currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-                mAttendanceSheet.add(studentNo, currentAttendance);
-                mAttendanceListAdapter.add(currentAttendance);
+                addAttendance(studentNo, currentAttendance);
+                position = mAttendanceListAdapter.getCount() - 1;
                 isSaved = false;
             }
-            int position = mAttendanceListAdapter.getPosition(currentAttendance);
             attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+            attendanceListView.setSelection(position);
         }
     }
 
@@ -1225,27 +1237,102 @@ public class DisasterModeActivity extends Activity {
                 AttendanceSheet tempAttendanceSheet = attendanceSheets.get(i);
                 if (tempAttendanceSheet.hasNfcId(id)) {
                     currentAttendance = tempAttendanceSheet.getByNfcId(id);
-                    if (!mAttendanceSheet.hasAttendance(currentAttendance)) {
+                    int position;
+                    if (!mAttendanceSheet.hasStudentNo(currentAttendance.getStudentNo())) {
                         if (!mPreferenceUtil.isLocationEnabled()) {
                             currentAttendance.setStatus(Attendance.ATTENDANCE);
                         }
                         else {
                             currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
                         }
-                        currentAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-                        mAttendanceSheet.add(id, currentAttendance);
-                        mAttendanceListAdapter.add(currentAttendance);
+                        addAttendance(id, currentAttendance);
+                        position = mAttendanceListAdapter.getCount() - 1;
                         isSaved = false;
                     }
                     else {
+                        position = mAttendanceListAdapter.getPosition(currentAttendance);
                         Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
                     }
-                    int position = mAttendanceListAdapter.getPosition(currentAttendance);
                     attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                    attendanceListView.setSelection(position);
                     isExisted = true;
                 }
             }
         }
+    }
+    
+    /**
+     * 出席データを追加する
+     * @param inAttendance 出席データ
+     */
+    public void addAttendance(String id, Attendance inAttendance) {
+        inAttendance.setStudentNum(mAttendanceSheet.size() + 1);
+        mAttendanceSheet.add(id, inAttendance);
+        mAttendanceListAdapter.add(inAttendance);
+        
+        final String studentNum = String.valueOf(inAttendance.getStudentNum());
+        final String className = inAttendance.getClassName();
+        final String studentNo = inAttendance.getStudentNo();
+        final String studentName = inAttendance.getStudentName();
+        final String studentRuby = inAttendance.getStudentRuby();
+        final String statusString = inAttendance.getStatusString();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        final String timeStamp = format.format(new Date(inAttendance.getTimeStamp()));
+        final String latitude = String.valueOf(inAttendance.getLatitude());
+        final String longitude = String.valueOf(inAttendance.getLongitude());
+        
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                HttpURLConnection connection = null;
+                BufferedReader br = null;
+                /***
+                 * POST送信
+                 * 参考:挫折から始まる Androidアプリ開発日誌～ときどきJava Tips etc...～  Androidでhttp通信をしてみよう（HttpUrlConnectionによるPOST編）
+                 *      http://yukimura1227.blog.fc2.com/blog-entry-36.html
+                 */
+                try {
+                    URL mUrl = new URL("http://192.168.137.1:8080/ams/ams8.jsp");
+                    connection = (HttpURLConnection)mUrl.openConnection();
+                    connection.setRequestMethod("POST");
+                    connection.setDoOutput(true);
+                    
+                    PrintStream ps = new PrintStream(connection.getOutputStream());
+                    ps.print("number=" + URLEncoder.encode(studentNum, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
+                             + "&belong=" + URLEncoder.encode(className, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
+                             + "&id=" + URLEncoder.encode(studentNo, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
+                             + "&name=" + URLEncoder.encode(studentName, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
+                             + "&kana=" + URLEncoder.encode(studentRuby, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
+                             + "&safety=" + URLEncoder.encode(statusString, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
+                             + "&time=" + URLEncoder.encode(timeStamp, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
+                             + "&latitude=" + URLEncoder.encode(latitude, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
+                             + "&longitude=" + URLEncoder.encode(longitude, DisasterModeActivity.CHARACTER_CODE_FOR_SEND));
+                    ps.close();
+                    
+                    br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        Log.w("addAttendance", line);
+                    }
+                }
+                catch (IOException e) {
+                    Log.e("addAttendance", e.getMessage(), e);
+                }
+                finally {
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
+                    if (br != null) {
+                        try {
+                            br.close();
+                        }
+                        catch (IOException e) {
+                            Log.e("addAttendance", e.getMessage(), e);
+                        }
+                    }
+                }
+            }
+        }).start();
     }
 
     /**

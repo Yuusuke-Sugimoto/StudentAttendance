@@ -197,7 +197,6 @@ public class StudentListMakerActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 currentStudent = (Student)parent.getItemAtPosition(position);
-                studentListView.setSelection(position);
                 studentListView.invalidateViews();
             }
         });
@@ -213,6 +212,7 @@ public class StudentListMakerActivity extends Activity {
         int position = mStudentListAdapter.getPosition(currentStudent);
         if (position != -1) {
             studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
+            studentListView.setSelection(position);
         }
 
         // 各フォルダの作成
@@ -501,6 +501,10 @@ public class StudentListMakerActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        String[] nfcIds = currentStudent.getNfcIds();
+                        for (int i = 0; i < nfcIds.length; i++) {
+                            mStudentSheet.removeReadedNfcId(nfcIds[i]);
+                        }
                         mStudentSheet.remove(currentStudent);
                         mStudentListAdapter.remove(currentStudent);
                         isSaved = false;
@@ -619,17 +623,19 @@ public class StudentListMakerActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         currentStudent = mSheet.get(which);
+                        int position;
                         if (!mStudentSheet.hasStudentNo(currentStudent.getStudentNo())) {
                             currentStudent.setStudentNum(mStudentSheet.size() + 1);
-                            mStudentSheet.add(currentStudent);
-                            mStudentListAdapter.add(currentStudent);
+                            addStudent(currentStudent);
+                            position = mStudentListAdapter.getCount() - 1;
                             isSaved = false;
                         }
                         else {
+                            position = mStudentListAdapter.getPosition(currentStudent);
                             Toast.makeText(StudentListMakerActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
                         }
-                        int position = mStudentListAdapter.getPosition(currentStudent);
                         studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
+                        studentListView.setSelection(position);
                     }
                 });
                 builder.setCancelable(true);
@@ -685,18 +691,20 @@ public class StudentListMakerActivity extends Activity {
                         String studentName = editTextForStudentName.getEditableText().toString();
                         String studentRuby = editTextForStudentRuby.getEditableText().toString();
 
+                        int position;
                         if (!mStudentSheet.hasStudentNo(studentNo)) {
                             currentStudent = new Student(studentNo, mStudentSheet.size() + 1, className,
                                                          studentName, studentRuby, (String[])null);
-                            mStudentSheet.add(currentStudent);
-                            mStudentListAdapter.add(currentStudent);
+                            addStudent(currentStudent);
+                            position = mStudentListAdapter.getCount() - 1;
                             isSaved = false;
                         }
                         else {
                             currentStudent = mStudentSheet.get(studentNo);
+                            position = mStudentListAdapter.getPosition(currentStudent);
                         }
-                        int position = mStudentListAdapter.getPosition(currentStudent);
                         studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
+                        studentListView.setSelection(position);
                     }
                 });
                 builder.setNegativeButton(android.R.string.cancel, null);
@@ -928,9 +936,11 @@ public class StudentListMakerActivity extends Activity {
      * @param studentNo 学籍番号
      */
     public void onStudentNoReaded(String studentNo) {
+        int position;
         if (mStudentSheet.hasStudentNo(studentNo)) {
             // 既に学籍番号に対応するデータが存在する場合はその行を選択する
             currentStudent = mStudentSheet.get(studentNo);
+            position = mStudentListAdapter.getPosition(currentStudent);
         }
         else {
             // 存在しない場合は他のリストを検索する
@@ -940,9 +950,6 @@ public class StudentListMakerActivity extends Activity {
                     StudentSheet tempStudentSheet = studentSheets.get(i);
                     if (tempStudentSheet.hasStudentNo(studentNo)) {
                         currentStudent = tempStudentSheet.get(studentNo);
-                        currentStudent.setStudentNum(mStudentSheet.size() + 1);
-                        mStudentSheet.add(currentStudent);
-                        mStudentListAdapter.add(currentStudent);
                         isExisted = true;
                     }
                 }
@@ -951,12 +958,13 @@ public class StudentListMakerActivity extends Activity {
                 // 他のリストにも存在しない場合は学籍番号のみで追加する
                 currentStudent = new Student(studentNo);
             }
-            mStudentSheet.add(currentStudent);
-            mStudentListAdapter.add(currentStudent);
+            currentStudent.setStudentNum(mStudentSheet.size() + 1);
+            addStudent(currentStudent);
+            position = mStudentListAdapter.getCount() - 1;
             isSaved = false;
         }
-        int position = mStudentListAdapter.getPosition(currentStudent);
         studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
+        studentListView.setSelection(position);
     }
 
     /**
@@ -999,5 +1007,18 @@ public class StudentListMakerActivity extends Activity {
         mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
         studentListView.setAdapter(mStudentListAdapter);
         isSaved = true;
+    }
+    
+    /**
+     * 学生データを追加する
+     * @param inStudent 学生データ
+     */
+    public void addStudent(Student inStudent) {
+        mStudentSheet.add(inStudent);
+        mStudentListAdapter.add(inStudent);
+        String[] nfcIds = inStudent.getNfcIds();
+        for (int i = 0; i < nfcIds.length; i++) {
+            mStudentSheet.addReadedNfcId(nfcIds[i]);
+        }
     }
 }

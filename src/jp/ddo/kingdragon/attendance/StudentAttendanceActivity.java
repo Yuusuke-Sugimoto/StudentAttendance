@@ -201,7 +201,6 @@ public class StudentAttendanceActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 currentAttendance = (Attendance)parent.getItemAtPosition(position);
-                attendanceListView.setSelection(position);
                 attendanceListView.invalidateViews();
             }
         });
@@ -218,6 +217,7 @@ public class StudentAttendanceActivity extends Activity {
             int position = mAttendanceListAdapter.getPosition(currentAttendance);
             if (position != -1) {
                 attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                attendanceListView.setSelection(position);
             }
         }
 
@@ -712,6 +712,7 @@ public class StudentAttendanceActivity extends Activity {
             }
             int position = mAttendanceListAdapter.getPosition(currentAttendance);
             attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+            attendanceListView.setSelection(position);
         }
     }
 
