@@ -47,6 +47,11 @@
                             android:key="setting_disaster_mode"
                             android:defaultValue="false"
                             android:summary="@string/setting_disaster_mode_summary" />
+        <Preference android:title="@string/setting_password_title"
+                    android:key="setting_password"
+                    android:defaultValue="test1234"
+                    android:summary="@string/setting_password_not_registered"
+                    android:dependency="setting_disaster_mode" />
         <Preference android:title="@string/setting_ip_address_title"
                     android:key="setting_ip_address"
                     android:dependency="setting_disaster_mode" />

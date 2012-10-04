@@ -169,12 +169,14 @@ public class StudentListMakerActivity extends Activity {
 
         inputBuffer = new StringBuilder();
         currentStudent = new Student();
+        selectedSheet = null;
         mStudentSheet = new StudentSheet();
 
         // アクティビティ再生成前のデータがあれば復元する
         if (savedInstanceState != null) {
             isSaved = savedInstanceState.getBoolean("IsSaved");
             currentStudent = (Student)savedInstanceState.getSerializable("CurrentStudent");
+            selectedSheet = (StudentSheet)savedInstanceState.getSerializable("SelectedSheet");
             mStudentSheet = (StudentSheet)savedInstanceState.getSerializable("StudentSheet");
             ArrayList<Student> studentDisplayData = (ArrayList<Student>)savedInstanceState.getSerializable("StudentDisplayData");
             mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, studentDisplayData);
@@ -867,6 +869,7 @@ public class StudentListMakerActivity extends Activity {
     public void onSaveInstanceState(Bundle outState) {
         outState.putBoolean("IsSaved", isSaved);
         outState.putSerializable("CurrentStudent", currentStudent);
+        outState.putSerializable("SelectedSheet", selectedSheet);
         outState.putSerializable("StudentSheet", mStudentSheet);
         outState.putSerializable("StudentDisplayData", mStudentSheet.getStudentDisplayData());
     }
@@ -1008,7 +1011,7 @@ public class StudentListMakerActivity extends Activity {
         studentListView.setAdapter(mStudentListAdapter);
         isSaved = true;
     }
-    
+
     /**
      * 学生データを追加する
      * @param inStudent 学生データ

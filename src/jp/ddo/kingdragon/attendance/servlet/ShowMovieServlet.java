@@ -56,7 +56,7 @@ public class ShowMovieServlet extends HttpServlet {
             pw.println("</script>");
         }
         else {
-            pw.println("表示する内容がありません。");
+            pw.println("表示する内容がありません。<br />");
         }
         pw.println("</p>");
         pw.println("</body>");

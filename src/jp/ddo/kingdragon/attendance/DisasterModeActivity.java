@@ -105,6 +105,11 @@ public class DisasterModeActivity extends Activity {
      * 現在編集しているシート
      */
     private static AttendanceSheet mAttendanceSheet;
+    /**
+     * サーブレットに渡すコンテキスト<br />
+     * アプリケーションコンテキストを格納すること。
+     */
+    private static Context applicationContextForServlet;
 
     /**
      * 読み取り中かどうか
@@ -239,6 +244,9 @@ public class DisasterModeActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.disaster_mode);
 
+        mAttendanceSheet = new AttendanceSheet();
+        applicationContextForServlet = getApplicationContext();
+
         isReading = false;
         isSaved = true;
         isFetchingLocation = false;
@@ -246,7 +254,6 @@ public class DisasterModeActivity extends Activity {
         inputBuffer = new StringBuilder();
         currentAttendance = null;
         selectedSheet = null;
-        mAttendanceSheet = new AttendanceSheet();
         mAttendanceLocation = null;
         mPreferenceUtil = new PreferenceUtil(DisasterModeActivity.this);
 
@@ -849,8 +856,20 @@ public class DisasterModeActivity extends Activity {
                             isSaved = false;
                         }
                         else {
+                            currentAttendance = mAttendanceSheet.getByStudentNo(currentAttendance.getStudentNo());
+                            if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                                if (!mPreferenceUtil.isLocationEnabled()) {
+                                    currentAttendance.setStatus(Attendance.ATTENDANCE);
+                                }
+                                else {
+                                    currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                                }
+                                isSaved = false;
+                            }
+                            else {
+                                Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                            }
                             position = mAttendanceListAdapter.getPosition(currentAttendance);
-                            Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
                         }
                         attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
                         attendanceListView.setSelection(position);
@@ -908,14 +927,14 @@ public class DisasterModeActivity extends Activity {
                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String studentNo = editTextForStudentNo.getEditableText().toString();
-                        String className = editTextForClassName.getEditableText().toString();
+                        String studentNo   = editTextForStudentNo.getEditableText().toString();
+                        String className   = editTextForClassName.getEditableText().toString();
                         String studentName = editTextForStudentName.getEditableText().toString();
                         String studentRuby = editTextForStudentRuby.getEditableText().toString();
-                        currentAttendance = new Attendance(new Student(studentNo, -1, className, studentName,
-                                                           studentRuby, (String[])null), getResources());
                         int position;
-                        if (!mAttendanceSheet.hasStudentNo(currentAttendance.getStudentNo())) {
+                        if (!mAttendanceSheet.hasStudentNo(studentNo)) {
+                            currentAttendance = new Attendance(new Student(studentNo, -1, className, studentName,
+                                                                           studentRuby, (String[])null), getResources());
                             if (!mPreferenceUtil.isLocationEnabled()) {
                                 currentAttendance.setStatus(Attendance.ATTENDANCE);
                             }
@@ -927,8 +946,20 @@ public class DisasterModeActivity extends Activity {
                             isSaved = false;
                         }
                         else {
+                            currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
+                            if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                                if (!mPreferenceUtil.isLocationEnabled()) {
+                                    currentAttendance.setStatus(Attendance.ATTENDANCE);
+                                }
+                                else {
+                                    currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                                }
+                                isSaved = false;
+                            }
+                            else {
+                                Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                            }
                             position = mAttendanceListAdapter.getPosition(currentAttendance);
-                            Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
                         }
                         attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
                         attendanceListView.setSelection(position);
@@ -1053,6 +1084,11 @@ public class DisasterModeActivity extends Activity {
 
                 break;
             }
+            case DisasterModeActivity.DIALOG_ASK_OVERWRITE: {
+                mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
+
+                break;
+            }
         }
     }
 
@@ -1109,6 +1145,14 @@ public class DisasterModeActivity extends Activity {
      */
     public static AttendanceSheet getAttendanceSheet() {
         return mAttendanceSheet;
+    }
+
+    /**
+     * アプリケーションコンテキストを取得する
+     * @return アプリケーションコンテキスト
+     */
+    public static Context getApplicationContextForServlet() {
+        return applicationContextForServlet;
     }
 
     /**
@@ -1187,8 +1231,19 @@ public class DisasterModeActivity extends Activity {
             if (mAttendanceSheet.hasStudentNo(studentNo)) {
                 // 既に学籍番号に対応するデータが存在する場合はその行を選択する
                 currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
+                if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                    if (!mPreferenceUtil.isLocationEnabled()) {
+                        currentAttendance.setStatus(Attendance.ATTENDANCE);
+                    }
+                    else {
+                        currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                    }
+                    isSaved = false;
+                }
+                else {
+                    Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                }
                 position = mAttendanceListAdapter.getPosition(currentAttendance);
-                Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
             }
             else {
                 // 存在しない場合は他のリストを検索する
@@ -1250,6 +1305,7 @@ public class DisasterModeActivity extends Activity {
                         isSaved = false;
                     }
                     else {
+                        currentAttendance = mAttendanceSheet.getByStudentNo(currentAttendance.getStudentNo());
                         position = mAttendanceListAdapter.getPosition(currentAttendance);
                         Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
                     }
@@ -1260,7 +1316,7 @@ public class DisasterModeActivity extends Activity {
             }
         }
     }
-    
+
     /**
      * 出席データを追加する
      * @param inAttendance 出席データ
@@ -1269,7 +1325,7 @@ public class DisasterModeActivity extends Activity {
         inAttendance.setStudentNum(mAttendanceSheet.size() + 1);
         mAttendanceSheet.add(id, inAttendance);
         mAttendanceListAdapter.add(inAttendance);
-        
+
         final String studentNum = String.valueOf(inAttendance.getStudentNum());
         final String className = inAttendance.getClassName();
         final String studentNo = inAttendance.getStudentNo();
@@ -1280,7 +1336,7 @@ public class DisasterModeActivity extends Activity {
         final String timeStamp = format.format(new Date(inAttendance.getTimeStamp()));
         final String latitude = String.valueOf(inAttendance.getLatitude());
         final String longitude = String.valueOf(inAttendance.getLongitude());
-        
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -1296,7 +1352,7 @@ public class DisasterModeActivity extends Activity {
                     connection = (HttpURLConnection)mUrl.openConnection();
                     connection.setRequestMethod("POST");
                     connection.setDoOutput(true);
-                    
+
                     PrintStream ps = new PrintStream(connection.getOutputStream());
                     ps.print("number=" + URLEncoder.encode(studentNum, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
                              + "&belong=" + URLEncoder.encode(className, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
@@ -1308,7 +1364,7 @@ public class DisasterModeActivity extends Activity {
                              + "&latitude=" + URLEncoder.encode(latitude, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
                              + "&longitude=" + URLEncoder.encode(longitude, DisasterModeActivity.CHARACTER_CODE_FOR_SEND));
                     ps.close();
-                    
+
                     br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                     String line;
                     while ((line = br.readLine()) != null) {

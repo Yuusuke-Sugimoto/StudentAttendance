@@ -88,6 +88,12 @@ public class PreferenceUtil {
     public int getLocationInterval() {
         return Integer.parseInt(getString("setting_location_interval", "5"));
     }
+    /**
+     * 位置情報の更新間隔を削除する
+     */
+    public void removeLocationInterval() {
+        remove("setting_location_interval");
+    }
 
     /**
      * "緯度"が有効かどうかを取得する
@@ -142,6 +148,12 @@ public class PreferenceUtil {
     public String getAttendanceName() {
         return getString("setting_attendance_name", "%S_%y%M%d%h%m%s");
     }
+    /**
+     * 出席データの保存名を削除する
+     */
+    public void removeAttendanceName() {
+        remove("setting_attendance_name");
+    }
 
     /**
      * 災害モードが有効かどうかを取得する
@@ -149,6 +161,27 @@ public class PreferenceUtil {
      */
     public boolean isDisasterModeEnabled() {
         return getBoolean("setting_disaster_mode", false);
+    }
+
+    /**
+     * パスワードを変更する
+     * @param password 新パスワード
+     */
+    public void putPassword(String password) {
+        putString("setting_password", password);
+    }
+    /**
+     * パスワードを取得する
+     * @return パスワード 未設定ならば"test1234"
+     */
+    public String getPassword() {
+        return getString("setting_password", "test1234");
+    }
+    /**
+     * パスワードを削除する
+     */
+    public void removePassword() {
+        remove("setting_password");
     }
 
     /**

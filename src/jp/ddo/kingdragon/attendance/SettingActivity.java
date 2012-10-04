@@ -3,6 +3,7 @@ package jp.ddo.kingdragon.attendance;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -13,6 +14,9 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -31,7 +35,11 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
     // リクエストコード
     private static final int REQUEST_CHANGE_ATTENDANCE_DIR = 0;
     // ダイアログのID
-    private static final int DIALOG_ILLEGAL_FILE_NAME = 0;
+    private static final int DIALOG_ILLEGAL_FILE_NAME      = 0;
+    private static final int DIALOG_EDIT_PASSWORD          = 1;
+    private static final int DIALOG_OLD_PASSWORD_NOT_MATCH = 2;
+    private static final int DIALOG_NEW_PASSWORD_NOT_MATCH = 3;
+    private static final int DIALOG_LONG_PASSWORD          = 4;
     /**
      * 位置情報の更新間隔の初期値
      */
@@ -40,8 +48,25 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
      * 出席データの保存名の初期値
      */
     private static final String DEFAULT_ATTENDANCE_NAME = "%S_%y%M%d%h%m%s";
+    /**
+     * パスワードの初期値
+     */
+    private static final String DEFAULT_PASSWORD = "test1234";
 
     // 変数の宣言
+    /**
+     * 旧パスワード用のEditText
+     */
+    private EditText editTextForOldPassword;
+    /**
+     * 新パスワード用のEditText
+     */
+    private EditText editTextForNewPassword;
+    /**
+     * 新パスワード(確認)用のEditText
+     */
+    private EditText editTextForNewPasswordConf;
+
     /**
      * 設定内容の読み取り/変更に使用
      */
@@ -64,7 +89,7 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
                 String newLocationInterval = (String)newValue;
                 if (newLocationInterval.length() == 0) {
                     // 値が空だった場合初期値をセットする
-                    mPreferenceUtil.putLocationInterval(SettingActivity.DEFAULT_LOCATION_INTERVAL);
+                    mPreferenceUtil.removeLocationInterval();
                     locationIntervalPreference.setText(String.valueOf(SettingActivity.DEFAULT_LOCATION_INTERVAL));
                     retBool = false;
                 }
@@ -103,12 +128,22 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
                 }
                 else {
                     // 値が空だった場合初期値をセットする
-                    mPreferenceUtil.putAttendanceName(SettingActivity.DEFAULT_ATTENDANCE_NAME);
+                    mPreferenceUtil.removeAttendanceName();
                     attendanceNamePreference.setText(SettingActivity.DEFAULT_ATTENDANCE_NAME);
                     retBool = false;
                 }
 
                 return retBool;
+            }
+        });
+
+        Preference passwordPreference = (Preference)findPreference("setting_password");
+        passwordPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                showDialog(SettingActivity.DIALOG_EDIT_PASSWORD);
+
+                return true;
             }
         });
 
@@ -198,9 +233,112 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
 
                 break;
             }
+            case SettingActivity.DIALOG_EDIT_PASSWORD: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
+                builder.setTitle(R.string.setting_password_title);
+
+                LayoutInflater inflater = LayoutInflater.from(SettingActivity.this);
+                View mView = inflater.inflate(R.layout.setting_edit_password, null);
+                editTextForOldPassword     = (EditText)mView.findViewById(R.id.setting_old_password);
+                editTextForNewPassword     = (EditText)mView.findViewById(R.id.setting_new_password);
+                editTextForNewPasswordConf = (EditText)mView.findViewById(R.id.setting_new_password_conf);
+
+                builder.setView(mView);
+                builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String oldPassword     = editTextForOldPassword.getEditableText().toString();
+                        String newPassword     = editTextForNewPassword.getEditableText().toString();
+                        String newPasswordConf = editTextForNewPasswordConf.getEditableText().toString();
+
+                        if (oldPassword.equals(mPreferenceUtil.getPassword())) {
+                            if (newPassword.equals(newPasswordConf)) {
+                                if (newPassword.length() <= 16) {
+                                    if (newPassword.length() != 0) {
+                                        mPreferenceUtil.putPassword(newPassword);
+                                    }
+                                    else {
+                                        mPreferenceUtil.removePassword();
+                                    }
+                                    editTextForOldPassword.setText("");
+                                    editTextForNewPassword.setText("");
+                                    editTextForNewPasswordConf.setText("");
+                                }
+                                else {
+                                    showDialog(SettingActivity.DIALOG_LONG_PASSWORD);
+                                }
+                            }
+                            else {
+                                showDialog(SettingActivity.DIALOG_NEW_PASSWORD_NOT_MATCH);
+                            }
+                        }
+                        else {
+                            showDialog(SettingActivity.DIALOG_OLD_PASSWORD_NOT_MATCH);
+                        }
+                    }
+                });
+                builder.setNegativeButton(android.R.string.cancel, null);
+                builder.setCancelable(true);
+                builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        editTextForOldPassword.setText("");
+                        editTextForNewPassword.setText("");
+                        editTextForNewPasswordConf.setText("");
+                    }
+                });
+                retDialog = builder.create();
+
+                break;
+            }
+            case SettingActivity.DIALOG_OLD_PASSWORD_NOT_MATCH:
+            case SettingActivity.DIALOG_NEW_PASSWORD_NOT_MATCH:
+            case SettingActivity.DIALOG_LONG_PASSWORD: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
+                builder.setTitle(R.string.error);
+                builder.setMessage("");
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+                retDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        showDialog(SettingActivity.DIALOG_EDIT_PASSWORD);
+                    }
+                });
+
+                break;
+            }
         }
 
         return retDialog;
+    }
+
+    @Override
+    public void onPrepareDialog(int id, Dialog dialog) {
+        AlertDialog mAlertDialog = null;
+        if (dialog instanceof AlertDialog) {
+            mAlertDialog = (AlertDialog)dialog;
+        }
+
+        switch (id) {
+            case SettingActivity.DIALOG_OLD_PASSWORD_NOT_MATCH: {
+                mAlertDialog.setMessage(getString(R.string.error_old_password_not_match));
+
+                break;
+            }
+            case SettingActivity.DIALOG_NEW_PASSWORD_NOT_MATCH: {
+                mAlertDialog.setMessage(getString(R.string.error_new_password_not_match));
+
+                break;
+            }
+            case SettingActivity.DIALOG_LONG_PASSWORD: {
+                mAlertDialog.setMessage(getString(R.string.error_long_password));
+
+                break;
+            }
+        }
     }
 
     @Override
@@ -245,6 +383,14 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
 
         EditTextPreference attendanceNamePreference = (EditTextPreference)findPreference("setting_attendance_name");
         attendanceNamePreference.setSummary(mPreferenceUtil.getAttendanceName());
+
+        Preference passwordPreference = (Preference)findPreference("setting_password");
+        if (!mPreferenceUtil.getPassword().equals(SettingActivity.DEFAULT_PASSWORD)) {
+            passwordPreference.setSummary(R.string.setting_password_registered);
+        }
+        else {
+            passwordPreference.setSummary(R.string.setting_password_not_registered);
+        }
 
         getListView().invalidateViews();
     }

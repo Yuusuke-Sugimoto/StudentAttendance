@@ -3,7 +3,7 @@
           android:id="@+id/dialog_student_no"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:inputType="textCapCharacters"
+          android:inputType="text"
           android:digits="@string/alphabet_and_number"
           android:maxLines="1"
           android:hint="@string/dialog_search_student_no_hint" />

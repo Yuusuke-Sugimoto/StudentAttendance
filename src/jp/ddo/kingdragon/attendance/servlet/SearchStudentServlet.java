@@ -3,6 +3,7 @@ package jp.ddo.kingdragon.attendance.servlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import javax.servlet.ServletException;
@@ -27,6 +28,7 @@ public class SearchStudentServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String no   = request.getParameter("no");
         String name = request.getParameter("name");
 
         response.setContentType("text/html");
@@ -43,20 +45,43 @@ public class SearchStudentServlet extends HttpServlet {
         pw.println("</head>");
         pw.println("<body>");
         pw.println("<p>");
-        if (name != null) {
-            if (!name.matches(".*(\\[|\\]|\\-|\\(|\\)|\\||\\^|\\$|\\.|\\*|\\+|\\?|\\\\).*")) {
-                Attendance target = null;
+        if (no != null || name != null) {
+            boolean isErrorOccurred = false;
+            if (no != null) {
+                if (no.matches(".*(\\[|\\]|\\-|\\(|\\)|\\||\\^|\\$|\\.|\\*|\\+|\\?|\\\\).*")) {
+                    pw.println("学籍番号に使用できない文字が含まれています。<br />");
+                    isErrorOccurred = true;
+                }
+            }
+            if (name != null) {
+                if (name.matches(".*(\\[|\\]|\\-|\\(|\\)|\\||\\^|\\$|\\.|\\*|\\+|\\?|\\\\).*")) {
+                    pw.println("氏名に使用できない文字が含まれています。<br />");
+                    isErrorOccurred = true;
+                }
+            }
+
+            if (!isErrorOccurred) {
+                ArrayList<Attendance> targets = new ArrayList<Attendance>();
                 AttendanceSheet mAttendanceSheet = DisasterModeActivity.getAttendanceSheet();
                 for (Attendance mAttendance : mAttendanceSheet.getAttendanceDisplayData()) {
-                    String studentName = mAttendance.getStudentName().toLowerCase();
-                    String matchPattern = "^" + name.toLowerCase() + ".*";
-                    if (studentName.matches(matchPattern) || studentName.replaceAll(" ", "").matches(matchPattern)) {
-                        target = mAttendance;
+                    if (no != null && no.length() != 0) {
+                        String studentNo    = mAttendance.getStudentNo().toUpperCase();
+                        String matchPattern = "^" + no.toUpperCase() + "$";
+                        if (studentNo.matches(matchPattern)) {
+                            targets.add(mAttendance);
+                        }
+                    }
+                    if (name != null && name.length() != 0) {
+                        String studentName  = mAttendance.getStudentName().toLowerCase();
+                        String matchPattern = "^" + name.toLowerCase() + ".*";
+                        if (studentName.matches(matchPattern) || studentName.replaceAll(" ", "").matches(matchPattern)) {
+                            targets.add(mAttendance);
+                        }
                     }
                 }
 
                 pw.println("検索結果<br />");
-                if (target != null) {
+                if (targets.size() != 0) {
                     pw.println("<table border=\"1\">");
                     pw.println("<tr>");
                     pw.println("<th>連番</th>");
@@ -71,58 +96,57 @@ public class SearchStudentServlet extends HttpServlet {
                     pw.println("<th>精度</th>");
                     pw.println("<th>その他</th>");
                     pw.println("</tr>");
-                    long timeStamp = target.getTimeStamp();
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                    String photoPath = target.getExtra(Attendance.PHOTO_PATH, null);
-                    String moviePath = target.getExtra(Attendance.MOVIE_PATH, null);
-                    pw.println("<tr>");
-                    pw.println("<td>" + target.getStudentNum() + "</td>");
-                    pw.println("<td>" + target.getClassName() + "</td>");
-                    pw.println("<td>" + target.getStudentNo() + "</td>");
-                    pw.println("<td>" + target.getStudentName() + "</td>");
-                    pw.println("<td>" + target.getStudentRuby() + "</td>");
-                    pw.println("<td>");
-                    if (target.getStatus() != Attendance.ABSENCE) {
-                        pw.println("確認済");
+                    for (Attendance target : targets) {
+                        long timeStamp = target.getTimeStamp();
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                        String photoPath = target.getExtra(Attendance.PHOTO_PATH, null);
+                        String moviePath = target.getExtra(Attendance.MOVIE_PATH, null);
+                        pw.println("<tr>");
+                        pw.println("<td>" + target.getStudentNum() + "</td>");
+                        pw.println("<td>" + target.getClassName() + "</td>");
+                        pw.println("<td>" + target.getStudentNo() + "</td>");
+                        pw.println("<td>" + target.getStudentName() + "</td>");
+                        pw.println("<td>" + target.getStudentRuby() + "</td>");
+                        pw.println("<td>");
+                        if (target.getStatus() != Attendance.ABSENCE) {
+                            pw.println("確認済");
+                        }
+                        pw.println("</td>");
+                        pw.println("<td>" + dateFormat.format(new Date(timeStamp)) + "</td>");
+                        pw.println("<td>");
+                        if (target.getLatitude() != -1.0) {
+                            pw.println(target.getLatitude());
+                        }
+                        pw.println("</td>");
+                        pw.println("<td>");
+                        if (target.getLongitude() != -1.0) {
+                            pw.println(target.getLongitude());
+                        }
+                        pw.println("</td>");
+                        pw.println("<td>");
+                        if (target.getAccuracy() != -1.0f) {
+                            pw.println(target.getAccuracy());
+                        }
+                        pw.println("</td>");
+                        pw.println("<td>");
+                        if (photoPath != null) {
+                            pw.println("<a href=\"" + photoPath + "\" title=\"写真\">写真</a>");
+                        }
+                        if (moviePath != null) {
+                            pw.println("<a href=\"ShowMovie?path=" + moviePath + "\" title=\"動画\">動画</a>");
+                        }
+                        pw.println("</td>");
+                        pw.println("</tr>");
                     }
-                    pw.println("</td>");
-                    pw.println("<td>" + dateFormat.format(new Date(timeStamp)) + "</td>");
-                    pw.println("<td>");
-                    if (target.getLatitude() != -1.0) {
-                        pw.println(target.getLatitude());
-                    }
-                    pw.println("</td>");
-                    pw.println("<td>");
-                    if (target.getLongitude() != -1.0) {
-                        pw.println(target.getLongitude());
-                    }
-                    pw.println("</td>");
-                    pw.println("<td>");
-                    if (target.getAccuracy() != -1.0f) {
-                        pw.println(target.getAccuracy());
-                    }
-                    pw.println("</td>");
-                    pw.println("<td>");
-                    if (photoPath != null) {
-                        pw.println("<a href=\"" + photoPath + "\" title=\"写真\">写真</a>");
-                    }
-                    if (moviePath != null) {
-                        pw.println("<a href=\"ShowMovie?path=" + moviePath + "\" title=\"動画\">動画</a>");
-                    }
-                    pw.println("</td>");
-                    pw.println("</tr>");
                     pw.println("</table>");
                 }
                 else {
-                    pw.println("該当する学生が見つかりません。");
+                    pw.println("該当する学生が見つかりません。<br />");
                 }
-            }
-            else {
-                pw.println("氏名に使用できない文字が含まれています。");
             }
         }
         else {
-            pw.println("氏名が指定されていません。");
+            pw.println("検索条件が指定されていません。<br />");
         }
         pw.println("</p>");
         pw.println("</body>");

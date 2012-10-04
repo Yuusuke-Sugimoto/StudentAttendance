@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.DialogInterface.OnDismissListener;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -18,11 +19,14 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -31,6 +35,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 
 import jp.ddo.kingdragon.attendance.filechoose.FileChooseActivity;
@@ -38,6 +44,7 @@ import jp.ddo.kingdragon.attendance.student.Attendance;
 import jp.ddo.kingdragon.attendance.student.AttendanceListAdapter;
 import jp.ddo.kingdragon.attendance.student.AttendanceLocation;
 import jp.ddo.kingdragon.attendance.student.AttendanceSheet;
+import jp.ddo.kingdragon.attendance.student.Student;
 import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
 import jp.ddo.kingdragon.attendance.util.Util;
 
@@ -52,10 +59,15 @@ public class StudentAttendanceActivity extends Activity {
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING = 0;
     private static final int DIALOG_ATTENDANCE_MENU         = 1;
-    private static final int DIALOG_ASK_OVERWRITE           = 2;
-    private static final int DIALOG_FETCHING_LOCATION       = 3;
-    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 4;
-    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 5;
+    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 2;
+    private static final int DIALOG_CSV_FILE_LIST           = 3;
+    private static final int DIALOG_STUDENT_LIST            = 4;
+    private static final int DIALOG_SEARCH_STUDENT_NO       = 5;
+    private static final int DIALOG_INPUT_STUDENT_INFO      = 6;
+    private static final int DIALOG_ASK_OVERWRITE           = 7;
+    private static final int DIALOG_FETCHING_LOCATION       = 8;
+    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 9;
+    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 10;
     /**
      * 使用する文字コード
      */
@@ -92,9 +104,17 @@ public class StudentAttendanceActivity extends Activity {
      */
     private File saveFile;
     /**
+     * キーボード(バーコードリーダ)から入力された内容
+     */
+    private StringBuilder inputBuffer;
+    /**
      * 現在扱っている出席データ
      */
     private Attendance currentAttendance;
+    /**
+     * リストから追加する際に選択されたシート
+     */
+    private AttendanceSheet selectedSheet;
     /**
      * 出席データの一覧を表示するビュー
      */
@@ -115,6 +135,22 @@ public class StudentAttendanceActivity extends Activity {
      * 読み取り開始ボタン
      */
     private Button readStartButton;
+    /**
+     * 学籍番号用のEditText
+     */
+    private EditText editTextForStudentNo;
+    /**
+     * 所属用のEditText
+     */
+    private EditText editTextForClassName;
+    /**
+     * 氏名用のEditText
+     */
+    private EditText editTextForStudentName;
+    /**
+     * カナ用のEditText
+     */
+    private EditText editTextForStudentRuby;
 
     /**
      * 設定内容の読み取り/変更に使用
@@ -153,6 +189,12 @@ public class StudentAttendanceActivity extends Activity {
      */
     private String[][] techs;
 
+    // コレクションの宣言
+    /**
+     * リストディレクトリから読み取った全てのシートを格納するリスト
+     */
+    private ArrayList<AttendanceSheet> attendanceSheets;
+
     @Override
     @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
@@ -164,7 +206,9 @@ public class StudentAttendanceActivity extends Activity {
         isSaved = true;
         isFetchingLocation = false;
 
+        inputBuffer = new StringBuilder();
         currentAttendance = null;
+        selectedSheet = null;
         mAttendanceSheet = new AttendanceSheet();
         mAttendanceLocation = null;
         mPreferenceUtil = new PreferenceUtil(StudentAttendanceActivity.this);
@@ -177,6 +221,7 @@ public class StudentAttendanceActivity extends Activity {
             isFetchingLocation = savedInstanceState.getBoolean("IsFetchingLocation");
             attendanceKind = savedInstanceState.getInt("AttendanceKind");
             currentAttendance = (Attendance)savedInstanceState.getSerializable("CurrentAttendance");
+            selectedSheet = (AttendanceSheet)savedInstanceState.getSerializable("SelectedSheet");
             mAttendanceSheet = (AttendanceSheet)savedInstanceState.getSerializable("AttendanceSheet");
             ArrayList<Attendance> attendanceDisplayData = (ArrayList<Attendance>)savedInstanceState.getSerializable("AttendanceDisplayData");
             mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, attendanceDisplayData);
@@ -293,6 +338,8 @@ public class StudentAttendanceActivity extends Activity {
             public void onStatusChanged(String provider, int status, Bundle extras) {}
         };
         mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+
+        refreshAttendanceSheets();
     }
 
     @Override
@@ -410,6 +457,16 @@ public class StudentAttendanceActivity extends Activity {
 
                 break;
             }
+            case R.id.menu_add_attendance: {
+                showDialog(StudentAttendanceActivity.DIALOG_ADD_ATTENDANCE_MENU);
+
+                break;
+            }
+            case R.id.menu_refresh: {
+                refreshAttendanceSheets();
+
+                break;
+            }
             case R.id.menu_open: {
                 Intent mIntent = new Intent(StudentAttendanceActivity.this, FileChooseActivity.class);
                 mIntent.putExtra("initDirPath", listDir.getAbsolutePath());
@@ -524,6 +581,211 @@ public class StudentAttendanceActivity extends Activity {
 
                 break;
             }
+            case StudentAttendanceActivity.DIALOG_ADD_ATTENDANCE_MENU: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+                builder.setTitle(R.string.dialog_add_attendance_menu_title);
+                builder.setItems(R.array.dialog_add_attendance_menu, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0: {
+                                // リストから追加する
+                                if (attendanceSheets.size() != 0) {
+                                    showDialog(StudentAttendanceActivity.DIALOG_CSV_FILE_LIST);
+                                }
+                                else {
+                                    Toast.makeText(StudentAttendanceActivity.this, R.string.error_list_file_not_found, Toast.LENGTH_SHORT).show();
+                                }
+
+                                break;
+                            }
+                            case 1: {
+                                // 学籍番号で検索する
+                                showDialog(StudentAttendanceActivity.DIALOG_SEARCH_STUDENT_NO);
+
+                                break;
+                            }
+                            case 2: {
+                                // 手動で登録する
+                                showDialog(StudentAttendanceActivity.DIALOG_INPUT_STUDENT_INFO);
+
+                                break;
+                            }
+                        }
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_CSV_FILE_LIST: {
+                selectedSheet = null;
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+                builder.setTitle(R.string.dialog_csv_file_list_title);
+                String[] subjects = new String[attendanceSheets.size()];
+                for (int i = 0; i < attendanceSheets.size(); i++) {
+                    subjects[i] = attendanceSheets.get(i).getSubject();
+                }
+                builder.setItems(subjects, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        selectedSheet = attendanceSheets.get(which);
+                        showDialog(StudentAttendanceActivity.DIALOG_STUDENT_LIST);
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
+                retDialog.setOnDismissListener(new OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        removeDialog(id);
+                    }
+                });
+
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_STUDENT_LIST: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+                builder.setTitle(selectedSheet.getSubject());
+                final ArrayList<Attendance> mSheet = selectedSheet.getAttendanceDisplayData();
+                String[] students = new String[mSheet.size()];
+                for (int i = 0; i < mSheet.size(); i++) {
+                    Attendance mAttendance = mSheet.get(i);
+                    students[i] = mAttendance.getStudentNo() + " " + mAttendance.getStudentName();
+                }
+                builder.setItems(students, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        currentAttendance = mSheet.get(which);
+                        int position;
+                        if (!mAttendanceSheet.hasStudentNo(currentAttendance.getStudentNo())) {
+                            if (!mPreferenceUtil.isLocationEnabled()) {
+                                currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
+                            }
+                            else {
+                                currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition(), mAttendanceLocation);
+                            }
+                            addAttendance(currentAttendance.getStudentNo(), currentAttendance);
+                            position = mAttendanceListAdapter.getCount() - 1;
+                            isSaved = false;
+                        }
+                        else {
+                            currentAttendance = mAttendanceSheet.getByStudentNo(currentAttendance.getStudentNo());
+                            if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                                if (!mPreferenceUtil.isLocationEnabled()) {
+                                    currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
+                                }
+                                else {
+                                    currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition(), mAttendanceLocation);
+                                }
+                                isSaved = false;
+                            }
+                            else {
+                                Toast.makeText(StudentAttendanceActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                            }
+                            position = mAttendanceListAdapter.getPosition(currentAttendance);
+                        }
+                        attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                        attendanceListView.setSelection(position);
+                    }
+                });
+                builder.setCancelable(true);
+                retDialog = builder.create();
+                retDialog.setOnDismissListener(new OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        removeDialog(id);
+                    }
+                });
+
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_SEARCH_STUDENT_NO: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+                builder.setTitle(R.string.dialog_search_student_no_title);
+
+                LayoutInflater inflater = LayoutInflater.from(StudentAttendanceActivity.this);
+                editTextForStudentNo = (EditText)inflater.inflate(R.layout.dialog_search_student_no, null);
+
+                builder.setView(editTextForStudentNo);
+                builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        boolean beforeReadingFlag = isReading;
+                        if (!isReading) {
+                            isReading = true;
+                        }
+                        String studentNo = editTextForStudentNo.getText().toString().toUpperCase();
+                        onStudentNoReaded(studentNo);
+                        isReading = beforeReadingFlag;
+                    }
+                });
+                builder.setNegativeButton(android.R.string.cancel, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_INPUT_STUDENT_INFO: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+                builder.setTitle(R.string.dialog_input_student_info_title);
+
+                LayoutInflater inflater = LayoutInflater.from(StudentAttendanceActivity.this);
+                View mView = inflater.inflate(R.layout.dialog_input_student_info, null);
+                editTextForStudentNo   = (EditText)mView.findViewById(R.id.dialog_student_no);
+                editTextForClassName   = (EditText)mView.findViewById(R.id.dialog_class_name);
+                editTextForStudentName = (EditText)mView.findViewById(R.id.dialog_student_name);
+                editTextForStudentRuby = (EditText)mView.findViewById(R.id.dialog_student_ruby);
+
+                builder.setView(mView);
+                builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String studentNo = editTextForStudentNo.getEditableText().toString();
+                        String className = editTextForClassName.getEditableText().toString();
+                        String studentName = editTextForStudentName.getEditableText().toString();
+                        String studentRuby = editTextForStudentRuby.getEditableText().toString();
+                        int position;
+                        if (!mAttendanceSheet.hasStudentNo(studentNo)) {
+                            currentAttendance = new Attendance(new Student(studentNo, -1, className, studentName,
+                                                                           studentRuby, (String[])null), getResources());
+                            if (!mPreferenceUtil.isLocationEnabled()) {
+                                currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
+                            }
+                            else {
+                                currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition(), mAttendanceLocation);
+                            }
+                            addAttendance(studentNo, currentAttendance);
+                            position = mAttendanceListAdapter.getCount() - 1;
+                            isSaved = false;
+                        }
+                        else {
+                            currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
+                            if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                                if (!mPreferenceUtil.isLocationEnabled()) {
+                                    currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
+                                }
+                                else {
+                                    currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition(), mAttendanceLocation);
+                                }
+                                isSaved = false;
+                            }
+                            else {
+                                Toast.makeText(StudentAttendanceActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                            }
+                            position = mAttendanceListAdapter.getPosition(currentAttendance);
+                        }
+                        attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                        attendanceListView.setSelection(position);
+                    }
+                });
+                builder.setNegativeButton(android.R.string.cancel, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
             case StudentAttendanceActivity.DIALOG_ASK_OVERWRITE: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
                 builder.setIcon(android.R.drawable.ic_dialog_alert);
@@ -624,6 +886,19 @@ public class StudentAttendanceActivity extends Activity {
 
                 break;
             }
+            case StudentAttendanceActivity.DIALOG_SEARCH_STUDENT_NO: {
+                editTextForStudentNo.setText("");
+
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_INPUT_STUDENT_INFO: {
+                editTextForStudentNo.setText("");
+                editTextForClassName.setText("");
+                editTextForStudentName.setText("");
+                editTextForStudentRuby.setText("");
+
+                break;
+            }
             case StudentAttendanceActivity.DIALOG_ASK_OVERWRITE: {
                 mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
 
@@ -643,6 +918,22 @@ public class StudentAttendanceActivity extends Activity {
     }
 
     @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        boolean retBool;
+
+        if (event.isPrintingKey()) {
+            onCharTyped((char)event.getUnicodeChar());
+
+            retBool = true;
+        }
+        else {
+            retBool = super.onKeyDown(keyCode, event);
+        }
+
+        return retBool;
+    }
+
+    @Override
     public void onNewIntent(Intent intent) {
         String action = intent.getAction();
         if (action.equals(NfcAdapter.ACTION_TAG_DISCOVERED)) {
@@ -658,6 +949,7 @@ public class StudentAttendanceActivity extends Activity {
         outState.putBoolean("IsFetchingLocation", isFetchingLocation);
         outState.putInt("AttendanceKind", attendanceKindSpinner.getSelectedItemPosition());
         outState.putSerializable("CurrentAttendance", currentAttendance);
+        outState.putSerializable("SelectedSheet", selectedSheet);
         outState.putSerializable("AttendanceSheet", mAttendanceSheet);
         outState.putSerializable("AttendanceDisplayData", mAttendanceSheet.getAttendanceDisplayData());
         outState.putSerializable("AttendanceLocation", mAttendanceLocation);
@@ -683,6 +975,104 @@ public class StudentAttendanceActivity extends Activity {
         catch (IOException e) {
             Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
             Log.e("saveCsvFile", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * CSVファイルを読み込み直す
+     */
+    public void refreshAttendanceSheets() {
+        attendanceSheets = new ArrayList<AttendanceSheet>();
+        ArrayList<File> csvFiles = new ArrayList<File>();
+        for (File mFile : listDir.listFiles()) {
+            if (mFile.getName().endsWith(".csv")) {
+                csvFiles.add(mFile);
+            }
+        }
+        Comparator<File> mComparator = new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                return o1.getName().toLowerCase().compareTo(o2.getName().toLowerCase());
+            }
+        };
+        Collections.sort(csvFiles, mComparator);
+        for (File csvFile : csvFiles) {
+            try {
+                attendanceSheets.add(new AttendanceSheet(csvFile, StudentAttendanceActivity.CHARACTER_CODE, getResources()));
+            }
+            catch (IOException e) {
+                Log.e("refreshAttendanceSheets", e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * 文字が入力された際に呼び出される
+     * @param c 入力された文字
+     */
+    public void onCharTyped(char c) {
+        if (Character.isLetter(c)) {
+            inputBuffer.setLength(0);
+            c = Character.toUpperCase(c);
+        }
+        inputBuffer.append(c);
+        if (inputBuffer.length() == 6) {
+            onStudentNoReaded(inputBuffer.toString());
+        }
+    }
+
+    /**
+     * 学籍番号を読み取った際に呼び出される
+     * @param studentNo 学籍番号
+     */
+    public void onStudentNoReaded(String studentNo) {
+        if (isReading) {
+            int position;
+            if (mAttendanceSheet.hasStudentNo(studentNo)) {
+                // 既に学籍番号に対応するデータが存在する場合はその行を選択する
+                currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
+                if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                    if (!mPreferenceUtil.isLocationEnabled()) {
+                        currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
+                    }
+                    else {
+                        currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition(), mAttendanceLocation);
+                    }
+                    isSaved = false;
+                }
+                else {
+                    Toast.makeText(StudentAttendanceActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                }
+                position = mAttendanceListAdapter.getPosition(currentAttendance);
+            }
+            else {
+                // 存在しない場合は他のリストを検索する
+                boolean isExisted = false;
+                if (attendanceSheets.size() != 0) {
+                    for (int i = 0; !isExisted && i < attendanceSheets.size(); i++) {
+                        AttendanceSheet tempAttendanceSheet = attendanceSheets.get(i);
+                        if (tempAttendanceSheet.hasStudentNo(studentNo)) {
+                            currentAttendance = tempAttendanceSheet.getByStudentNo(studentNo);
+                            isExisted = true;
+                        }
+                    }
+                }
+                if (!isExisted) {
+                    // 他のリストにも存在しない場合は学籍番号のみで追加する
+                    currentAttendance = new Attendance(new Student(studentNo), getResources());
+                }
+                if (!mPreferenceUtil.isLocationEnabled()) {
+                    currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
+                }
+                else {
+                    currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition(), mAttendanceLocation);
+                }
+                addAttendance(studentNo, currentAttendance);
+                position = mAttendanceListAdapter.getCount() - 1;
+                isSaved = false;
+            }
+            attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+            attendanceListView.setSelection(position);
         }
     }
 
@@ -714,6 +1104,16 @@ public class StudentAttendanceActivity extends Activity {
             attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
             attendanceListView.setSelection(position);
         }
+    }
+
+    /**
+     * 出席データを追加する
+     * @param inAttendance 出席データ
+     */
+    public void addAttendance(String id, Attendance inAttendance) {
+        inAttendance.setStudentNum(mAttendanceSheet.size() + 1);
+        mAttendanceSheet.add(id, inAttendance);
+        mAttendanceListAdapter.add(inAttendance);
     }
 
     /**
