@@ -56,6 +56,9 @@
     <string name="setting_password_new_password_conf_hint">新パスワードをもう一度入力</string>
     <string name="setting_password_available_character">パスワードには、半角英数字およびアンダーバーが利用可能です。</string>
     <string name="setting_ip_address_title">IPアドレス</string>
+    <string name="setting_send_server_title">サーバに送信する</string>
+    <string name="setting_send_server_summary">安否データをサーバに送信します。</string>
+    <string name="setting_server_address_title">サーバのアドレス</string>
     <string name="setting_other_title">その他</string>
     <string name="setting_license_title">ライセンス表記</string>
     <string name="setting_license_summary">このアプリに使用されている各ライセンスを表示することができます。</string>

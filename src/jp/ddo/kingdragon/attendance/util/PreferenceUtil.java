@@ -40,7 +40,7 @@ public class PreferenceUtil {
     // コンストラクタ
     /**
      * インスタンスを生成する
-     * @param mContext SharedPreferences取得用のコンテキスト 非null
+     * @param inContext SharedPreferences取得用のコンテキスト 非null
      */
     public PreferenceUtil(Context inContext) {
         if (inContext != null) {

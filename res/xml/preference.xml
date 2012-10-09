@@ -55,6 +55,15 @@
         <Preference android:title="@string/setting_ip_address_title"
                     android:key="setting_ip_address"
                     android:dependency="setting_disaster_mode" />
+        <CheckBoxPreference android:title="@string/setting_send_server_title"
+                            android:key="setting_send_server"
+                            android:defaultValue="false"
+                            android:summary="@string/setting_send_server_summary" />
+        <EditTextPreference android:title="@string/setting_server_address_title"
+                            android:key="setting_server_address"
+                            android:defaultValue=""
+                            android:inputType="text"
+                            android:dependency="setting_send_server" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting_other_title">
         <PreferenceScreen android:title="@string/setting_license_title"
