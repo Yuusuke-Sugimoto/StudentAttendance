@@ -23,6 +23,15 @@ import jp.ddo.kingdragon.attendance.student.Attendance;
 public class SendAttendanceQueue implements Iterable<Attendance> {
     // 変数の宣言
     /**
+     * 一時停止中かどうか
+     */
+    private boolean isPaused;
+    /**
+     * 送信中かどうか
+     */
+    private boolean isSending;
+
+    /**
      * 送信先のアドレス
      */
     private String serverAddress;
@@ -38,53 +47,45 @@ public class SendAttendanceQueue implements Iterable<Attendance> {
      * 送信中の出席データ
      */
     private Attendance sendingAttendance;
-    /**
-     * 送信中かどうか
-     */
-    private boolean isSending;
-    /**
-     * このインスタンスに対応するリスナ
-     */
-    private SendAttendanceListener listener;
 
     /**
      * 送信待ちの出席データのキュー
      */
     private LinkedList<Attendance> queue;
-    /**
-     * 失敗した出席データのキュー　
-     */
-    private LinkedList<Attendance> incompleteAttendanceQueue;
 
-    // コンストラクタ 
+    // コンストラクタ
     /**
      * 送信先のアドレスと文字コード、タイムアウトの時間を指定してインスタンスを生成する
      * @param serverAddress 送信先のアドレス
      * @param characterCode 文字コード
-     * @param タイムアウト(ミリ秒)
+     * @param timeout タイムアウト(ミリ秒)
      */
-    private SendAttendanceQueue(String serverAddress, String characterCode, int timeout) {
+    public SendAttendanceQueue(String serverAddress, String characterCode, int timeout) {
+        isPaused = false;
+        isSending = false;
         this.serverAddress = serverAddress;
         this.characterCode = characterCode;
         this.timeout = timeout;
         sendingAttendance = null;
-        isSending = false;
-        listener = null;
         queue = new LinkedList<Attendance>();
-        incompleteAttendanceQueue = new LinkedList<Attendance>();
     }
 
     @Override
     public Iterator<Attendance> iterator() {
         return queue.iterator();
     }
-    
+
     /**
-     * 送信中の出席データを返す
-     * @return 送信中の出席データ 送信中でなければnull
+     * 送信を一時停止する
      */
-    public Attendance getSendingAttendance() {
-        return sendingAttendance;
+    public void pause() {
+        isPaused = true;
+    }
+    /**
+     * 送信を再開する
+     */
+    public void resume() {
+        isPaused = false;
     }
 
     /**
@@ -94,43 +95,20 @@ public class SendAttendanceQueue implements Iterable<Attendance> {
     public boolean isSending() {
         return isSending;
     }
-    
+
+    /**
+     * 送信中の出席データを返す
+     * @return 送信中の出席データ 送信中でなければnull
+     */
+    public Attendance getSendingAttendance() {
+        return sendingAttendance;
+    }
+
     /**
      * 待機中の出席データを削除する
      */
     public void removeWaitingAttendances() {
         queue.clear();
-    }
-    
-    /**
-     * 未送信の出席データを保持しているかどうかを返す
-     * @return 保持していればtrue そうでなければfalse
-     */
-    public boolean hasIncompleteAttendances() {
-        return !incompleteAttendanceQueue.isEmpty();
-    }
-    
-    /**
-     * 未送信の出席データのリストを返す
-     * @return 未送信の出席データのリスト
-     */
-    public LinkedList<Attendance> getIncompleteAttendances() {
-        return incompleteAttendanceQueue;
-    }
-    
-    /**
-     * 未送信の出席データを削除する
-     */
-    public void removeIncompleteAttendances() {
-        incompleteAttendanceQueue.clear();
-    }
-
-    /**
-     * リスナをセットする
-     * @param listener リスナ
-     */
-    public void setSendAttendanceListener(SendAttendanceListener listener) {
-        this.listener = listener;
     }
 
     /**
@@ -139,10 +117,7 @@ public class SendAttendanceQueue implements Iterable<Attendance> {
      */
     public void enqueue(Attendance inAttendance) {
         queue.offer(inAttendance);
-        if (listener != null) {
-            listener.onEnqueue(inAttendance);
-        }
-        if (!isSending) {
+        if (!isPaused && !isSending) {
             execute();
         }
     }
@@ -154,38 +129,22 @@ public class SendAttendanceQueue implements Iterable<Attendance> {
         sendingAttendance = queue.poll();
         if (sendingAttendance != null) {
             isSending = true;
-            if (listener != null) {
-                listener.onPostStart(sendingAttendance);
-            }
             sendAttendance(sendingAttendance);
         }
         else {
             isSending = false;
-            if (listener != null) {
-                listener.onAllTaskEnd();
-            }
         }
     }
 
     /**
      * 出席データを送信する処理
      */
-    private void sendAttendance(Attendance inAttendance) {
-        final String studentNum = String.valueOf(inAttendance.getStudentNum());
-        final String className = inAttendance.getClassName();
-        final String studentNo = inAttendance.getStudentNo();
-        final String studentName = inAttendance.getStudentName();
-        final String studentRuby = inAttendance.getStudentRuby();
-        final String statusString = inAttendance.getStatusString();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        final String timeStamp = format.format(new Date(inAttendance.getTimeStamp()));
-        final String latitude = String.valueOf(inAttendance.getLatitude());
-        final String longitude = String.valueOf(inAttendance.getLongitude());
-
+    private void sendAttendance(final Attendance inAttendance) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 HttpURLConnection connection = null;
+                PrintStream ps = null;
                 BufferedReader br = null;
                 /***
                  * POST送信
@@ -199,27 +158,33 @@ public class SendAttendanceQueue implements Iterable<Attendance> {
                     connection.setDoOutput(true);
                     connection.setConnectTimeout(timeout);
 
-                    PrintStream ps = new PrintStream(connection.getOutputStream());
-                    ps.print("number=" + URLEncoder.encode(studentNum, characterCode)
-                             + "&belong=" + URLEncoder.encode(className, characterCode)
-                             + "&id=" + URLEncoder.encode(studentNo, characterCode)
-                             + "&name=" + URLEncoder.encode(studentName, characterCode)
-                             + "&kana=" + URLEncoder.encode(studentRuby, characterCode)
-                             + "&safety=" + URLEncoder.encode(statusString, characterCode)
-                             + "&time=" + URLEncoder.encode(timeStamp, characterCode)
-                             + "&latitude=" + URLEncoder.encode(latitude, characterCode)
-                             + "&longitude=" + URLEncoder.encode(longitude, characterCode));
-                    ps.close();
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                    ps = new PrintStream(connection.getOutputStream());
+                    ps.print("number="       + URLEncoder.encode(String.valueOf(inAttendance.getStudentNum()), characterCode)
+                             + "&belong="    + URLEncoder.encode(inAttendance.getClassName(), characterCode)
+                             + "&id="        + URLEncoder.encode(inAttendance.getStudentNo(), characterCode)
+                             + "&name="      + URLEncoder.encode(inAttendance.getStudentName(), characterCode)
+                             + "&kana="      + URLEncoder.encode(inAttendance.getStudentRuby(), characterCode)
+                             + "&safety="    + URLEncoder.encode(inAttendance.getStatusString(), characterCode)
+                             + "&time="      + URLEncoder.encode(format.format(new Date(inAttendance.getTimeStamp())), characterCode)
+                             + "&latitude="  + URLEncoder.encode(String.valueOf(inAttendance.getLatitude()), characterCode)
+                             + "&longitude=" + URLEncoder.encode(String.valueOf(inAttendance.getLongitude()), characterCode));
 
                     br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                     while (br.readLine() != null) {}
                 }
                 catch (IOException e) {
+                    queue.offer(inAttendance);
+
                     Log.e("sendAttendance", e.getMessage(), e);
                 }
                 finally {
                     if (connection != null) {
                         connection.disconnect();
+                    }
+                    if (ps != null) {
+                        ps.flush();
+                        ps.close();
                     }
                     if (br != null) {
                         try {
@@ -229,93 +194,11 @@ public class SendAttendanceQueue implements Iterable<Attendance> {
                             Log.e("sendAttendance", e.getMessage(), e);
                         }
                     }
+                    if (!isPaused) {
+                        execute();
+                    }
                 }
             }
         }).start();
-    }
-
-    /**
-     * 送信に成功した際に呼び出される
-     * @param mPostTask 送信に成功した出席データ
-     */
-    public void onPostSuccess(Attendance mPostTask) {
-        if (listener != null) {
-            listener.onPostSuccess(mPostTask);
-        }
-    }
-
-    /**
-     * 送信に失敗した際に呼び出される
-     * @param mPostTask 送信に失敗した出席データ
-     */
-    public void onPostFailure(Attendance mPostTask) {
-        incompleteAttendanceQueue.offer(mPostTask);
-        
-        if (listener != null) {
-            listener.onPostFailure(mPostTask);
-        }
-    }
-
-    /**
-     * 送信に終了した際に成功/失敗に関わらず呼び出される
-     * @param mPostTask 送信が終了した出席データ
-     */
-    public void onPostEnd(Attendance mPostTask) {
-        if (listener != null) {
-            listener.onPostEnd(mPostTask);
-        }
-
-        execute();
-    }
-    
-    /**
-     * 送信に失敗した出席データをリトライする
-     */
-    public void retry() {
-        Attendance task;
-        while ((task = incompleteAttendanceQueue.poll()) != null) {
-            enqueue(task);
-        }
-    }
-
-    /**
-     * 送信出席データの各動作に対応するリスナクラス
-     * @author 杉本祐介
-     */
-    public interface SendAttendanceListener {
-        /**
-         * 送信出席データがキューに追加された際に呼び出される
-         * @param mPostTask キューに追加された出席データ
-         */
-        void onEnqueue(Attendance mPostTask);
-
-        /**
-         * 送信を開始した際に呼び出される
-         * @param mPostTask 送信を開始した出席データ
-         */
-        void onPostStart(Attendance mPostTask);
-
-        /**
-         * 送信に成功した際に呼び出される
-         * @param mPostTask 送信に成功した出席データ
-         */
-        void onPostSuccess(Attendance mPostTask);
-
-        /**
-         * 送信に失敗した際に呼び出される
-         * @param mPostTask 送信に失敗した出席データ
-         */
-        void onPostFailure(Attendance mPostTask);
-
-        /**
-         * 送信に終了した際に成功/失敗に関わらず呼び出される
-         * @param mPostTask 送信が終了した出席データ
-         */
-        void onPostEnd(Attendance mPostTask);
-
-        /**
-         * 待機中の出席データがなくなった際に呼び出される
-         */
-        void onAllTaskEnd();
     }
 }

@@ -33,14 +33,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -152,6 +146,10 @@ public class DisasterModeActivity extends Activity {
      */
     private AttendanceSheet selectedSheet;
     /**
+     * 出席データを送信するキュー
+     */
+    private SendAttendanceQueue attendanceQueue;
+    /**
      * 出席データの一覧を表示するビュー
      */
     private ListView attendanceListView;
@@ -255,6 +253,8 @@ public class DisasterModeActivity extends Activity {
         selectedSheet = null;
         mAttendanceLocation = null;
         mPreferenceUtil = new PreferenceUtil(DisasterModeActivity.this);
+        attendanceQueue = new SendAttendanceQueue(mPreferenceUtil.getServerAddress(PreferenceUtil.DEFAULT_SERVER_ADDRESS),
+                                                  DisasterModeActivity.CHARACTER_CODE_FOR_SEND, 100);
 
         // アクティビティ再生成前のデータがあれば復元する
         if (savedInstanceState != null) {
@@ -1324,81 +1324,10 @@ public class DisasterModeActivity extends Activity {
         inAttendance.setStudentNum(mAttendanceSheet.size() + 1);
         mAttendanceSheet.add(id, inAttendance);
         mAttendanceListAdapter.add(inAttendance);
-        
+
         if (mPreferenceUtil.isSendServerEnabled(false)) {
-            sendAttendance(inAttendance);
+            attendanceQueue.enqueue(inAttendance);
         }
-    }
-    
-    /**
-     * 出席データを送信する
-     * @param inAttendance 出席データ
-     */
-    public void sendAttendance(Attendance inAttendance) {
-        final String studentNum = String.valueOf(inAttendance.getStudentNum());
-        final String className = inAttendance.getClassName();
-        final String studentNo = inAttendance.getStudentNo();
-        final String studentName = inAttendance.getStudentName();
-        final String studentRuby = inAttendance.getStudentRuby();
-        final String statusString = inAttendance.getStatusString();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        final String timeStamp = format.format(new Date(inAttendance.getTimeStamp()));
-        final String latitude = String.valueOf(inAttendance.getLatitude());
-        final String longitude = String.valueOf(inAttendance.getLongitude());
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                HttpURLConnection connection = null;
-                BufferedReader br = null;
-                /***
-                 * POST送信
-                 * 参考:挫折から始まる Androidアプリ開発日誌～ときどきJava Tips etc...～  Androidでhttp通信をしてみよう（HttpUrlConnectionによるPOST編）
-                 *      http://yukimura1227.blog.fc2.com/blog-entry-36.html
-                 */
-                try {
-                    URL mUrl = new URL(mPreferenceUtil.getServerAddress(PreferenceUtil.DEFAULT_SERVER_ADDRESS));
-                    connection = (HttpURLConnection)mUrl.openConnection();
-                    connection.setRequestMethod("POST");
-                    connection.setDoOutput(true);
-                    connection.setConnectTimeout(100);
-
-                    PrintStream ps = new PrintStream(connection.getOutputStream());
-                    ps.print("number=" + URLEncoder.encode(studentNum, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
-                             + "&belong=" + URLEncoder.encode(className, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
-                             + "&id=" + URLEncoder.encode(studentNo, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
-                             + "&name=" + URLEncoder.encode(studentName, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
-                             + "&kana=" + URLEncoder.encode(studentRuby, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
-                             + "&safety=" + URLEncoder.encode(statusString, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
-                             + "&time=" + URLEncoder.encode(timeStamp, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
-                             + "&latitude=" + URLEncoder.encode(latitude, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
-                             + "&longitude=" + URLEncoder.encode(longitude, DisasterModeActivity.CHARACTER_CODE_FOR_SEND));
-                    ps.close();
-
-                    br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        Log.w("addAttendance", line);
-                    }
-                }
-                catch (IOException e) {
-                    Log.e("addAttendance", e.getMessage(), e);
-                }
-                finally {
-                    if (connection != null) {
-                        connection.disconnect();
-                    }
-                    if (br != null) {
-                        try {
-                            br.close();
-                        }
-                        catch (IOException e) {
-                            Log.e("addAttendance", e.getMessage(), e);
-                        }
-                    }
-                }
-            }
-        }).start();
     }
 
     /**
