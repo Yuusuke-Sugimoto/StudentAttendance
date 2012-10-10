@@ -30,6 +30,12 @@ public class PreferenceUtil {
     // 動画の画質
     public static final int QUALITY_LOW  = 0;
     public static final int QUALITY_HIGH = 1;
+    // デフォルト値
+    public static final int    DEFAULT_LOCATION_INTERVAL = 5;
+    public static final String DEFAULT_ATTENDANCE_DIR    = Environment.getExternalStorageDirectory().getAbsolutePath() + "/StudentAttendance/AttendanceData";
+    public static final String DEFAULT_ATTENDANCE_NAME   = "%S_%y%M%d%h%m%s";
+    public static final String DEFAULT_PASSWORD          = "test1234";
+    public static final String DEFAULT_SERVER_ADDRESS    = "http://192.168.11.2:8080/ams/ams8.jsp";
 
     // 変数の宣言
     /**
@@ -53,25 +59,27 @@ public class PreferenceUtil {
 
     /**
      * "位置情報を付加する"の設定値を変更する
-     * @param value 新しい値
+     * @param isLocationEnabled 位置情報を付加するかどうか
      */
-    public void putLocationEnabled(boolean value) {
-        putBoolean("setting_add_location", false);
+    public void putLocationEnabled(boolean isLocationEnabled) {
+        putBoolean("setting_add_location", isLocationEnabled);
     }
     /**
      * "位置情報を付加する"が有効かどうかを取得する
-     * @return 有効ならばtrue 無効または未設定ならばfalse
+     * @param defValue デフォルト値
+     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
      */
-    public boolean isLocationEnabled() {
-        return getBoolean("setting_add_location", false);
+    public boolean isLocationEnabled(boolean defValue) {
+        return getBoolean("setting_add_location", defValue);
     }
 
     /**
      * "位置情報の取得方法"の設定値を取得する
-     * @return "位置情報の取得方法"の設定値 未設定ならば0
+     * @param defValue デフォルト値
+     * @return "位置情報の取得方法"の設定値 未設定ならばデフォルト値
      */
-    public int getLocationProvider() {
-        return Integer.parseInt(getString("setting_location_provider", "0"));
+    public int getLocationProvider(int defValue) {
+        return Integer.parseInt(getString("setting_location_provider", String.valueOf(defValue)));
     }
 
     /**
@@ -83,10 +91,11 @@ public class PreferenceUtil {
     }
     /**
      * 位置情報の更新間隔を取得する
-     * @return 位置情報の更新間隔 未設定ならば5
+     * @param defValue デフォルト値
+     * @return 位置情報の更新間隔 未設定ならばデフォルト値
      */
-    public int getLocationInterval() {
-        return Integer.parseInt(getString("setting_location_interval", "5"));
+    public int getLocationInterval(int defValue) {
+        return Integer.parseInt(getString("setting_location_interval", String.valueOf(defValue)));
     }
     /**
      * 位置情報の更新間隔を削除する
@@ -97,26 +106,29 @@ public class PreferenceUtil {
 
     /**
      * "緯度"が有効かどうかを取得する
-     * @return 有効ならばtrue 無効または未設定ならばfalse
+     * @param defValue デフォルト値
+     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
      */
-    public boolean isLatitudeEnabled() {
-        return getBoolean("setting_location_format_latitude", false);
+    public boolean isLatitudeEnabled(boolean defValue) {
+        return getBoolean("setting_location_format_latitude", defValue);
     }
 
     /**
      * "経度"が有効かどうかを取得する
-     * @return 有効ならばtrue 無効または未設定ならばfalse
+     * @param defValue デフォルト値
+     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
      */
-    public boolean isLongitudeEnabled() {
-        return getBoolean("setting_location_format_longitude", false);
+    public boolean isLongitudeEnabled(boolean defValue) {
+        return getBoolean("setting_location_format_longitude", defValue);
     }
 
     /**
      * "精度"が有効かどうかを取得する
-     * @return 有効ならばtrue 無効または未設定ならばfalse
+     * @param defValue デフォルト値
+     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
      */
-    public boolean isAccuracyEnabled() {
-        return getBoolean("setting_location_format_accuracy", false);
+    public boolean isAccuracyEnabled(boolean defValue) {
+        return getBoolean("setting_location_format_accuracy", defValue);
     }
 
     /**
@@ -128,10 +140,11 @@ public class PreferenceUtil {
     }
     /**
      * 出席データの保存先を取得する
-     * @return 出席データの保存先 未設定ならば外部SDカードのパス/StudentAttendance/AttendanceData
+     * @param defValue デフォルト値
+     * @return 出席データの保存先 未設定ならばデフォルト値
      */
-    public String getAttendanceDir() {
-        return getString("setting_attendance_dir", Environment.getExternalStorageDirectory().getAbsolutePath() + "/StudentAttendance/AttendanceData");
+    public String getAttendanceDir(String defValue) {
+        return getString("setting_attendance_dir", defValue);
     }
 
     /**
@@ -143,10 +156,11 @@ public class PreferenceUtil {
     }
     /**
      * 出席データの保存先を取得する
-     * @return 出席データの保存名 未設定ならば"%S_%y%M%d%h%m%s"
+     * @param defValue デフォルト値
+     * @return 出席データの保存名 未設定ならばデフォルト値
      */
-    public String getAttendanceName() {
-        return getString("setting_attendance_name", "%S_%y%M%d%h%m%s");
+    public String getAttendanceName(String defValue) {
+        return getString("setting_attendance_name", defValue);
     }
     /**
      * 出席データの保存名を削除する
@@ -157,10 +171,11 @@ public class PreferenceUtil {
 
     /**
      * 災害モードが有効かどうかを取得する
-     * @return 有効ならばtrue 無効または未設定ならばfalse
+     * @param defValue デフォルト値
+     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
      */
-    public boolean isDisasterModeEnabled() {
-        return getBoolean("setting_disaster_mode", false);
+    public boolean isDisasterModeEnabled(boolean defValue) {
+        return getBoolean("setting_disaster_mode", defValue);
     }
 
     /**
@@ -172,16 +187,40 @@ public class PreferenceUtil {
     }
     /**
      * パスワードを取得する
-     * @return パスワード 未設定ならば"test1234"
+     * @param defValue デフォルト値
+     * @return パスワード 未設定ならばデフォルト値
      */
-    public String getPassword() {
-        return getString("setting_password", "test1234");
+    public String getPassword(String defValue) {
+        return getString("setting_password", defValue);
     }
     /**
      * パスワードを削除する
      */
     public void removePassword() {
         remove("setting_password");
+    }
+
+    /**
+     * "サーバに送信する"が有効かどうかを取得する
+     * @param defValue デフォルト値
+     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
+     */
+    public boolean isSendServerEnabled(boolean defValue) {
+        return getBoolean("setting_send_server", defValue);
+    }
+    /**
+     * サーバのアドレスを取得する
+     * @param defValue デフォルト値
+     * @return サーバのアドレス 未設定ならばデフォルト値
+     */
+    public String getServerAddress(String defValue) {
+        return getString("setting_server_address", defValue);
+    }
+    /**
+     * サーバのアドレスを削除する
+     */
+    public void removeServerAddress() {
+        remove("setting_server_address");
     }
 
     /**
@@ -193,10 +232,11 @@ public class PreferenceUtil {
     }
     /**
      * 対応している画像サイズの一覧を保存したかどうかを取得する
-     * @return 保存済みならばtrue そうでなければfalse
+     * @param defValue デフォルト値
+     * @return 保存済みならばtrue そうでなければfalse 未設定ならばデフォルト値
      */
-    public boolean isSupportedPictureSizesSaved() {
-        return getBoolean("SupportedPictureSizeSaved", false);
+    public boolean isSupportedPictureSizesSaved(boolean defValue) {
+        return getBoolean("SupportedPictureSizeSaved", defValue);
     }
 
     /**
@@ -208,42 +248,47 @@ public class PreferenceUtil {
     }
     /**
      * 対応しているプレビューサイズの一覧を保存したかどうかを取得する
-     * @return 保存済みならばtrue そうでなければfalse
+     * @param defValue デフォルト値
+     * @return 保存済みならばtrue そうでなければfalse 未設定ならばデフォルト値
      */
-    public boolean isSupportedPreviewSizesSaved() {
-        return getBoolean("SupportedPreviewSizeSaved", false);
+    public boolean isSupportedPreviewSizesSaved(boolean defValue) {
+        return getBoolean("SupportedPreviewSizeSaved", defValue);
     }
 
     /**
      * "撮影時の向き"の設定値を取得する
-     * @return "撮影時の向き"の設定値 未設定ならば0
+     * @param defValue デフォルト値
+     * @return "撮影時の向き"の設定値 未設定ならばデフォルト値
      */
-    public int getRotationSetting() {
-        return Integer.parseInt(getString("setting_rotation", "0"));
+    public int getRotationSetting(int defValue) {
+        return Integer.parseInt(getString("setting_rotation", String.valueOf(defValue)));
     }
 
     /**
      * "撮影する画像のサイズ"の設定値を取得する
-     * @return "撮影する画像のサイズ"の設定値 未設定ならば0
+     * @param defValue デフォルト値
+     * @return "撮影する画像のサイズ"の設定値 未設定ならばデフォルト値
      */
-    public int getSelectedPictureSize() {
-        return Integer.parseInt(getString("setting_picture_size", "0"));
+    public int getSelectedPictureSize(int defValue) {
+        return Integer.parseInt(getString("setting_picture_size", String.valueOf(defValue)));
     }
 
     /**
      * "撮影時にAFを行う"が有効かどうかを調べる
-     * @return 有効ならばtrue 無効または未設定ならばfalse
+     * @param defValue デフォルト値
+     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
      */
-    public boolean isTakeAutoFocusEnable() {
-        return getBoolean("setting_use_take_autofocus", false);
+    public boolean isTakeAutoFocusEnable(boolean defValue) {
+        return getBoolean("setting_use_take_autofocus", defValue);
     }
 
     /**
      * "タップ時にAFを行う"が有効かどうかを調べる
-     * @return 有効ならばtrue 無効または未設定ならばfalse
+     * @param defValue デフォルト値
+     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
      */
-    public boolean isTapAutoFocusEnable() {
-        return getBoolean("setting_use_tap_autofocus", false);
+    public boolean isTapAutoFocusEnable(boolean defValue) {
+        return getBoolean("setting_use_tap_autofocus", defValue);
     }
 
     /**
@@ -324,10 +369,11 @@ public class PreferenceUtil {
 
     /**
      * "撮影する動画の画質"の設定値を取得する
-     * @return "撮影する動画の画質"の設定値 未設定ならば0
+     * @param defValue デフォルト値
+     * @return "撮影する動画の画質"の設定値 未設定ならばデフォルト値
      */
-    public int getMovieQuality() {
-        return Integer.parseInt(getString("setting_movie_quality", "0"));
+    public int getMovieQuality(int defValue) {
+        return Integer.parseInt(getString("setting_movie_quality", String.valueOf(defValue)));
     }
 
     /**
@@ -336,8 +382,8 @@ public class PreferenceUtil {
      * @param value 保存する値
      */
     public void putString(String key, String value) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        prefs.edit().putString(key, value).commit();
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().putString(key, value).commit();
     }
     /**
      * SharedPreferencesからStringを読み出す
@@ -346,9 +392,9 @@ public class PreferenceUtil {
      * @return keyに対応する値 なければデフォルト値
      */
     public String getString(String key, String defValue) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
 
-        return prefs.getString(key, defValue);
+        return pref.getString(key, defValue);
     }
 
     /**
@@ -357,8 +403,8 @@ public class PreferenceUtil {
      * @param value 保存する値
      */
     public void putInt(String key, int value) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        prefs.edit().putInt(key, value).commit();
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().putInt(key, value).commit();
     }
     /**
      * SharedPreferencesからintを読み出す
@@ -367,9 +413,9 @@ public class PreferenceUtil {
      * @return keyに対応する値 なければデフォルト値
      */
     public int getInt(String key, int defValue) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
 
-        return prefs.getInt(key, defValue);
+        return pref.getInt(key, defValue);
     }
 
     /**
@@ -378,8 +424,8 @@ public class PreferenceUtil {
      * @param value 保存する値
      */
     public void putBoolean(String key, boolean value) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        prefs.edit().putBoolean(key, value).commit();
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().putBoolean(key, value).commit();
     }
     /**
      * SharedPreferencesからbooleanを読み出す
@@ -388,9 +434,9 @@ public class PreferenceUtil {
      * @return keyに対応する値 なければデフォルト値
      */
     public boolean getBoolean(String key, boolean defValue) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
 
-        return prefs.getBoolean(key, defValue);
+        return pref.getBoolean(key, defValue);
     }
 
     /**
@@ -398,7 +444,7 @@ public class PreferenceUtil {
      * @param key 削除する値のキー
      */
     public void remove(String key) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        prefs.edit().remove(key).commit();
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        pref.edit().remove(key).commit();
     }
 }

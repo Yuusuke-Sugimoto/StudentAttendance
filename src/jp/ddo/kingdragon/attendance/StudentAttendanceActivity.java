@@ -288,7 +288,7 @@ public class StudentAttendanceActivity extends Activity {
         // 各フォルダの作成
         baseDir = new File(Environment.getExternalStorageDirectory(), "StudentAttendance");
         listDir = new File(baseDir, "StudentList");
-        saveDir = new File(mPreferenceUtil.getAttendanceDir());
+        saveDir = new File(mPreferenceUtil.getAttendanceDir(baseDir.getAbsolutePath() + "/AttendanceData"));
         if (!listDir.exists() && !listDir.mkdirs()) {
             Toast.makeText(StudentAttendanceActivity.this, R.string.error_make_list_directory_failed, Toast.LENGTH_SHORT).show();
 
@@ -346,18 +346,18 @@ public class StudentAttendanceActivity extends Activity {
     public void onResume() {
         super.onResume();
 
-        if (!mPreferenceUtil.isDisasterModeEnabled()) {
+        if (!mPreferenceUtil.isDisasterModeEnabled(false)) {
             if (mNfcAdapter != null) {
                 mNfcAdapter.enableForegroundDispatch(StudentAttendanceActivity.this, mPendingIntent, filters, techs);
             }
 
-            if (mPreferenceUtil.isLocationEnabled()) {
+            if (mPreferenceUtil.isLocationEnabled(false)) {
                 /**
                  * GPSが選択されていてGPSが無効になっている場合、設定画面を表示するか確認する
                  * 参考:[Android] GSPが有効か確認し、必要であればGPS設定画面を表示する。 | 株式会社ノベラック スタッフBlog
                  *      http://www.noveluck.co.jp/blog/archives/159
                  */
-                if (mPreferenceUtil.getLocationProvider() == PreferenceUtil.LOCATION_PROVIDER_NETWORK
+                if (mPreferenceUtil.getLocationProvider(PreferenceUtil.LOCATION_PROVIDER_NETWORK) == PreferenceUtil.LOCATION_PROVIDER_NETWORK
                     || mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     startUpdateLocation();
                 }
@@ -479,7 +479,7 @@ public class StudentAttendanceActivity extends Activity {
             case R.id.menu_save: {
                 if (mAttendanceSheet.size() != 0) {
                     // ファイル名を生成
-                    StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName() + ".csv");
+                    StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName(PreferenceUtil.DEFAULT_ATTENDANCE_NAME) + ".csv");
                     // 科目名と授業時間を置換
                     int subjectPos;
                     while ((subjectPos = rawFileName.indexOf("%S")) != -1) {
@@ -566,7 +566,7 @@ public class StudentAttendanceActivity extends Activity {
                 builder.setItems(R.array.dialog_attendance_menu, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if (!mPreferenceUtil.isLocationEnabled()) {
+                        if (!mPreferenceUtil.isLocationEnabled(false)) {
                             currentAttendance.setStatus(which);
                         }
                         else {
@@ -660,7 +660,7 @@ public class StudentAttendanceActivity extends Activity {
                         currentAttendance = mSheet.get(which);
                         int position;
                         if (!mAttendanceSheet.hasStudentNo(currentAttendance.getStudentNo())) {
-                            if (!mPreferenceUtil.isLocationEnabled()) {
+                            if (!mPreferenceUtil.isLocationEnabled(false)) {
                                 currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
                             }
                             else {
@@ -673,7 +673,7 @@ public class StudentAttendanceActivity extends Activity {
                         else {
                             currentAttendance = mAttendanceSheet.getByStudentNo(currentAttendance.getStudentNo());
                             if (currentAttendance.getStatus() == Attendance.ABSENCE) {
-                                if (!mPreferenceUtil.isLocationEnabled()) {
+                                if (!mPreferenceUtil.isLocationEnabled(false)) {
                                     currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
                                 }
                                 else {
@@ -750,7 +750,7 @@ public class StudentAttendanceActivity extends Activity {
                         if (!mAttendanceSheet.hasStudentNo(studentNo)) {
                             currentAttendance = new Attendance(new Student(studentNo, -1, className, studentName,
                                                                            studentRuby, (String[])null), getResources());
-                            if (!mPreferenceUtil.isLocationEnabled()) {
+                            if (!mPreferenceUtil.isLocationEnabled(false)) {
                                 currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
                             }
                             else {
@@ -763,7 +763,7 @@ public class StudentAttendanceActivity extends Activity {
                         else {
                             currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
                             if (currentAttendance.getStatus() == Attendance.ABSENCE) {
-                                if (!mPreferenceUtil.isLocationEnabled()) {
+                                if (!mPreferenceUtil.isLocationEnabled(false)) {
                                     currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
                                 }
                                 else {
@@ -962,12 +962,12 @@ public class StudentAttendanceActivity extends Activity {
      */
     public void saveCsvFile(File csvFile, String encode) {
         try {
-            if (!mPreferenceUtil.isLocationEnabled()) {
+            if (!mPreferenceUtil.isLocationEnabled(false)) {
                 mAttendanceSheet.saveCsvFile(csvFile, encode);
             }
             else {
-                mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(), mPreferenceUtil.isLongitudeEnabled(),
-                                             mPreferenceUtil.isAccuracyEnabled());
+                mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(false), mPreferenceUtil.isLongitudeEnabled(false),
+                                             mPreferenceUtil.isAccuracyEnabled(false));
             }
             isSaved = true;
             Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
@@ -1032,7 +1032,7 @@ public class StudentAttendanceActivity extends Activity {
                 // 既に学籍番号に対応するデータが存在する場合はその行を選択する
                 currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
                 if (currentAttendance.getStatus() == Attendance.ABSENCE) {
-                    if (!mPreferenceUtil.isLocationEnabled()) {
+                    if (!mPreferenceUtil.isLocationEnabled(false)) {
                         currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
                     }
                     else {
@@ -1061,7 +1061,7 @@ public class StudentAttendanceActivity extends Activity {
                     // 他のリストにも存在しない場合は学籍番号のみで追加する
                     currentAttendance = new Attendance(new Student(studentNo), getResources());
                 }
-                if (!mPreferenceUtil.isLocationEnabled()) {
+                if (!mPreferenceUtil.isLocationEnabled(false)) {
                     currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
                 }
                 else {
@@ -1089,7 +1089,7 @@ public class StudentAttendanceActivity extends Activity {
         if (isReading && mAttendanceSheet.hasNfcId(id)) {
             currentAttendance = mAttendanceSheet.getByNfcId(id);
             if (currentAttendance.getStatus() == Attendance.ABSENCE) {
-                if (!mPreferenceUtil.isLocationEnabled()) {
+                if (!mPreferenceUtil.isLocationEnabled(false)) {
                     currentAttendance.setStatus(attendanceKindSpinner.getSelectedItemPosition());
                 }
                 else {
@@ -1125,12 +1125,14 @@ public class StudentAttendanceActivity extends Activity {
         }
         if (!isFetchingLocation) {
             isFetchingLocation = true;
-            if (mPreferenceUtil.getLocationProvider() == PreferenceUtil.LOCATION_PROVIDER_GPS) {
-                mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, mPreferenceUtil.getLocationInterval() * 60000,
+            if (mPreferenceUtil.getLocationProvider(PreferenceUtil.LOCATION_PROVIDER_NETWORK) == PreferenceUtil.LOCATION_PROVIDER_GPS) {
+                mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                                                        mPreferenceUtil.getLocationInterval(PreferenceUtil.DEFAULT_LOCATION_INTERVAL) * 60000,
                                                         0, mLocationListener);
             }
             else {
-                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, mPreferenceUtil.getLocationInterval() * 60000,
+                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                                                        mPreferenceUtil.getLocationInterval(PreferenceUtil.DEFAULT_LOCATION_INTERVAL) * 60000,
                                                         0, mLocationListener);
             }
         }

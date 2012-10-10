@@ -193,7 +193,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
                                         // 撮影中でなければ撮影
                                         isCapturing = true;
                                         captureButton.setEnabled(false);
-                                        if (!mPreferenceUtil.isTakeAutoFocusEnable() || isFocused) {
+                                        if (!mPreferenceUtil.isTakeAutoFocusEnable(false) || isFocused) {
                                             mCamera.takePicture(null, null, null, CameraActivity.this);
                                         }
                                         else {
@@ -241,7 +241,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             @Override
             public void onClick(View v) {
                 // 画面がタッチされたらオートフォーカスを実行
-                if (isCameraLaunched && mPreferenceUtil.isTapAutoFocusEnable() && !isFocusing
+                if (isCameraLaunched && mPreferenceUtil.isTapAutoFocusEnable(false) && !isFocusing
                     && captureMode == CameraActivity.CAPTURE_MODE_PHOTO) {
                     // オートフォーカス中でなければオートフォーカスを実行
                     // フラグを更新
@@ -403,7 +403,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         if (!isCameraLaunched && params != null) {
             // 未設定の時のみサイズの設定を行う
             // 各種パラメータの設定
-            if (!mPreferenceUtil.isSupportedPictureSizesSaved()) {
+            if (!mPreferenceUtil.isSupportedPictureSizesSaved(false)) {
                 List<Camera.Size> pictureSizes = params.getSupportedPictureSizes();
                 Collections.sort(pictureSizes, new Comparator<Camera.Size>() {
                     @Override
@@ -415,7 +415,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
                 mPreferenceUtil.putSupportedPictureSizesSaved(true);
             }
 
-            if (!mPreferenceUtil.isSupportedPreviewSizesSaved()) {
+            if (!mPreferenceUtil.isSupportedPreviewSizesSaved(false)) {
                 List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
                 Collections.sort(previewSizes, new Comparator<Camera.Size>() {
                     @Override
@@ -431,7 +431,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             Camera.Size picSize = null;
             if (captureMode == CameraActivity.CAPTURE_MODE_PHOTO) {
                 List<Camera.Size> pictureSizes;
-                int selectedPicSize = mPreferenceUtil.getSelectedPictureSize();
+                int selectedPicSize = mPreferenceUtil.getSelectedPictureSize(-1);
                 if (selectedPicSize != -1) {
                     int[] pictureSize = mPreferenceUtil.getSupportedPictureSize(selectedPicSize);
                     picSize = mCamera.new Size(pictureSize[PreferenceUtil.WIDTH], pictureSize[PreferenceUtil.HEIGHT]);
@@ -556,7 +556,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             degrees[i] = (int)Math.floor(Math.toDegrees(radians[i]));
         }
 
-        int rotationSetting = mPreferenceUtil.getRotationSetting();
+        int rotationSetting = mPreferenceUtil.getRotationSetting(PreferenceUtil.ROTATION_AUTO);
         if (captureMode == CameraActivity.CAPTURE_MODE_MOVIE) {
             rotationSetting = PreferenceUtil.ROTATION_NR_LANDSCAPE;
         }
@@ -670,11 +670,11 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         recorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
 
         int movieQuality = CamcorderProfile.QUALITY_LOW;
-        if (mPreferenceUtil.getMovieQuality() == PreferenceUtil.QUALITY_HIGH) {
+        if (mPreferenceUtil.getMovieQuality(PreferenceUtil.QUALITY_LOW) == PreferenceUtil.QUALITY_HIGH) {
             movieQuality = CamcorderProfile.QUALITY_HIGH;
         }
         CamcorderProfile profile = CamcorderProfile.get(movieQuality);
-        if (mPreferenceUtil.getMovieQuality() == PreferenceUtil.QUALITY_LOW) {
+        if (movieQuality == CamcorderProfile.QUALITY_LOW) {
             profile.videoCodec = MediaRecorder.VideoEncoder.H264;
             profile.audioCodec = MediaRecorder.AudioEncoder.AAC;
         }

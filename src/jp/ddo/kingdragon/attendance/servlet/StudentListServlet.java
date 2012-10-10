@@ -70,7 +70,7 @@ public class StudentListServlet extends HttpServlet {
         pw.println("<p>");
         if (applicationContext != null) {
             PreferenceUtil mPreferenceUtil = new PreferenceUtil(applicationContext);
-            if (password != null && password.equals(mPreferenceUtil.getPassword())) {
+            if (password != null && password.equals(mPreferenceUtil.getPassword(PreferenceUtil.DEFAULT_PASSWORD))) {
                 AttendanceSheet mAttendanceSheet = DisasterModeActivity.getAttendanceSheet();
                 if (mAttendanceSheet.size() != 0) {
                     pw.println("確認状況<br />");

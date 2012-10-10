@@ -86,7 +86,6 @@ public class DisasterModeActivity extends Activity {
     private static final int DIALOG_FETCHING_LOCATION       = 8;
     private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 9;
     private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 10;
-
     /**
      * CSVファイルへの保存に使用する文字コード
      */
@@ -326,7 +325,7 @@ public class DisasterModeActivity extends Activity {
         // 各フォルダの作成
         baseDir = new File(Environment.getExternalStorageDirectory(), "StudentAttendance");
         listDir = new File(baseDir, "StudentList");
-        saveDir = new File(mPreferenceUtil.getAttendanceDir());
+        saveDir = new File(mPreferenceUtil.getAttendanceDir(baseDir.getAbsolutePath() + "/AttendanceData"));
         File webDir = new File(baseDir, "WebDoc");
         File servletDir = new File(baseDir, "Servlet");
         if (!listDir.exists() && !listDir.mkdirs()) {
@@ -465,18 +464,18 @@ public class DisasterModeActivity extends Activity {
     public void onResume() {
         super.onResume();
 
-        if (mPreferenceUtil.isDisasterModeEnabled()) {
+        if (mPreferenceUtil.isDisasterModeEnabled(false)) {
             if (mNfcAdapter != null) {
                 mNfcAdapter.enableForegroundDispatch(DisasterModeActivity.this, mPendingIntent, filters, techs);
             }
 
-            if (mPreferenceUtil.isLocationEnabled()) {
+            if (mPreferenceUtil.isLocationEnabled(false)) {
                 /**
                  * GPSが選択されていてGPSが無効になっている場合、設定画面を表示するか確認する
                  * 参考:[Android] GPSが有効か確認し、必要であればGPS設定画面を表示する。 | 株式会社ノベラック スタッフBlog
                  *      http://www.noveluck.co.jp/blog/archives/159
                  */
-                if (mPreferenceUtil.getLocationProvider() == PreferenceUtil.LOCATION_PROVIDER_NETWORK
+                if (mPreferenceUtil.getLocationProvider(PreferenceUtil.LOCATION_PROVIDER_NETWORK) == PreferenceUtil.LOCATION_PROVIDER_NETWORK
                     || mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     startUpdateLocation();
                 }
@@ -654,7 +653,7 @@ public class DisasterModeActivity extends Activity {
             case R.id.menu_save: {
                 if (mAttendanceSheet.size() != 0) {
                     // ファイル名を生成
-                    StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName() + ".csv");
+                    StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName(PreferenceUtil.DEFAULT_ATTENDANCE_NAME) + ".csv");
                     // 科目名を置換
                     int subjectPos;
                     while ((subjectPos = rawFileName.indexOf("%S")) != -1) {
@@ -845,7 +844,7 @@ public class DisasterModeActivity extends Activity {
                         currentAttendance = mSheet.get(which);
                         int position;
                         if (!mAttendanceSheet.hasStudentNo(currentAttendance.getStudentNo())) {
-                            if (!mPreferenceUtil.isLocationEnabled()) {
+                            if (!mPreferenceUtil.isLocationEnabled(false)) {
                                 currentAttendance.setStatus(Attendance.ATTENDANCE);
                             }
                             else {
@@ -858,7 +857,7 @@ public class DisasterModeActivity extends Activity {
                         else {
                             currentAttendance = mAttendanceSheet.getByStudentNo(currentAttendance.getStudentNo());
                             if (currentAttendance.getStatus() == Attendance.ABSENCE) {
-                                if (!mPreferenceUtil.isLocationEnabled()) {
+                                if (!mPreferenceUtil.isLocationEnabled(false)) {
                                     currentAttendance.setStatus(Attendance.ATTENDANCE);
                                 }
                                 else {
@@ -935,7 +934,7 @@ public class DisasterModeActivity extends Activity {
                         if (!mAttendanceSheet.hasStudentNo(studentNo)) {
                             currentAttendance = new Attendance(new Student(studentNo, -1, className, studentName,
                                                                            studentRuby, (String[])null), getResources());
-                            if (!mPreferenceUtil.isLocationEnabled()) {
+                            if (!mPreferenceUtil.isLocationEnabled(false)) {
                                 currentAttendance.setStatus(Attendance.ATTENDANCE);
                             }
                             else {
@@ -948,7 +947,7 @@ public class DisasterModeActivity extends Activity {
                         else {
                             currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
                             if (currentAttendance.getStatus() == Attendance.ABSENCE) {
-                                if (!mPreferenceUtil.isLocationEnabled()) {
+                                if (!mPreferenceUtil.isLocationEnabled(false)) {
                                     currentAttendance.setStatus(Attendance.ATTENDANCE);
                                 }
                                 else {
@@ -1162,12 +1161,12 @@ public class DisasterModeActivity extends Activity {
      */
     public void saveCsvFile(File csvFile, String encode) {
         try {
-            if (!mPreferenceUtil.isLocationEnabled()) {
+            if (!mPreferenceUtil.isLocationEnabled(false)) {
                 mAttendanceSheet.saveCsvFile(csvFile, encode);
             }
             else {
-                mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(), mPreferenceUtil.isLongitudeEnabled(),
-                                             mPreferenceUtil.isAccuracyEnabled());
+                mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(false), mPreferenceUtil.isLongitudeEnabled(false),
+                                             mPreferenceUtil.isAccuracyEnabled(false));
             }
             isSaved = true;
             Toast.makeText(DisasterModeActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
@@ -1232,7 +1231,7 @@ public class DisasterModeActivity extends Activity {
                 // 既に学籍番号に対応するデータが存在する場合はその行を選択する
                 currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
                 if (currentAttendance.getStatus() == Attendance.ABSENCE) {
-                    if (!mPreferenceUtil.isLocationEnabled()) {
+                    if (!mPreferenceUtil.isLocationEnabled(false)) {
                         currentAttendance.setStatus(Attendance.ATTENDANCE);
                     }
                     else {
@@ -1261,7 +1260,7 @@ public class DisasterModeActivity extends Activity {
                     // 他のリストにも存在しない場合は学籍番号のみで追加する
                     currentAttendance = new Attendance(new Student(studentNo), getResources());
                 }
-                if (!mPreferenceUtil.isLocationEnabled()) {
+                if (!mPreferenceUtil.isLocationEnabled(false)) {
                     currentAttendance.setStatus(Attendance.ATTENDANCE);
                 }
                 else {
@@ -1294,7 +1293,7 @@ public class DisasterModeActivity extends Activity {
                     currentAttendance = tempAttendanceSheet.getByNfcId(id);
                     int position;
                     if (!mAttendanceSheet.hasStudentNo(currentAttendance.getStudentNo())) {
-                        if (!mPreferenceUtil.isLocationEnabled()) {
+                        if (!mPreferenceUtil.isLocationEnabled(false)) {
                             currentAttendance.setStatus(Attendance.ATTENDANCE);
                         }
                         else {
@@ -1325,7 +1324,17 @@ public class DisasterModeActivity extends Activity {
         inAttendance.setStudentNum(mAttendanceSheet.size() + 1);
         mAttendanceSheet.add(id, inAttendance);
         mAttendanceListAdapter.add(inAttendance);
-
+        
+        if (mPreferenceUtil.isSendServerEnabled(false)) {
+            sendAttendance(inAttendance);
+        }
+    }
+    
+    /**
+     * 出席データを送信する
+     * @param inAttendance 出席データ
+     */
+    public void sendAttendance(Attendance inAttendance) {
         final String studentNum = String.valueOf(inAttendance.getStudentNum());
         final String className = inAttendance.getClassName();
         final String studentNo = inAttendance.getStudentNo();
@@ -1348,10 +1357,11 @@ public class DisasterModeActivity extends Activity {
                  *      http://yukimura1227.blog.fc2.com/blog-entry-36.html
                  */
                 try {
-                    URL mUrl = new URL("http://192.168.137.1:8080/ams/ams8.jsp");
+                    URL mUrl = new URL(mPreferenceUtil.getServerAddress(PreferenceUtil.DEFAULT_SERVER_ADDRESS));
                     connection = (HttpURLConnection)mUrl.openConnection();
                     connection.setRequestMethod("POST");
                     connection.setDoOutput(true);
+                    connection.setConnectTimeout(100);
 
                     PrintStream ps = new PrintStream(connection.getOutputStream());
                     ps.print("number=" + URLEncoder.encode(studentNum, DisasterModeActivity.CHARACTER_CODE_FOR_SEND)
@@ -1400,12 +1410,14 @@ public class DisasterModeActivity extends Activity {
         }
         if (!isFetchingLocation) {
             isFetchingLocation = true;
-            if (mPreferenceUtil.getLocationProvider() == PreferenceUtil.LOCATION_PROVIDER_GPS) {
-                mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, mPreferenceUtil.getLocationInterval() * 60000,
+            if (mPreferenceUtil.getLocationProvider(PreferenceUtil.LOCATION_PROVIDER_NETWORK) == PreferenceUtil.LOCATION_PROVIDER_GPS) {
+                mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                                                        mPreferenceUtil.getLocationInterval(PreferenceUtil.DEFAULT_LOCATION_INTERVAL) * 60000,
                                                         0, mLocationListener);
             }
             else {
-                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, mPreferenceUtil.getLocationInterval() * 60000,
+                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                                                        mPreferenceUtil.getLocationInterval(PreferenceUtil.DEFAULT_LOCATION_INTERVAL) * 60000,
                                                         0, mLocationListener);
             }
         }

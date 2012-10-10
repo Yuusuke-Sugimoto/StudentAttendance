@@ -40,18 +40,6 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
     private static final int DIALOG_OLD_PASSWORD_NOT_MATCH = 2;
     private static final int DIALOG_NEW_PASSWORD_NOT_MATCH = 3;
     private static final int DIALOG_LONG_PASSWORD          = 4;
-    /**
-     * 位置情報の更新間隔の初期値
-     */
-    private static final int DEFAULT_LOCATION_INTERVAL = 5;
-    /**
-     * 出席データの保存名の初期値
-     */
-    private static final String DEFAULT_ATTENDANCE_NAME = "%S_%y%M%d%h%m%s";
-    /**
-     * パスワードの初期値
-     */
-    private static final String DEFAULT_PASSWORD = "test1234";
 
     // 変数の宣言
     /**
@@ -80,8 +68,8 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
 
         mPreferenceUtil = new PreferenceUtil(SettingActivity.this);
 
-        final EditTextPreference locationIntervalPreference = (EditTextPreference)findPreference("setting_location_interval");
-        locationIntervalPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+        final EditTextPreference locationIntervalPref = (EditTextPreference)findPreference("setting_location_interval");
+        locationIntervalPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 boolean retBool = true;
@@ -90,7 +78,7 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
                 if (newLocationInterval.length() == 0) {
                     // 値が空だった場合初期値をセットする
                     mPreferenceUtil.removeLocationInterval();
-                    locationIntervalPreference.setText(String.valueOf(SettingActivity.DEFAULT_LOCATION_INTERVAL));
+                    locationIntervalPref.setText(String.valueOf(PreferenceUtil.DEFAULT_LOCATION_INTERVAL));
                     retBool = false;
                 }
 
@@ -98,12 +86,12 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
             }
         });
 
-        Preference attendanceDirPreference = (Preference)findPreference("setting_attendance_dir");
-        attendanceDirPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+        Preference attendanceDirPref = (Preference)findPreference("setting_attendance_dir");
+        attendanceDirPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 Intent mIntent = new Intent(SettingActivity.this, FileChooseActivity.class);
-                mIntent.putExtra("initDirPath", mPreferenceUtil.getAttendanceDir());
+                mIntent.putExtra("initDirPath", mPreferenceUtil.getAttendanceDir(PreferenceUtil.DEFAULT_ATTENDANCE_DIR));
                 mIntent.putExtra("filter", ".*");
                 mIntent.putExtra("dirMode", true);
                 startActivityForResult(mIntent, SettingActivity.REQUEST_CHANGE_ATTENDANCE_DIR);
@@ -112,8 +100,8 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
             }
         });
 
-        final EditTextPreference attendanceNamePreference = (EditTextPreference)findPreference("setting_attendance_name");
-        attendanceNamePreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+        final EditTextPreference attendanceNamePref = (EditTextPreference)findPreference("setting_attendance_name");
+        attendanceNamePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 boolean retBool = true;
@@ -129,7 +117,7 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
                 else {
                     // 値が空だった場合初期値をセットする
                     mPreferenceUtil.removeAttendanceName();
-                    attendanceNamePreference.setText(SettingActivity.DEFAULT_ATTENDANCE_NAME);
+                    attendanceNamePref.setText(PreferenceUtil.DEFAULT_ATTENDANCE_NAME);
                     retBool = false;
                 }
 
@@ -137,13 +125,31 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
             }
         });
 
-        Preference passwordPreference = (Preference)findPreference("setting_password");
-        passwordPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+        Preference passwordPref = (Preference)findPreference("setting_password");
+        passwordPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 showDialog(SettingActivity.DIALOG_EDIT_PASSWORD);
 
                 return true;
+            }
+        });
+
+        final EditTextPreference serverAddressPref = (EditTextPreference)findPreference("setting_server_address");
+        serverAddressPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                boolean retBool = true;
+
+                String newAddress = (String)newValue;
+                if (newAddress.length() == 0) {
+                    // 値が空だった場合初期値をセットする
+                    mPreferenceUtil.removeServerAddress();
+                    serverAddressPref.setText(PreferenceUtil.DEFAULT_SERVER_ADDRESS);
+                    retBool = false;
+                }
+
+                return retBool;
             }
         });
 
@@ -251,7 +257,7 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
                         String newPassword     = editTextForNewPassword.getEditableText().toString();
                         String newPasswordConf = editTextForNewPasswordConf.getEditableText().toString();
 
-                        if (oldPassword.equals(mPreferenceUtil.getPassword())) {
+                        if (oldPassword.equals(mPreferenceUtil.getPassword(PreferenceUtil.DEFAULT_PASSWORD))) {
                             if (newPassword.equals(newPasswordConf)) {
                                 if (newPassword.length() <= 16) {
                                     if (newPassword.length() != 0) {
@@ -350,24 +356,24 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
      * 各項目の表示を更新する
      */
     public void updateUi() {
-        ListPreference locationProviderPreference = (ListPreference)findPreference("setting_location_provider");
-        locationProviderPreference.setSummary(locationProviderPreference.getEntry());
+        ListPreference locationProviderPref = (ListPreference)findPreference("setting_location_provider");
+        locationProviderPref.setSummary(locationProviderPref.getEntry());
 
-        EditTextPreference locationIntervalPreference = (EditTextPreference)findPreference("setting_location_interval");
-        locationIntervalPreference.setSummary(mPreferenceUtil.getLocationInterval() + "分");
+        EditTextPreference locationIntervalPref = (EditTextPreference)findPreference("setting_location_interval");
+        locationIntervalPref.setSummary(mPreferenceUtil.getLocationInterval(PreferenceUtil.DEFAULT_LOCATION_INTERVAL) + "分");
 
-        PreferenceScreen locationFormatPreference = (PreferenceScreen)findPreference("setting_location_format");
+        PreferenceScreen locationFormatPref = (PreferenceScreen)findPreference("setting_location_format");
         StringBuilder locationFormatSummary = new StringBuilder();
-        if (mPreferenceUtil.isLatitudeEnabled()) {
+        if (mPreferenceUtil.isLatitudeEnabled(false)) {
             locationFormatSummary.append(getString(R.string.setting_location_format_latitude_title));
         }
-        if (mPreferenceUtil.isLongitudeEnabled()) {
+        if (mPreferenceUtil.isLongitudeEnabled(false)) {
             if (locationFormatSummary.length() != 0) {
                 locationFormatSummary.append(",");
             }
             locationFormatSummary.append(getString(R.string.setting_location_format_longitude_title));
         }
-        if (mPreferenceUtil.isAccuracyEnabled()) {
+        if (mPreferenceUtil.isAccuracyEnabled(false)) {
             if (locationFormatSummary.length() != 0) {
                 locationFormatSummary.append(",");
             }
@@ -376,21 +382,24 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
         if (locationFormatSummary.length() == 0) {
             locationFormatSummary.append(getString(R.string.setting_location_format_output_null));
         }
-        locationFormatPreference.setSummary(locationFormatSummary.toString());
+        locationFormatPref.setSummary(locationFormatSummary.toString());
 
-        Preference attendanceDirPreference = (Preference)findPreference("setting_attendance_dir");
-        attendanceDirPreference.setSummary(mPreferenceUtil.getAttendanceDir());
+        Preference attendanceDirPref = (Preference)findPreference("setting_attendance_dir");
+        attendanceDirPref.setSummary(mPreferenceUtil.getAttendanceDir(PreferenceUtil.DEFAULT_ATTENDANCE_DIR));
 
-        EditTextPreference attendanceNamePreference = (EditTextPreference)findPreference("setting_attendance_name");
-        attendanceNamePreference.setSummary(mPreferenceUtil.getAttendanceName());
+        EditTextPreference attendanceNamePref = (EditTextPreference)findPreference("setting_attendance_name");
+        attendanceNamePref.setSummary(mPreferenceUtil.getAttendanceName(PreferenceUtil.DEFAULT_ATTENDANCE_NAME));
 
-        Preference passwordPreference = (Preference)findPreference("setting_password");
-        if (!mPreferenceUtil.getPassword().equals(SettingActivity.DEFAULT_PASSWORD)) {
-            passwordPreference.setSummary(R.string.setting_password_registered);
+        Preference passwordPref = (Preference)findPreference("setting_password");
+        if (!mPreferenceUtil.getPassword(PreferenceUtil.DEFAULT_PASSWORD).equals(PreferenceUtil.DEFAULT_PASSWORD)) {
+            passwordPref.setSummary(R.string.setting_password_registered);
         }
         else {
-            passwordPreference.setSummary(R.string.setting_password_not_registered);
+            passwordPref.setSummary(R.string.setting_password_not_registered);
         }
+        
+        EditTextPreference serverAddressPref = (EditTextPreference)findPreference("setting_server_address");
+        serverAddressPref.setSummary(mPreferenceUtil.getServerAddress(PreferenceUtil.DEFAULT_SERVER_ADDRESS));
 
         getListView().invalidateViews();
     }

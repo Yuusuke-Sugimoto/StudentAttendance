@@ -58,10 +58,11 @@
         <CheckBoxPreference android:title="@string/setting_send_server_title"
                             android:key="setting_send_server"
                             android:defaultValue="false"
-                            android:summary="@string/setting_send_server_summary" />
+                            android:summary="@string/setting_send_server_summary"
+                            android:dependency="setting_disaster_mode" />
         <EditTextPreference android:title="@string/setting_server_address_title"
                             android:key="setting_server_address"
-                            android:defaultValue=""
+                            android:defaultValue="http://192.168.11.2:8080/ams/ams8.jsp"
                             android:inputType="text"
                             android:dependency="setting_send_server" />
     </PreferenceCategory>
