@@ -303,6 +303,9 @@ public class Attendance implements Serializable {
     /**
      * 出席データの内容を配列で取得する<br />
      * 位置情報を付加する。
+     * @param isLatitudeEnabled 緯度を付加するかどうか
+     * @param isLongitudeEnabled 経度を付加するかどうか
+     * @param isAccuracyEnabled 精度を付加するかどうか
      * @return 出席データの内容を配列に格納したもの
      */
     public String[] getAttendanceData(boolean isLatitudeEnabled, boolean isLongitudeEnabled, boolean isAccuracyEnabled) {

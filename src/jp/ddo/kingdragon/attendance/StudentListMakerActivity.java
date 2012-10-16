@@ -271,7 +271,7 @@ public class StudentListMakerActivity extends Activity {
                     String filePath = data.getStringExtra("filePath");
                     try {
                         mStudentSheet = new StudentSheet(new File(filePath), CHARACTER_CODE);
-                        mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mStudentSheet.getStudentDisplayData());
+                        mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mStudentSheet.getStudentList());
                         studentListView.setAdapter(mStudentListAdapter);
                         isSaved = false;
                         Toast.makeText(StudentListMakerActivity.this, fileName + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
@@ -477,10 +477,6 @@ public class StudentListMakerActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String[] nfcIds = currentStudent.getNfcIds();
-                        for (int i = 0; i < nfcIds.length; i++) {
-                            mStudentSheet.removeReadedNfcId(nfcIds[i]);
-                        }
                         currentStudent.removeAllNfcIds();
                         studentListView.invalidateViews();
                         isSaved = false;
@@ -503,10 +499,6 @@ public class StudentListMakerActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String[] nfcIds = currentStudent.getNfcIds();
-                        for (int i = 0; i < nfcIds.length; i++) {
-                            mStudentSheet.removeReadedNfcId(nfcIds[i]);
-                        }
                         mStudentSheet.remove(currentStudent);
                         mStudentListAdapter.remove(currentStudent);
                         isSaved = false;
@@ -550,7 +542,7 @@ public class StudentListMakerActivity extends Activity {
             }
             case StudentListMakerActivity.DIALOG_ADD_STUDENT_MENU: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(StudentListMakerActivity.this);
-                builder.setTitle(R.string.dialog_add_attendance_menu_title);
+                builder.setTitle(R.string.dialog_add_student_menu_title);
                 builder.setItems(R.array.dialog_add_attendance_menu, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -615,7 +607,7 @@ public class StudentListMakerActivity extends Activity {
             case StudentListMakerActivity.DIALOG_STUDENT_LIST: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(StudentListMakerActivity.this);
                 builder.setTitle(selectedSheet.getSubject());
-                final ArrayList<Student> mSheet = selectedSheet.getStudentDisplayData();
+                final ArrayList<Student> mSheet = selectedSheet.getStudentList();
                 String[] students = new String[mSheet.size()];
                 for (int i = 0; i < mSheet.size(); i++) {
                     Student mStudent = mSheet.get(i);
@@ -702,7 +694,7 @@ public class StudentListMakerActivity extends Activity {
                             isSaved = false;
                         }
                         else {
-                            currentStudent = mStudentSheet.get(studentNo);
+                            currentStudent = mStudentSheet.getByStudentNo(studentNo);
                             position = mStudentListAdapter.getPosition(currentStudent);
                         }
                         studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
@@ -871,7 +863,7 @@ public class StudentListMakerActivity extends Activity {
         outState.putSerializable("CurrentStudent", currentStudent);
         outState.putSerializable("SelectedSheet", selectedSheet);
         outState.putSerializable("StudentSheet", mStudentSheet);
-        outState.putSerializable("StudentDisplayData", mStudentSheet.getStudentDisplayData());
+        outState.putSerializable("StudentDisplayData", mStudentSheet.getStudentList());
     }
 
     /**
@@ -942,7 +934,7 @@ public class StudentListMakerActivity extends Activity {
         int position;
         if (mStudentSheet.hasStudentNo(studentNo)) {
             // 既に学籍番号に対応するデータが存在する場合はその行を選択する
-            currentStudent = mStudentSheet.get(studentNo);
+            currentStudent = mStudentSheet.getByStudentNo(studentNo);
             position = mStudentListAdapter.getPosition(currentStudent);
         }
         else {
@@ -952,7 +944,7 @@ public class StudentListMakerActivity extends Activity {
                 for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
                     StudentSheet tempStudentSheet = studentSheets.get(i);
                     if (tempStudentSheet.hasStudentNo(studentNo)) {
-                        currentStudent = tempStudentSheet.get(studentNo);
+                        currentStudent = tempStudentSheet.getByStudentNo(studentNo);
                         isExisted = true;
                     }
                 }
@@ -984,9 +976,8 @@ public class StudentListMakerActivity extends Activity {
             if (!currentStudent.hasNfcId(id)) {
                 // 登録されていないNFCタグであれば読み取り済みかどうかを調べ、
                 // 読み取り済みでなければ追加
-                if (!mStudentSheet.isNfcIdReaded(id)) {
+                if (!mStudentSheet.hasNfcId(id)) {
                     currentStudent.addNfcId(id);
-                    mStudentSheet.addReadedNfcId(id);
                 }
                 else {
                     Toast.makeText(StudentListMakerActivity.this, R.string.error_nfc_id_already_registered, Toast.LENGTH_SHORT).show();
@@ -995,7 +986,6 @@ public class StudentListMakerActivity extends Activity {
             else {
                 // 登録されているNFCタグであれば削除
                 currentStudent.removeNfcId(id);
-                mStudentSheet.removeReadedNfcId(id);
             }
             studentListView.invalidateViews();
             isSaved = false;
@@ -1019,9 +1009,5 @@ public class StudentListMakerActivity extends Activity {
     public void addStudent(Student inStudent) {
         mStudentSheet.add(inStudent);
         mStudentListAdapter.add(inStudent);
-        String[] nfcIds = inStudent.getNfcIds();
-        for (int i = 0; i < nfcIds.length; i++) {
-            mStudentSheet.addReadedNfcId(nfcIds[i]);
-        }
     }
 }

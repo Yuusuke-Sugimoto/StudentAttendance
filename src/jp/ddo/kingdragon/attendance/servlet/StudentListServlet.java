@@ -88,7 +88,7 @@ public class StudentListServlet extends HttpServlet {
                     pw.println("<th>精度</th>");
                     pw.println("<th>その他</th>");
                     pw.println("</tr>");
-                    for (Attendance mAttendance : mAttendanceSheet.getAttendanceDisplayData()) {
+                    for (Attendance mAttendance : mAttendanceSheet.getAttendanceList()) {
                         long timeStamp = mAttendance.getTimeStamp();
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                         String photoPath = mAttendance.getExtra(Attendance.PHOTO_PATH, null);

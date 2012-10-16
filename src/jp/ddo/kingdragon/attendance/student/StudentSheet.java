@@ -36,16 +36,24 @@ public class StudentSheet implements Serializable {
      * 授業時間
      */
     private String time;
+    /**
+     * 元のファイル
+     */
+    private File baseFile;
 
     // コレクションの宣言
     /**
      * 読み取り済みのNFCタグのリスト
      */
-    private ArrayList<String> readedNfcIds;
+    private ArrayList<String> readNfcIds;
     /**
-     * 現在管理している学生データのリスト
+     * 現在管理している学生データを学籍番号をキーとして格納したリスト
      */
-    private LinkedHashMap<String, Student> students;
+    private LinkedHashMap<String, Student> studentsStudentNo;
+    /**
+     * 現在管理している学生データをNFCタグをキーとして格納したリスト
+     */
+    private LinkedHashMap<String, Student> studentsNfcId;
 
     // コンストラクタ
     /**
@@ -54,8 +62,10 @@ public class StudentSheet implements Serializable {
     public StudentSheet() {
         subject = "";
         time = "";
-        readedNfcIds = new ArrayList<String>();
-        students = new LinkedHashMap<String, Student>();
+        baseFile = null;
+        readNfcIds = new ArrayList<String>();
+        studentsStudentNo = new LinkedHashMap<String, Student>();
+        studentsNfcId = new LinkedHashMap<String, Student>();
     }
     /**
      * CSVファイルからシートを生成する
@@ -68,6 +78,7 @@ public class StudentSheet implements Serializable {
     public StudentSheet(File csvFile, String encode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
         this();
 
+        baseFile = csvFile;
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
         CSVParser parser = new CSVParser();
         boolean isSubjectRecord = false;
@@ -123,12 +134,12 @@ public class StudentSheet implements Serializable {
                 else {
                     num = -1;
                 }
-                students.put(values[2], new Student(values[2], num, values[1],
-                                                          values[3], values[4], nfcIds));
-
-                // NFCタグを読み取り済みとして追加
+                Student mStudent = new Student(values[2], num, values[1], values[3], values[4], nfcIds);
+                studentsStudentNo.put(values[2], mStudent);
                 for (String nfcId : nfcIds) {
-                    readedNfcIds.add(nfcId);
+                    studentsNfcId.put(nfcId, mStudent);
+                    // NFCタグを読み取り済みとして追加
+                    readNfcIds.add(nfcId);
                 }
             }
 
@@ -157,6 +168,7 @@ public class StudentSheet implements Serializable {
     public String getSubject() {
         return subject;
     }
+    
     /**
      * 授業時間をセットする
      * @param time 授業時間
@@ -171,37 +183,13 @@ public class StudentSheet implements Serializable {
     public String getTime() {
         return time;
     }
+    
     /**
-     * 学生データの表示用のリストを取得する
-     * @return 学生データの表示用のリスト
+     * 元のファイルを取得する
+     * @return 元のファイル 展開も保存も行われていない場合はnull
      */
-    public ArrayList<Student> getStudentDisplayData() {
-        return new ArrayList<Student>(students.values());
-    }
-
-    /**
-     * 読み取り済みのNFCタグを追加する
-     * @param id 読み取り済みのNFCタグのID
-     */
-    public void addReadedNfcId(String id) {
-        readedNfcIds.add(id);
-    }
-
-    /**
-     * 読み取り済みのNFCタグを削除する
-     * @param id 読み取り済みのNFCタグのID
-     */
-    public void removeReadedNfcId(String id) {
-        readedNfcIds.remove(id);
-    }
-
-    /**
-     * NFCタグが読み取り済みかどうかを調べる
-     * @param id 検索するID
-     * @return 読み取り済みであればtrue そうでなければfalse
-     */
-    public boolean isNfcIdReaded(String id) {
-        return readedNfcIds.contains(id);
+    public File getBaseFile() {
+        return baseFile;
     }
 
     /**
@@ -210,9 +198,14 @@ public class StudentSheet implements Serializable {
      * @param inStudent 追加する学生データ
      */
     public void add(Student inStudent) {
-        if (!students.containsKey(inStudent.getStudentNo())) {
-            inStudent.setStudentNum(students.size() + 1);
-            students.put(inStudent.getStudentNo(), inStudent);
+        if (!studentsStudentNo.containsKey(inStudent.getStudentNo())) {
+            inStudent.setStudentNum(studentsStudentNo.size() + 1);
+            studentsStudentNo.put(inStudent.getStudentNo(), inStudent);
+            if (inStudent.getNumOfNfcId() != 0) {
+                for (String nfcId : inStudent.getNfcIds()) {
+                    studentsNfcId.put(nfcId, inStudent);
+                }
+            }
         }
     }
 
@@ -221,7 +214,12 @@ public class StudentSheet implements Serializable {
      * @param inStudent 削除する学生データ
      */
     public void remove(Student inStudent) {
-        students.remove(inStudent.getStudentNo());
+        studentsStudentNo.remove(inStudent.getStudentNo());
+        if (inStudent.getNumOfNfcId() != 0) {
+            for (String nfcId : inStudent.getNfcIds()) {
+                studentsNfcId.remove(nfcId);
+            }
+        }
     }
 
     /**
@@ -229,8 +227,17 @@ public class StudentSheet implements Serializable {
      * @param studentNo 学籍番号
      * @return 学生データ
      */
-    public Student get(String studentNo) {
-        return students.get(studentNo);
+    public Student getByStudentNo(String studentNo) {
+        return studentsStudentNo.get(studentNo);
+    }
+
+    /**
+     * 引数で渡されたNFCタグを持つ学生データを取得する
+     * @param id NFCタグのID
+     * @return 学生データ
+     */
+    public Student getByNfcId(String id) {
+        return studentsNfcId.get(id);
     }
 
     /**
@@ -238,16 +245,33 @@ public class StudentSheet implements Serializable {
      * @return 現在の学生データの数
      */
     public int size() {
-        return students.size();
+        return studentsStudentNo.size();
     }
 
     /**
      * 引数で渡された学籍番号をもつ学生データが存在するかどうかを調べる
      * @param studentNo 学籍番号
-     * @return 存在したならばtrue 存在しなければfalse
+     * @return 存在するならばtrue 存在しなければfalse
      */
     public boolean hasStudentNo(String studentNo) {
-        return students.containsKey(studentNo);
+        return studentsStudentNo.containsKey(studentNo);
+    }
+
+    /**
+     * 引数で渡されたNFCタグをもつ学生データが存在するかどうかを調べる
+     * @param id NFCタグのID
+     * @return 存在するならばtrue 存在しなければfalse
+     */
+    public boolean hasNfcId(String id) {
+        return studentsNfcId.containsKey(id);
+    }
+
+    /**
+     * 学生データの表示用のリストを取得する
+     * @return 学生データの表示用のリスト
+     */
+    public ArrayList<Student> getStudentList() {
+        return new ArrayList<Student>(studentsStudentNo.values());
     }
 
     /**
@@ -259,12 +283,13 @@ public class StudentSheet implements Serializable {
      * @throws IOException
      */
     public void saveCsvFile(File csvFile, String encode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
+        baseFile = csvFile;
         CSVWriter writer = new CSVWriter(new OutputStreamWriter(new FileOutputStream(csvFile), encode));
         writer.writeNext(new String[] {"科目", "授業時間", "受講者数"});
-        writer.writeNext(new String[] {subject, time, String.valueOf(students.size())});
+        writer.writeNext(new String[] {subject, time, String.valueOf(studentsStudentNo.size())});
         writer.writeNext(new String[] {"", "所属", "学籍番号", "氏名", "カナ"});
-        for (String key : students.keySet()) {
-            writer.writeNext(students.get(key).getStudentData());
+        for (String key : studentsStudentNo.keySet()) {
+            writer.writeNext(studentsStudentNo.get(key).getStudentData());
         }
         writer.flush();
         writer.close();

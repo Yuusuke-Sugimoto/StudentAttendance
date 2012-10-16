@@ -63,7 +63,7 @@ public class SearchStudentServlet extends HttpServlet {
             if (!isErrorOccurred) {
                 ArrayList<Attendance> targets = new ArrayList<Attendance>();
                 AttendanceSheet mAttendanceSheet = DisasterModeActivity.getAttendanceSheet();
-                for (Attendance mAttendance : mAttendanceSheet.getAttendanceDisplayData()) {
+                for (Attendance mAttendance : mAttendanceSheet.getAttendanceList()) {
                     if (no != null && no.length() != 0) {
                         String studentNo    = mAttendance.getStudentNo().toUpperCase();
                         String matchPattern = "^" + no.toUpperCase() + "$";

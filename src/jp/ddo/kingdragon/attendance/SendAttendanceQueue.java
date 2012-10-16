@@ -76,19 +76,6 @@ public class SendAttendanceQueue implements Iterable<Attendance> {
     }
 
     /**
-     * 送信を一時停止する
-     */
-    public void pause() {
-        isPaused = true;
-    }
-    /**
-     * 送信を再開する
-     */
-    public void resume() {
-        isPaused = false;
-    }
-
-    /**
      * 送信中かどうかを返す
      * @return 送信中ならばtrue そうでなければfalse
      */
@@ -109,6 +96,20 @@ public class SendAttendanceQueue implements Iterable<Attendance> {
      */
     public void removeWaitingAttendances() {
         queue.clear();
+    }
+
+    /**
+     * 送信を一時停止する
+     */
+    public void pause() {
+        isPaused = true;
+    }
+    /**
+     * 送信を再開する
+     */
+    public void resume() {
+        isPaused = false;
+        execute();
     }
 
     /**

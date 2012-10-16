@@ -46,13 +46,13 @@ public class AttendanceSheet implements Serializable {
 
     // コレクションの宣言
     /**
-     * 現在管理している出席データをNFCタグをキーとして格納したリスト
-     */
-    private LinkedHashMap<String, Attendance> attendancesNfcId;
-    /**
      * 現在管理している出席データを学籍番号をキーとして格納したリスト
      */
     private LinkedHashMap<String, Attendance> attendancesStudentNo;
+    /**
+     * 現在管理している出席データをNFCタグをキーとして格納したリスト
+     */
+    private LinkedHashMap<String, Attendance> attendancesNfcId;
 
     // コンストラクタ
     /**
@@ -61,8 +61,8 @@ public class AttendanceSheet implements Serializable {
     public AttendanceSheet() {
         subject = "";
         time = "";
-        attendancesNfcId = new LinkedHashMap<String, Attendance>();
         attendancesStudentNo = new LinkedHashMap<String, Attendance>();
+        attendancesNfcId = new LinkedHashMap<String, Attendance>();
     }
     /**
      * CSVファイルからシートを生成する
@@ -265,25 +265,8 @@ public class AttendanceSheet implements Serializable {
      * @param mAttendance 出席データ
      */
     public void add(String nfcId, Attendance mAttendance) {
-        attendancesNfcId.put(nfcId, mAttendance);
         attendancesStudentNo.put(mAttendance.getStudentNo(), mAttendance);
-    }
-
-    /**
-     * 出席データの表示用のリストを取得する
-     * @return 出席データの表示用のリスト
-     */
-    public ArrayList<Attendance> getAttendanceDisplayData() {
-        return new ArrayList<Attendance>(attendancesStudentNo.values());
-    }
-
-    /**
-     * 引数で渡されたNFCタグを持つ出席データを取得する
-     * @param id NFCタグのID
-     * @return 出席データ
-     */
-    public Attendance getByNfcId(String id) {
-        return attendancesNfcId.get(id);
+        attendancesNfcId.put(nfcId, mAttendance);
     }
 
     /**
@@ -296,6 +279,15 @@ public class AttendanceSheet implements Serializable {
     }
 
     /**
+     * 引数で渡されたNFCタグを持つ出席データを取得する
+     * @param id NFCタグのID
+     * @return 出席データ
+     */
+    public Attendance getByNfcId(String id) {
+        return attendancesNfcId.get(id);
+    }
+
+    /**
      * 現在の出席データの数を取得する
      * @return 現在の出席データの数
      */
@@ -304,30 +296,38 @@ public class AttendanceSheet implements Serializable {
     }
 
     /**
-     * 引数で渡されたNFCタグをもつ出席データが存在するかどうかを調べる
-     * @param id NFCタグのID
-     * @return 存在したならばtrue 存在しなければfalse
-     */
-    public boolean hasNfcId(String id) {
-        return attendancesNfcId.containsKey(id);
-    }
-
-    /**
      * 引数で渡された学籍番号をもつ出席データが存在するかどうかを調べる
      * @param studentNo 学籍番号
-     * @return 存在したならばtrue 存在しなければfalse
+     * @return 存在するならばtrue 存在しなければfalse
      */
     public boolean hasStudentNo(String studentNo) {
         return attendancesStudentNo.containsKey(studentNo);
     }
 
     /**
+     * 引数で渡されたNFCタグをもつ出席データが存在するかどうかを調べる
+     * @param id NFCタグのID
+     * @return 存在するならばtrue 存在しなければfalse
+     */
+    public boolean hasNfcId(String id) {
+        return attendancesNfcId.containsKey(id);
+    }
+
+    /**
      * 引数で渡された出席データが存在するかどうかを調べる
      * @param mAttendance 出席データ
-     * @return 存在したならばtrue 存在しなければfalse
+     * @return 存在するならばtrue 存在しなければfalse
      */
     public boolean hasAttendance(Attendance mAttendance) {
         return attendancesNfcId.containsValue(mAttendance);
+    }
+
+    /**
+     * 出席データの表示用のリストを取得する
+     * @return 出席データの表示用のリスト
+     */
+    public ArrayList<Attendance> getAttendanceList() {
+        return new ArrayList<Attendance>(attendancesStudentNo.values());
     }
 
     /**
@@ -349,7 +349,6 @@ public class AttendanceSheet implements Serializable {
      * @param encode 書き込む際に使用する文字コード
      * @param isLatitudeEnabled 緯度を付加するかどうか
      * @param isLongitudeEnabled 経度を付加するかどうか
-     * @param isAltitudeEnabled 高度を付加するかどうか
      * @param isAccuracyEnabled 精度を付加するかどうか
      * @throws FileNotFoundException
      * @throws UnsupportedEncodingException

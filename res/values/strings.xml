@@ -101,6 +101,7 @@
     <string name="menu_hide_invisible_file">隠しファイルを隠す</string>
     <string name="menu_create_file">新規ファイルを作成する</string>
     <string name="menu_create_directory">新規フォルダを作成する</string>
+    <string name="menu_add_student">学生データを追加する</string>
     <string name="menu_add_attendance">出席データを追加する</string>
     <string name="menu_refresh">リストを再読み込み</string>
     <string name="menu_read_from_csv_file">追加読み込み</string>
@@ -143,6 +144,7 @@
     <string name="dialog_create_directory_hint">フォルダ名を入力</string>
     <string name="dialog_disaster_menu_capture_photo">写真を撮影</string>
     <string name="dialog_disaster_menu_capture_movie">動画を撮影</string>
+    <string name="dialog_add_student_menu_title">学生データの追加</string>
     <string name="dialog_add_attendance_menu_title">出席データの追加</string>
     <string name="dialog_add_attendance_menu_list">リストから追加する</string>
     <string name="dialog_add_attendance_menu_search">学籍番号で検索する</string>
@@ -151,6 +153,8 @@
     <string name="dialog_search_student_no_title">学籍番号での検索</string>
     <string name="dialog_search_student_no_hint">学籍番号を入力</string>
     <string name="dialog_input_student_info_title">手動での登録</string>
+    <string name="dialog_ask_register_read_id">リストにないNFCタグを読み取りました。読み取ったNFCタグをリストに登録しますか?</string>
+    <string name="dialog_register_id_menu_title">NFCタグの登録</string>
 
     <string name="notice_location_fetched">現在地を取得しました</string>
     <string name="notice_add_location_disabled">\"位置情報を付加する\"は無効になりました</string>
@@ -160,6 +164,7 @@
     <string name="notice_csv_file_opened">を開きました</string>
     <string name="notice_csv_file_saved">に保存しました</string>
     <string name="notice_file_created">を作成しました</string>
+    <string name="notice_id_registered">NFCタグを登録しました</string>
 
     <string name="error">エラー</string>
     <string name="error_make_list_directory_failed">リストフォルダの作成に失敗しました</string>

@@ -9,7 +9,7 @@
           android:icon="@android:drawable/ic_menu_edit"
           android:numericShortcut="2" />
     <item android:id="@+id/menu_add_attendance"
-          android:title="@string/menu_add_attendance"
+          android:title="@string/menu_add_student"
           android:icon="@android:drawable/ic_menu_add"
           android:numericShortcut="3" />
     <item android:id="@+id/menu_refresh"
