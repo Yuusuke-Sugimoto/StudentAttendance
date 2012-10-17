@@ -13,6 +13,8 @@
     <string name="listmaker_title">リスト作成画面</string>
 
     <string name="disaster_title">災害モード</string>
+    <string name="disaster_send_resume_label">送信再開</string>
+    <string name="disaster_send_pause_label">送信停止</string>
 
     <string name="camera_title">カメラ</string>
     <string name="camera_capture_label">撮影</string>
@@ -111,6 +113,7 @@
     <string name="dialog_ask_remove_without_saving">保存されていない内容を破棄してもよろしいですか?</string>
     <string name="dialog_attendance_menu_title">出欠メニュー</string>
     <string name="dialog_ask_overwrite">に上書きしてもよろしいですか?</string>
+    <string name="dialog_save_as">別名で保存</string>
     <string name="dialog_fetching_location">現在地を取得しています…\n(バックボタンで中止)</string>
     <string name="dialog_ask_open_list_maker">リスト作成画面を開きますか?</string>
     <string name="dialog_ask_open_gps_preference">端末の設定でGPSが無効になっています。GPSの設定画面を開きますか?(キャンセルした場合、\"位置情報を付加する\"は無効になります)</string>
@@ -177,6 +180,7 @@
     <string name="error_opening_failed">を開けませんでした</string>
     <string name="error_saving_failed">への保存に失敗しました</string>
     <string name="error_saving_data_null">保存するデータがありません</string>
+    <string name="error_id_register_failed">NFCタグの登録に失敗しました</string>
     <string name="error_file_already_exists">既に同名のファイルが存在します。</string>
     <string name="error_file_create_failed">ファイルの作成に失敗しました。</string>
     <string name="error_illegal_file_name">ファイル名に使用できない文字が含まれています。</string>

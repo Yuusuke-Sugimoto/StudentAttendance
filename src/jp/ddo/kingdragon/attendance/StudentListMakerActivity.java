@@ -37,27 +37,32 @@ import jp.ddo.kingdragon.attendance.util.Util;
 
 /**
  * リスト作成画面
+ * [パラメータ]<br />
+ * SRC_FILE_PATH:開くCSVファイルのパス[String]<br />
  * @author 杉本祐介
  */
 public class StudentListMakerActivity extends Activity {
     // 定数の宣言
+    // パラメータ
+    public static final String SRC_FILE_PATH = "srcFilePath";
     // リクエストコード
     private static final int REQUEST_CHOOSE_OPEN_FILE = 0;
     private static final int REQUEST_CHOOSE_SAVE_FILE = 1;
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING   = 0;
     private static final int DIALOG_ASK_REMOVE_WITHOUT_SAVING = 1;
-    private static final int DIALOG_STUDENT_MENU              = 2;
-    private static final int DIALOG_EDIT_STUDENT              = 3;
-    private static final int DIALOG_ASK_REMOVE_NFC_ID         = 4;
-    private static final int DIALOG_ASK_REMOVE_STUDENT        = 5;
-    private static final int DIALOG_EDIT_INFO                 = 6;
-    private static final int DIALOG_ADD_STUDENT_MENU          = 7;
-    private static final int DIALOG_CSV_FILE_LIST             = 8;
-    private static final int DIALOG_STUDENT_LIST              = 9;
-    private static final int DIALOG_SEARCH_STUDENT_NO         = 10;
-    private static final int DIALOG_INPUT_STUDENT_INFO        = 11;
-    private static final int DIALOG_ASK_OVERWRITE             = 12;
+    private static final int DIALOG_ASK_OPEN_WITHOUT_SAVING   = 2;
+    private static final int DIALOG_STUDENT_MENU              = 3;
+    private static final int DIALOG_EDIT_STUDENT              = 4;
+    private static final int DIALOG_ASK_REMOVE_NFC_ID         = 5;
+    private static final int DIALOG_ASK_REMOVE_STUDENT        = 6;
+    private static final int DIALOG_EDIT_INFO                 = 7;
+    private static final int DIALOG_ADD_STUDENT_MENU          = 8;
+    private static final int DIALOG_CSV_FILE_LIST             = 9;
+    private static final int DIALOG_STUDENT_LIST              = 10;
+    private static final int DIALOG_SEARCH_STUDENT_NO         = 11;
+    private static final int DIALOG_INPUT_STUDENT_INFO        = 12;
+    private static final int DIALOG_ASK_OVERWRITE             = 13;
     /**
      * 使用する文字コード
      */
@@ -80,7 +85,7 @@ public class StudentListMakerActivity extends Activity {
     /**
      * 保存先のファイル
      */
-    private File saveFile;
+    private File destFile;
     /**
      * キーボード(バーコードリーダ)から入力された内容
      */
@@ -160,7 +165,6 @@ public class StudentListMakerActivity extends Activity {
     private ArrayList<StudentSheet> studentSheets;
 
     @Override
-    @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.student_list_maker);
@@ -170,18 +174,33 @@ public class StudentListMakerActivity extends Activity {
         inputBuffer = new StringBuilder();
         currentStudent = new Student();
         selectedSheet = null;
-        mStudentSheet = new StudentSheet();
 
-        // アクティビティ再生成前のデータがあれば復元する
+        String srcFilePath = getIntent().getStringExtra(StudentListMakerActivity.SRC_FILE_PATH);
+
         if (savedInstanceState != null) {
+            // アクティビティ再生成前のデータがあれば復元する
             isSaved = savedInstanceState.getBoolean("IsSaved");
             currentStudent = (Student)savedInstanceState.getSerializable("CurrentStudent");
             selectedSheet = (StudentSheet)savedInstanceState.getSerializable("SelectedSheet");
             mStudentSheet = (StudentSheet)savedInstanceState.getSerializable("StudentSheet");
-            ArrayList<Student> studentDisplayData = (ArrayList<Student>)savedInstanceState.getSerializable("StudentDisplayData");
-            mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, studentDisplayData);
+            mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mStudentSheet.getStudentList());
+        }
+        else if (srcFilePath != null) {
+            // 開くファイルがパラメータで指定されていればそのファイルを開く
+            File srcFile = new File(srcFilePath);
+            try {
+                mStudentSheet = new StudentSheet(srcFile, StudentListMakerActivity.CHARACTER_CODE);
+                mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mStudentSheet.getStudentList());
+                isSaved = false;
+                Toast.makeText(StudentListMakerActivity.this, srcFile.getName() + getString(R.string.notice_csv_file_opened), Toast.LENGTH_SHORT).show();
+            }
+            catch (IOException e) {
+                Toast.makeText(StudentListMakerActivity.this, srcFile.getName() + getString(R.string.error_opening_failed), Toast.LENGTH_SHORT).show();
+                Log.e("onCreate", e.getMessage(), e);
+            }
         }
         else {
+            mStudentSheet = new StudentSheet();
             mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
         }
 
@@ -267,10 +286,10 @@ public class StudentListMakerActivity extends Activity {
         switch (requestCode) {
             case StudentListMakerActivity.REQUEST_CHOOSE_OPEN_FILE: {
                 if (resultCode == Activity.RESULT_OK) {
-                    String fileName = data.getStringExtra("fileName");
-                    String filePath = data.getStringExtra("filePath");
+                    String fileName = data.getStringExtra(FileChooseActivity.FILE_NAME);
+                    String filePath = data.getStringExtra(FileChooseActivity.FILE_PATH);
                     try {
-                        mStudentSheet = new StudentSheet(new File(filePath), CHARACTER_CODE);
+                        mStudentSheet = new StudentSheet(new File(filePath), StudentListMakerActivity.CHARACTER_CODE);
                         mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0, mStudentSheet.getStudentList());
                         studentListView.setAdapter(mStudentListAdapter);
                         isSaved = false;
@@ -286,13 +305,13 @@ public class StudentListMakerActivity extends Activity {
             }
             case StudentListMakerActivity.REQUEST_CHOOSE_SAVE_FILE: {
                 if (resultCode == Activity.RESULT_OK) {
-                    String filePath = data.getStringExtra("filePath");
-                    saveFile = new File(filePath);
-                    if (saveFile.exists()) {
+                    String filePath = data.getStringExtra(FileChooseActivity.FILE_PATH);
+                    destFile = new File(filePath);
+                    if (destFile.exists()) {
                         showDialog(StudentListMakerActivity.DIALOG_ASK_OVERWRITE);
                     }
                     else {
-                        saveCsvFile(saveFile, StudentListMakerActivity.CHARACTER_CODE);
+                        saveCsvFile(destFile, StudentListMakerActivity.CHARACTER_CODE);
                     }
                 }
 
@@ -338,20 +357,31 @@ public class StudentListMakerActivity extends Activity {
                 break;
             }
             case R.id.menu_open: {
-                Intent mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
-                mIntent.putExtra("initDirPath", listDir.getAbsolutePath());
-                mIntent.putExtra("filter", ".*");
-                mIntent.putExtra("extension", "csv");
-                startActivityForResult(mIntent, StudentListMakerActivity.REQUEST_CHOOSE_OPEN_FILE);
+                if (!isSaved) {
+                    showDialog(StudentListMakerActivity.DIALOG_ASK_OPEN_WITHOUT_SAVING);
+                }
+                else {
+                    Intent mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
+                    mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, listDir.getAbsolutePath());
+                    mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                    mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
+                    startActivityForResult(mIntent, StudentListMakerActivity.REQUEST_CHOOSE_OPEN_FILE);
+                }
 
                 break;
             }
             case R.id.menu_save: {
-                Intent mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
-                mIntent.putExtra("initDirPath", listDir.getAbsolutePath());
-                mIntent.putExtra("filter", ".*");
-                mIntent.putExtra("extension", "csv");
-                startActivityForResult(mIntent, StudentListMakerActivity.REQUEST_CHOOSE_SAVE_FILE);
+                destFile = mStudentSheet.getBaseFile();
+                if (destFile != null) {
+                    showDialog(StudentListMakerActivity.DIALOG_ASK_OVERWRITE);
+                }
+                else {
+                    Intent mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
+                    mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, listDir.getAbsolutePath());
+                    mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                    mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
+                    startActivityForResult(mIntent, StudentListMakerActivity.REQUEST_CHOOSE_SAVE_FILE);
+                }
 
                 break;
             }
@@ -392,6 +422,27 @@ public class StudentListMakerActivity extends Activity {
                     public void onClick(DialogInterface dialog, int which) {
                         makeNewSheet();
                         Toast.makeText(StudentListMakerActivity.this, R.string.notice_new_sheet_created, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                builder.setNegativeButton(android.R.string.no, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case StudentListMakerActivity.DIALOG_ASK_OPEN_WITHOUT_SAVING: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentListMakerActivity.this);
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setTitle(R.string.dialog_ask);
+                builder.setMessage(R.string.dialog_ask_remove_without_saving);
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
+                        mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, listDir.getAbsolutePath());
+                        mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                        mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
+                        startActivityForResult(mIntent, StudentListMakerActivity.REQUEST_CHOOSE_OPEN_FILE);
                     }
                 });
                 builder.setNegativeButton(android.R.string.no, null);
@@ -477,6 +528,9 @@ public class StudentListMakerActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        for (String nfcId : currentStudent.getNfcIds()) {
+                            mStudentSheet.removeNfcId(nfcId);
+                        }
                         currentStudent.removeAllNfcIds();
                         studentListView.invalidateViews();
                         isSaved = false;
@@ -715,33 +769,28 @@ public class StudentListMakerActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        saveCsvFile(saveFile, StudentListMakerActivity.CHARACTER_CODE);
+                        saveCsvFile(destFile, StudentListMakerActivity.CHARACTER_CODE);
                     }
                 });
-                builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                builder.setNeutralButton(R.string.dialog_save_as, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-                builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
                         Intent mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
                         String initDirPath;
-                        File parent = saveFile.getParentFile();
+                        File parent = destFile.getParentFile();
                         if (parent != null) {
                             initDirPath = parent.getAbsolutePath();
                         }
                         else {
                             initDirPath = "/";
                         }
-                        mIntent.putExtra("initDirPath", initDirPath);
-                        mIntent.putExtra("filter", ".*");
-                        mIntent.putExtra("extension", "csv");
+                        mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, initDirPath);
+                        mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                        mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
                         startActivityForResult(mIntent, StudentListMakerActivity.REQUEST_CHOOSE_SAVE_FILE);
                     }
                 });
+                builder.setNegativeButton(android.R.string.cancel, null);
                 builder.setCancelable(true);
                 retDialog = builder.create();
 
@@ -808,8 +857,8 @@ public class StudentListMakerActivity extends Activity {
                 break;
             }
             case StudentListMakerActivity.DIALOG_ASK_OVERWRITE: {
-                if (saveFile != null) {
-                    mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
+                if (destFile != null) {
+                    mAlertDialog.setMessage(destFile.getName() + getString(R.string.dialog_ask_overwrite));
                 }
 
                 break;
@@ -863,7 +912,6 @@ public class StudentListMakerActivity extends Activity {
         outState.putSerializable("CurrentStudent", currentStudent);
         outState.putSerializable("SelectedSheet", selectedSheet);
         outState.putSerializable("StudentSheet", mStudentSheet);
-        outState.putSerializable("StudentDisplayData", mStudentSheet.getStudentList());
     }
 
     /**
@@ -978,6 +1026,7 @@ public class StudentListMakerActivity extends Activity {
                 // 読み取り済みでなければ追加
                 if (!mStudentSheet.hasNfcId(id)) {
                     currentStudent.addNfcId(id);
+                    mStudentSheet.addNfcId(id, currentStudent);
                 }
                 else {
                     Toast.makeText(StudentListMakerActivity.this, R.string.error_nfc_id_already_registered, Toast.LENGTH_SHORT).show();
@@ -986,6 +1035,7 @@ public class StudentListMakerActivity extends Activity {
             else {
                 // 登録されているNFCタグであれば削除
                 currentStudent.removeNfcId(id);
+                mStudentSheet.removeNfcId(id);
             }
             studentListView.invalidateViews();
             isSaved = false;

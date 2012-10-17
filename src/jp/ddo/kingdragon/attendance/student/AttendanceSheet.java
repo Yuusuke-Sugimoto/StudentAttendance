@@ -43,6 +43,10 @@ public class AttendanceSheet implements Serializable {
      * 授業時間
      */
     private String time;
+    /**
+     * 元のファイル
+     */
+    private File baseFile;
 
     // コレクションの宣言
     /**
@@ -61,6 +65,7 @@ public class AttendanceSheet implements Serializable {
     public AttendanceSheet() {
         subject = "";
         time = "";
+        baseFile = null;
         attendancesStudentNo = new LinkedHashMap<String, Attendance>();
         attendancesNfcId = new LinkedHashMap<String, Attendance>();
     }
@@ -76,6 +81,7 @@ public class AttendanceSheet implements Serializable {
     public AttendanceSheet(File csvFile, String encode, Resources inResources) throws UnsupportedEncodingException, FileNotFoundException, IOException {
         this();
 
+        baseFile = csvFile;
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
         CSVParser parser = new CSVParser();
         boolean isSubjectRecord = false;
@@ -106,6 +112,7 @@ public class AttendanceSheet implements Serializable {
 
                 if (values.length >= 6 && !values[5].matches("[A-Za-z0-9]+")) {
                     // values[5]が正規表現にマッチしなければ出席データが格納されたCSVファイル
+                    baseFile = null;
                     mAttendance = new Attendance(new Student(values[2], num, values[1],
                                                              values[3], values[4], (String[])null),
                                                  inResources);
@@ -257,6 +264,14 @@ public class AttendanceSheet implements Serializable {
      */
     public String getTime() {
         return time;
+    }
+
+    /**
+     * 元のファイルを取得する
+     * @return 元のファイル 展開も保存も行われていない場合はnull
+     */
+    public File getBaseFile() {
+        return baseFile;
     }
 
     /**

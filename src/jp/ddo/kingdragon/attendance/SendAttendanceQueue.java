@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -20,7 +21,13 @@ import jp.ddo.kingdragon.attendance.student.Attendance;
  * サーバに送信する出席データを管理するクラス
  * @author 杉本祐介
  */
-public class SendAttendanceQueue implements Iterable<Attendance> {
+public class SendAttendanceQueue implements Iterable<Attendance>, Serializable {
+    // 定数の宣言
+    /**
+     * シリアルバージョンUID
+     */
+    private static final long serialVersionUID = 6767596055879392050L;
+
     // 変数の宣言
     /**
      * 一時停止中かどうか

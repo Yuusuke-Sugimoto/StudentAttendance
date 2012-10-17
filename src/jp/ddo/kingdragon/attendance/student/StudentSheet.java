@@ -43,10 +43,6 @@ public class StudentSheet implements Serializable {
 
     // コレクションの宣言
     /**
-     * 読み取り済みのNFCタグのリスト
-     */
-    private ArrayList<String> readNfcIds;
-    /**
      * 現在管理している学生データを学籍番号をキーとして格納したリスト
      */
     private LinkedHashMap<String, Student> studentsStudentNo;
@@ -63,7 +59,6 @@ public class StudentSheet implements Serializable {
         subject = "";
         time = "";
         baseFile = null;
-        readNfcIds = new ArrayList<String>();
         studentsStudentNo = new LinkedHashMap<String, Student>();
         studentsNfcId = new LinkedHashMap<String, Student>();
     }
@@ -138,8 +133,6 @@ public class StudentSheet implements Serializable {
                 studentsStudentNo.put(values[2], mStudent);
                 for (String nfcId : nfcIds) {
                     studentsNfcId.put(nfcId, mStudent);
-                    // NFCタグを読み取り済みとして追加
-                    readNfcIds.add(nfcId);
                 }
             }
 
@@ -168,7 +161,7 @@ public class StudentSheet implements Serializable {
     public String getSubject() {
         return subject;
     }
-    
+
     /**
      * 授業時間をセットする
      * @param time 授業時間
@@ -183,7 +176,7 @@ public class StudentSheet implements Serializable {
     public String getTime() {
         return time;
     }
-    
+
     /**
      * 元のファイルを取得する
      * @return 元のファイル 展開も保存も行われていない場合はnull
@@ -195,7 +188,7 @@ public class StudentSheet implements Serializable {
     /**
      * 学生データを追加する<br />
      * 既に追加されている場合は追加しない。
-     * @param inStudent 追加する学生データ
+     * @param inStudent 学生データ
      */
     public void add(Student inStudent) {
         if (!studentsStudentNo.containsKey(inStudent.getStudentNo())) {
@@ -209,17 +202,35 @@ public class StudentSheet implements Serializable {
         }
     }
 
+    /**
+     * NFCタグを登録する<br />
+     * 既に登録されている場合は追加しない。
+     * @param nfcId NFCタグ
+     * @param inStudent 学生データ
+     */
+    public void addNfcId(String nfcId, Student inStudent) {
+        if (!studentsNfcId.containsKey(nfcId)) {
+            studentsNfcId.put(nfcId, inStudent);
+        }
+    }
+
     /***
      * 学生データを削除する
-     * @param inStudent 削除する学生データ
+     * @param inStudent 学生データ
      */
     public void remove(Student inStudent) {
         studentsStudentNo.remove(inStudent.getStudentNo());
-        if (inStudent.getNumOfNfcId() != 0) {
-            for (String nfcId : inStudent.getNfcIds()) {
-                studentsNfcId.remove(nfcId);
-            }
+        for (String nfcId : inStudent.getNfcIds()) {
+            studentsNfcId.remove(nfcId);
         }
+    }
+
+    /**
+     * NFCタグの登録を削除する
+     * @param nfcId NFCタグ
+     */
+    public void removeNfcId(String nfcId) {
+        studentsNfcId.remove(nfcId);
     }
 
     /**

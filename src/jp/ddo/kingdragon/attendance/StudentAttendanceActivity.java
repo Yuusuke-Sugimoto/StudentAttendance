@@ -59,21 +59,22 @@ public class StudentAttendanceActivity extends Activity {
     private static final int REQUEST_CHOOSE_OPEN_FILE = 0;
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING = 0;
-    private static final int DIALOG_ATTENDANCE_MENU         = 1;
-    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 2;
-    private static final int DIALOG_CSV_FILE_LIST           = 3;
-    private static final int DIALOG_STUDENT_LIST            = 4;
-    private static final int DIALOG_SEARCH_STUDENT_NO       = 5;
-    private static final int DIALOG_INPUT_STUDENT_INFO      = 6;
-    private static final int DIALOG_ASK_REGISTER_READ_ID    = 7;
-    private static final int DIALOG_REGISTER_ID_MENU        = 8;
-    private static final int DIALOG_CSV_FILE_LIST_R         = 9;
-    private static final int DIALOG_STUDENT_LIST_R          = 10;
-    private static final int DIALOG_SEARCH_STUDENT_NO_R     = 11;
-    private static final int DIALOG_ASK_OVERWRITE           = 12;
-    private static final int DIALOG_FETCHING_LOCATION       = 13;
-    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 14;
-    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 15;
+    private static final int DIALOG_ASK_OPEN_WITHOUT_SAVING = 1;
+    private static final int DIALOG_ATTENDANCE_MENU         = 2;
+    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 3;
+    private static final int DIALOG_CSV_FILE_LIST           = 4;
+    private static final int DIALOG_STUDENT_LIST            = 5;
+    private static final int DIALOG_SEARCH_STUDENT_NO       = 6;
+    private static final int DIALOG_INPUT_STUDENT_INFO      = 7;
+    private static final int DIALOG_ASK_REGISTER_READ_ID    = 8;
+    private static final int DIALOG_REGISTER_ID_MENU        = 9;
+    private static final int DIALOG_CSV_FILE_LIST_R         = 10;
+    private static final int DIALOG_STUDENT_LIST_R          = 11;
+    private static final int DIALOG_SEARCH_STUDENT_NO_R     = 12;
+    private static final int DIALOG_ASK_OVERWRITE           = 13;
+    private static final int DIALOG_FETCHING_LOCATION       = 14;
+    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 15;
+    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 16;
     /**
      * 使用する文字コード
      */
@@ -108,7 +109,7 @@ public class StudentAttendanceActivity extends Activity {
     /**
      * 保存先のファイル
      */
-    private File saveFile;
+    private File destFile;
     /**
      * キーボード(バーコードリーダ)から入力された内容
      */
@@ -206,7 +207,6 @@ public class StudentAttendanceActivity extends Activity {
     private ArrayList<StudentSheet> studentSheets;
 
     @Override
-    @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTitle(R.string.attendance_title);
@@ -235,8 +235,7 @@ public class StudentAttendanceActivity extends Activity {
             currentAttendance = (Attendance)savedInstanceState.getSerializable("CurrentAttendance");
             selectedSheet = (StudentSheet)savedInstanceState.getSerializable("SelectedSheet");
             mAttendanceSheet = (AttendanceSheet)savedInstanceState.getSerializable("AttendanceSheet");
-            ArrayList<Attendance> attendanceDisplayData = (ArrayList<Attendance>)savedInstanceState.getSerializable("AttendanceDisplayData");
-            mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, attendanceDisplayData);
+            mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, mAttendanceSheet.getAttendanceList());
             mAttendanceLocation = (AttendanceLocation)savedInstanceState.getSerializable("AttendanceLocation");
         }
         else {
@@ -383,7 +382,7 @@ public class StudentAttendanceActivity extends Activity {
                 stopUpdateLocation();
             }
 
-            if (mAttendanceSheet.size() != 0) {
+            if (studentSheets.size() != 0) {
                 readStartButton.setEnabled(true);
                 if (!isReading) {
                     readStartButton.setText(R.string.attendance_read_start_label);
@@ -427,8 +426,8 @@ public class StudentAttendanceActivity extends Activity {
         switch (requestCode) {
             case StudentAttendanceActivity.REQUEST_CHOOSE_OPEN_FILE: {
                 if (resultCode == Activity.RESULT_OK) {
-                    String fileName = data.getStringExtra("fileName");
-                    String filePath = data.getStringExtra("filePath");
+                    String fileName = data.getStringExtra(FileChooseActivity.FILE_NAME);
+                    String filePath = data.getStringExtra(FileChooseActivity.FILE_PATH);
                     try {
                         mAttendanceSheet = new AttendanceSheet(new File(filePath), CHARACTER_CODE, getResources());
                         mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, mAttendanceSheet.getAttendanceList());
@@ -480,11 +479,16 @@ public class StudentAttendanceActivity extends Activity {
                 break;
             }
             case R.id.menu_open: {
-                Intent mIntent = new Intent(StudentAttendanceActivity.this, FileChooseActivity.class);
-                mIntent.putExtra("initDirPath", listDir.getAbsolutePath());
-                mIntent.putExtra("filter", ".*");
-                mIntent.putExtra("extension", "csv");
-                startActivityForResult(mIntent, StudentAttendanceActivity.REQUEST_CHOOSE_OPEN_FILE);
+                if (!isSaved) {
+                    showDialog(StudentAttendanceActivity.DIALOG_ASK_OPEN_WITHOUT_SAVING);
+                }
+                else {
+                    Intent mIntent = new Intent(StudentAttendanceActivity.this, FileChooseActivity.class);
+                    mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, listDir.getAbsolutePath());
+                    mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                    mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
+                    startActivityForResult(mIntent, StudentAttendanceActivity.REQUEST_CHOOSE_OPEN_FILE);
+                }
 
                 break;
             }
@@ -531,12 +535,12 @@ public class StudentAttendanceActivity extends Activity {
                     }
 
                     String fileName = rawFileName.toString();
-                    saveFile = new File(saveDir, fileName);
-                    if (saveFile.exists()) {
+                    destFile = new File(saveDir, fileName);
+                    if (destFile.exists()) {
                         showDialog(StudentAttendanceActivity.DIALOG_ASK_OVERWRITE);
                     }
                     else {
-                        saveCsvFile(saveFile, StudentAttendanceActivity.CHARACTER_CODE);
+                        saveCsvFile(destFile, StudentAttendanceActivity.CHARACTER_CODE);
                     }
                 }
                 else {
@@ -564,6 +568,27 @@ public class StudentAttendanceActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         StudentAttendanceActivity.super.onBackPressed();
+                    }
+                });
+                builder.setNegativeButton(android.R.string.no, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case StudentAttendanceActivity.DIALOG_ASK_OPEN_WITHOUT_SAVING: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setTitle(R.string.dialog_ask);
+                builder.setMessage(R.string.dialog_ask_remove_without_saving);
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent mIntent = new Intent(StudentAttendanceActivity.this, FileChooseActivity.class);
+                        mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, listDir.getAbsolutePath());
+                        mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                        mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
+                        startActivityForResult(mIntent, StudentAttendanceActivity.REQUEST_CHOOSE_OPEN_FILE);
                     }
                 });
                 builder.setNegativeButton(android.R.string.no, null);
@@ -891,7 +916,7 @@ public class StudentAttendanceActivity extends Activity {
                             try {
                                 selectedSheet.saveCsvFile(selectedSheet.getBaseFile(), StudentAttendanceActivity.CHARACTER_CODE);
                                 Toast.makeText(StudentAttendanceActivity.this, R.string.notice_id_registered, Toast.LENGTH_SHORT).show();
-                                
+
                                 currentAttendance = new Attendance(mStudent, getResources());
                                 int position;
                                 if (!mAttendanceSheet.hasStudentNo(currentAttendance.getStudentNo())) {
@@ -923,8 +948,11 @@ public class StudentAttendanceActivity extends Activity {
                                 }
                                 attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
                                 attendanceListView.setSelection(position);
+
+                                refreshStudentSheets();
                             }
                             catch (IOException e) {
+                                Toast.makeText(StudentAttendanceActivity.this, R.string.error_id_register_failed, Toast.LENGTH_SHORT).show();
                                 Log.e("onCreateDialog", e.getMessage(), e);
                             }
                         }
@@ -963,7 +991,7 @@ public class StudentAttendanceActivity extends Activity {
                                     try {
                                         tempStudentSheet.saveCsvFile(tempStudentSheet.getBaseFile(), StudentAttendanceActivity.CHARACTER_CODE);
                                         Toast.makeText(StudentAttendanceActivity.this, R.string.notice_id_registered, Toast.LENGTH_SHORT).show();
-                                        
+
                                         currentAttendance = new Attendance(mStudent, getResources());
                                         int position;
                                         if (!mAttendanceSheet.hasStudentNo(studentNo)) {
@@ -995,8 +1023,11 @@ public class StudentAttendanceActivity extends Activity {
                                         }
                                         attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
                                         attendanceListView.setSelection(position);
+
+                                        refreshStudentSheets();
                                     }
                                     catch (IOException e) {
+                                        Toast.makeText(StudentAttendanceActivity.this, R.string.error_id_register_failed, Toast.LENGTH_SHORT).show();
                                         Log.e("onCreateDialog", e.getMessage(), e);
                                     }
                                     isExisted = true;
@@ -1019,7 +1050,7 @@ public class StudentAttendanceActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        saveCsvFile(saveFile, StudentAttendanceActivity.CHARACTER_CODE);
+                        saveCsvFile(destFile, StudentAttendanceActivity.CHARACTER_CODE);
                     }
                 });
                 builder.setNegativeButton(android.R.string.no, null);
@@ -1053,6 +1084,10 @@ public class StudentAttendanceActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Intent mIntent = new Intent(StudentAttendanceActivity.this, StudentListMakerActivity.class);
+                        File baseFile = mAttendanceSheet.getBaseFile();
+                        if (baseFile != null) {
+                            mIntent.putExtra(StudentListMakerActivity.SRC_FILE_PATH, baseFile.getAbsolutePath());
+                        }
                         startActivity(mIntent);
                     }
                 });
@@ -1125,7 +1160,7 @@ public class StudentAttendanceActivity extends Activity {
                 break;
             }
             case StudentAttendanceActivity.DIALOG_ASK_OVERWRITE: {
-                mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
+                mAlertDialog.setMessage(destFile.getName() + getString(R.string.dialog_ask_overwrite));
 
                 break;
             }
@@ -1177,7 +1212,6 @@ public class StudentAttendanceActivity extends Activity {
         outState.putSerializable("CurrentAttendance", currentAttendance);
         outState.putSerializable("SelectedSheet", selectedSheet);
         outState.putSerializable("AttendanceSheet", mAttendanceSheet);
-        outState.putSerializable("AttendanceDisplayData", mAttendanceSheet.getAttendanceList());
         outState.putSerializable("AttendanceLocation", mAttendanceLocation);
     }
 
@@ -1332,8 +1366,41 @@ public class StudentAttendanceActivity extends Activity {
                 attendanceListView.setSelection(position);
             }
             else {
-                readNfcId = id;
-                showDialog(StudentAttendanceActivity.DIALOG_ASK_REGISTER_READ_ID);
+                boolean isExisted = false;
+                if (studentSheets.size() != 0) {
+                    for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
+                        StudentSheet tempStudentSheet = studentSheets.get(i);
+                        if (tempStudentSheet.hasNfcId(id)) {
+                            Student mStudent = tempStudentSheet.getByNfcId(id);
+                            int position;
+                            if (!mAttendanceSheet.hasStudentNo(mStudent.getStudentNo())) {
+                                currentAttendance = new Attendance(mStudent, getResources());
+                                if (!mPreferenceUtil.isLocationEnabled(false)) {
+                                    currentAttendance.setStatus(Attendance.ATTENDANCE);
+                                }
+                                else {
+                                    currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                                }
+                                addAttendance(id, currentAttendance);
+                                position = mAttendanceListAdapter.getCount() - 1;
+                                isSaved = false;
+                            }
+                            else {
+                                currentAttendance = mAttendanceSheet.getByStudentNo(mStudent.getStudentNo());
+                                position = mAttendanceListAdapter.getPosition(currentAttendance);
+                                Toast.makeText(StudentAttendanceActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                            }
+                            attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                            attendanceListView.setSelection(position);
+                            isExisted = true;
+                        }
+                    }
+                }
+
+                if (!isExisted) {
+                    readNfcId = id;
+                    showDialog(StudentAttendanceActivity.DIALOG_ASK_REGISTER_READ_ID);
+                }
             }
         }
     }

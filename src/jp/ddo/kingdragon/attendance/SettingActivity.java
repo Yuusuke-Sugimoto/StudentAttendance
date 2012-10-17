@@ -91,9 +91,9 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 Intent mIntent = new Intent(SettingActivity.this, FileChooseActivity.class);
-                mIntent.putExtra("initDirPath", mPreferenceUtil.getAttendanceDir(PreferenceUtil.DEFAULT_ATTENDANCE_DIR));
-                mIntent.putExtra("filter", ".*");
-                mIntent.putExtra("dirMode", true);
+                mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, mPreferenceUtil.getAttendanceDir(PreferenceUtil.DEFAULT_ATTENDANCE_DIR));
+                mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                mIntent.putExtra(FileChooseActivity.DIR_MODE, true);
                 startActivityForResult(mIntent, SettingActivity.REQUEST_CHANGE_ATTENDANCE_DIR);
 
                 return true;
@@ -214,7 +214,7 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
         switch (requestCode) {
             case SettingActivity.REQUEST_CHANGE_ATTENDANCE_DIR: {
                 if (resultCode == Activity.RESULT_OK) {
-                    String filePath = data.getStringExtra("filePath");
+                    String filePath = data.getStringExtra(FileChooseActivity.FILE_PATH);
                     mPreferenceUtil.putAttendanceDir(filePath);
                 }
 
@@ -397,7 +397,7 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
         else {
             passwordPref.setSummary(R.string.setting_password_not_registered);
         }
-        
+
         EditTextPreference serverAddressPref = (EditTextPreference)findPreference("setting_server_address");
         serverAddressPref.setSummary(mPreferenceUtil.getServerAddress(PreferenceUtil.DEFAULT_SERVER_ADDRESS));
 

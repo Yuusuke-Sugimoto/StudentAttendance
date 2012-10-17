@@ -71,21 +71,22 @@ public class DisasterModeActivity extends Activity {
     private static final int REQUEST_CHOOSE_OPEN_FILE = 2;
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING = 0;
-    private static final int DIALOG_DISASTER_MENU           = 1;
-    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 2;
-    private static final int DIALOG_CSV_FILE_LIST           = 3;
-    private static final int DIALOG_STUDENT_LIST            = 4;
-    private static final int DIALOG_SEARCH_STUDENT_NO       = 5;
-    private static final int DIALOG_INPUT_STUDENT_INFO      = 6;
-    private static final int DIALOG_ASK_REGISTER_READ_ID    = 7;
-    private static final int DIALOG_REGISTER_ID_MENU        = 8;
-    private static final int DIALOG_CSV_FILE_LIST_R         = 9;
-    private static final int DIALOG_STUDENT_LIST_R          = 10;
-    private static final int DIALOG_SEARCH_STUDENT_NO_R     = 11;
-    private static final int DIALOG_ASK_OVERWRITE           = 12;
-    private static final int DIALOG_FETCHING_LOCATION       = 13;
-    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 14;
-    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 15;
+    private static final int DIALOG_ASK_OPEN_WITHOUT_SAVING = 1;
+    private static final int DIALOG_DISASTER_MENU           = 2;
+    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 3;
+    private static final int DIALOG_CSV_FILE_LIST           = 4;
+    private static final int DIALOG_STUDENT_LIST            = 5;
+    private static final int DIALOG_SEARCH_STUDENT_NO       = 6;
+    private static final int DIALOG_INPUT_STUDENT_INFO      = 7;
+    private static final int DIALOG_ASK_REGISTER_READ_ID    = 8;
+    private static final int DIALOG_REGISTER_ID_MENU        = 9;
+    private static final int DIALOG_CSV_FILE_LIST_R         = 10;
+    private static final int DIALOG_STUDENT_LIST_R          = 11;
+    private static final int DIALOG_SEARCH_STUDENT_NO_R     = 12;
+    private static final int DIALOG_ASK_OVERWRITE           = 13;
+    private static final int DIALOG_FETCHING_LOCATION       = 14;
+    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 15;
+    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 16;
     /**
      * CSVファイルへの保存に使用する文字コード
      */
@@ -115,6 +116,10 @@ public class DisasterModeActivity extends Activity {
      */
     private boolean isReading;
     /**
+     * 送信中かどうか
+     */
+    private boolean isSending;
+    /**
      * 保存済みかどうか
      */
     private boolean isSaved;
@@ -138,7 +143,7 @@ public class DisasterModeActivity extends Activity {
     /**
      * 保存先のファイル
      */
-    private File saveFile;
+    private File destFile;
     /**
      * キーボード(バーコードリーダ)から入力された内容
      */
@@ -171,6 +176,10 @@ public class DisasterModeActivity extends Activity {
      * 読み取り開始ボタン
      */
     private Button readStartButton;
+    /**
+     * 送信停止ボタン
+     */
+    private Button sendPauseButton;
     /**
      * 学籍番号用のEditText
      */
@@ -246,7 +255,6 @@ public class DisasterModeActivity extends Activity {
     private ArrayList<StudentSheet> studentSheets;
 
     @Override
-    @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.disaster_mode);
@@ -255,6 +263,7 @@ public class DisasterModeActivity extends Activity {
         applicationContextForServlet = getApplicationContext();
 
         isReading = false;
+        isSending = true;
         isSaved = true;
         isFetchingLocation = false;
 
@@ -264,23 +273,24 @@ public class DisasterModeActivity extends Activity {
         selectedSheet = null;
         mAttendanceLocation = null;
         mPreferenceUtil = new PreferenceUtil(DisasterModeActivity.this);
-        attendanceQueue = new SendAttendanceQueue(mPreferenceUtil.getServerAddress(PreferenceUtil.DEFAULT_SERVER_ADDRESS),
-                                                  DisasterModeActivity.CHARACTER_CODE_FOR_SEND, 100);
 
         // アクティビティ再生成前のデータがあれば復元する
         if (savedInstanceState != null) {
             isReading = savedInstanceState.getBoolean("IsReading");
+            isSending = savedInstanceState.getBoolean("IsSending");
             isSaved = savedInstanceState.getBoolean("IsSaved");
             isFetchingLocation = savedInstanceState.getBoolean("IsFetchingLocation");
             readNfcId = savedInstanceState.getString("ReadNfcId");
+            attendanceQueue = (SendAttendanceQueue)savedInstanceState.getSerializable("AttendanceQueue");
             currentAttendance = (Attendance)savedInstanceState.getSerializable("CurrentAttendance");
             selectedSheet = (StudentSheet)savedInstanceState.getSerializable("SelectedSheet");
             mAttendanceSheet = (AttendanceSheet)savedInstanceState.getSerializable("AttendanceSheet");
-            ArrayList<Attendance> attendanceDisplayData = (ArrayList<Attendance>)savedInstanceState.getSerializable("AttendanceDisplayData");
-            mAttendanceListAdapter = new AttendanceListAdapter(DisasterModeActivity.this, 0, attendanceDisplayData);
+            mAttendanceListAdapter = new AttendanceListAdapter(DisasterModeActivity.this, 0, mAttendanceSheet.getAttendanceList());
             mAttendanceLocation = (AttendanceLocation)savedInstanceState.getSerializable("AttendanceLocation");
         }
         else {
+            attendanceQueue = new SendAttendanceQueue(mPreferenceUtil.getServerAddress(PreferenceUtil.DEFAULT_SERVER_ADDRESS),
+                                                      DisasterModeActivity.CHARACTER_CODE_FOR_SEND, 100);
             mAttendanceListAdapter = new AttendanceListAdapter(DisasterModeActivity.this, 0);
         }
 
@@ -330,6 +340,23 @@ public class DisasterModeActivity extends Activity {
                 else {
                     readStartButton.setText(R.string.attendance_read_finish_label);
                     isReading = true;
+                }
+            }
+        });
+
+        sendPauseButton = (Button)findViewById(R.id.send_pause);
+        sendPauseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isSending) {
+                    sendPauseButton.setText(R.string.disaster_send_resume_label);
+                    attendanceQueue.pause();
+                    isSending = false;
+                }
+                else {
+                    sendPauseButton.setText(R.string.disaster_send_pause_label);
+                    attendanceQueue.resume();
+                    isSending = true;
                 }
             }
         });
@@ -513,6 +540,22 @@ public class DisasterModeActivity extends Activity {
             else {
                 readStartButton.setEnabled(false);
                 readStartButton.setText(R.string.attendance_read_start_label);
+                isReading = false;
+            }
+
+            if (mPreferenceUtil.isSendServerEnabled(false)) {
+                sendPauseButton.setEnabled(true);
+                if (!isSending) {
+                    sendPauseButton.setText(R.string.disaster_send_resume_label);
+                }
+                else {
+                    sendPauseButton.setText(R.string.disaster_send_pause_label);
+                }
+            }
+            else {
+                sendPauseButton.setEnabled(false);
+                sendPauseButton.setText(R.string.disaster_send_resume_label);
+                isSending = false;
             }
 
             if (mWakeLock.isHeld()) {
@@ -595,8 +638,8 @@ public class DisasterModeActivity extends Activity {
             }
             case DisasterModeActivity.REQUEST_CHOOSE_OPEN_FILE: {
                 if (resultCode == Activity.RESULT_OK) {
-                    String fileName = data.getStringExtra("fileName");
-                    String filePath = data.getStringExtra("filePath");
+                    String fileName = data.getStringExtra(FileChooseActivity.FILE_NAME);
+                    String filePath = data.getStringExtra(FileChooseActivity.FILE_NAME);
                     try {
                         AttendanceSheet tempAttendanceSheet = new AttendanceSheet(new File(filePath), DisasterModeActivity.CHARACTER_CODE,
                                                                                   getResources());
@@ -654,11 +697,16 @@ public class DisasterModeActivity extends Activity {
                 break;
             }
             case R.id.menu_open: {
-                Intent mIntent = new Intent(DisasterModeActivity.this, FileChooseActivity.class);
-                mIntent.putExtra("initDirPath", saveDir.getAbsolutePath());
-                mIntent.putExtra("filter", ".*");
-                mIntent.putExtra("extension", "csv");
-                startActivityForResult(mIntent, DisasterModeActivity.REQUEST_CHOOSE_OPEN_FILE);
+                if (!isSaved) {
+                    showDialog(DisasterModeActivity.DIALOG_ASK_OPEN_WITHOUT_SAVING);
+                }
+                else {
+                    Intent mIntent = new Intent(DisasterModeActivity.this, FileChooseActivity.class);
+                    mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, saveDir.getAbsolutePath());
+                    mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                    mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
+                    startActivityForResult(mIntent, DisasterModeActivity.REQUEST_CHOOSE_OPEN_FILE);
+                }
 
                 break;
             }
@@ -705,12 +753,12 @@ public class DisasterModeActivity extends Activity {
                     }
 
                     String fileName = rawFileName.toString();
-                    saveFile = new File(saveDir, fileName);
-                    if (saveFile.exists()) {
+                    destFile = new File(saveDir, fileName);
+                    if (destFile.exists()) {
                         showDialog(DisasterModeActivity.DIALOG_ASK_OVERWRITE);
                     }
                     else {
-                        saveCsvFile(saveFile, DisasterModeActivity.CHARACTER_CODE);
+                        saveCsvFile(destFile, DisasterModeActivity.CHARACTER_CODE);
                     }
                 }
                 else {
@@ -738,6 +786,27 @@ public class DisasterModeActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         DisasterModeActivity.super.onBackPressed();
+                    }
+                });
+                builder.setNegativeButton(android.R.string.no, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case DisasterModeActivity.DIALOG_ASK_OPEN_WITHOUT_SAVING: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
+                builder.setIcon(android.R.drawable.ic_dialog_alert);
+                builder.setTitle(R.string.dialog_ask);
+                builder.setMessage(R.string.dialog_ask_remove_without_saving);
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent mIntent = new Intent(DisasterModeActivity.this, FileChooseActivity.class);
+                        mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, listDir.getAbsolutePath());
+                        mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                        mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
+                        startActivityForResult(mIntent, DisasterModeActivity.REQUEST_CHOOSE_OPEN_FILE);
                     }
                 });
                 builder.setNegativeButton(android.R.string.no, null);
@@ -1075,7 +1144,7 @@ public class DisasterModeActivity extends Activity {
                             try {
                                 selectedSheet.saveCsvFile(selectedSheet.getBaseFile(), DisasterModeActivity.CHARACTER_CODE);
                                 Toast.makeText(DisasterModeActivity.this, R.string.notice_id_registered, Toast.LENGTH_SHORT).show();
-                                
+
                                 currentAttendance = new Attendance(mStudent, getResources());
                                 int position;
                                 if (!mAttendanceSheet.hasStudentNo(currentAttendance.getStudentNo())) {
@@ -1107,8 +1176,11 @@ public class DisasterModeActivity extends Activity {
                                 }
                                 attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
                                 attendanceListView.setSelection(position);
+
+                                refreshStudentSheets();
                             }
                             catch (IOException e) {
+                                Toast.makeText(DisasterModeActivity.this, R.string.error_id_register_failed, Toast.LENGTH_SHORT).show();
                                 Log.e("onCreateDialog", e.getMessage(), e);
                             }
                         }
@@ -1147,7 +1219,7 @@ public class DisasterModeActivity extends Activity {
                                     try {
                                         tempStudentSheet.saveCsvFile(tempStudentSheet.getBaseFile(), DisasterModeActivity.CHARACTER_CODE);
                                         Toast.makeText(DisasterModeActivity.this, R.string.notice_id_registered, Toast.LENGTH_SHORT).show();
-                                        
+
                                         currentAttendance = new Attendance(mStudent, getResources());
                                         int position;
                                         if (!mAttendanceSheet.hasStudentNo(studentNo)) {
@@ -1179,8 +1251,11 @@ public class DisasterModeActivity extends Activity {
                                         }
                                         attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
                                         attendanceListView.setSelection(position);
+
+                                        refreshStudentSheets();
                                     }
                                     catch (IOException e) {
+                                        Toast.makeText(DisasterModeActivity.this, R.string.error_id_register_failed, Toast.LENGTH_SHORT).show();
                                         Log.e("onCreateDialog", e.getMessage(), e);
                                     }
                                     isExisted = true;
@@ -1203,7 +1278,7 @@ public class DisasterModeActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        saveCsvFile(saveFile, DisasterModeActivity.CHARACTER_CODE);
+                        saveCsvFile(destFile, DisasterModeActivity.CHARACTER_CODE);
                     }
                 });
                 builder.setNegativeButton(android.R.string.no, null);
@@ -1309,7 +1384,7 @@ public class DisasterModeActivity extends Activity {
                 break;
             }
             case DisasterModeActivity.DIALOG_ASK_OVERWRITE: {
-                mAlertDialog.setMessage(saveFile.getName() + getString(R.string.dialog_ask_overwrite));
+                mAlertDialog.setMessage(destFile.getName() + getString(R.string.dialog_ask_overwrite));
 
                 break;
             }
@@ -1354,13 +1429,14 @@ public class DisasterModeActivity extends Activity {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putBoolean("IsReading", isReading);
+        outState.putBoolean("IsSending", isSending);
         outState.putBoolean("IsSaved", isSaved);
         outState.putBoolean("IsFetchingLocation", isFetchingLocation);
         outState.putString("ReadNfcId", readNfcId);
+        outState.putSerializable("AttendanceQueue", attendanceQueue);
         outState.putSerializable("CurrentAttendance", currentAttendance);
         outState.putSerializable("SelectedSheet", selectedSheet);
         outState.putSerializable("AttendanceSheet", mAttendanceSheet);
-        outState.putSerializable("AttendanceDisplayData", mAttendanceSheet.getAttendanceList());
         outState.putSerializable("AttendanceLocation", mAttendanceLocation);
     }
 
@@ -1516,9 +1592,10 @@ public class DisasterModeActivity extends Activity {
             for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
                 StudentSheet tempStudentSheet = studentSheets.get(i);
                 if (tempStudentSheet.hasNfcId(id)) {
-                    currentAttendance = new Attendance(tempStudentSheet.getByNfcId(id), getResources());
+                    Student mStudent = tempStudentSheet.getByNfcId(id);
                     int position;
-                    if (!mAttendanceSheet.hasStudentNo(currentAttendance.getStudentNo())) {
+                    if (!mAttendanceSheet.hasStudentNo(mStudent.getStudentNo())) {
+                        currentAttendance = new Attendance(mStudent, getResources());
                         if (!mPreferenceUtil.isLocationEnabled(false)) {
                             currentAttendance.setStatus(Attendance.ATTENDANCE);
                         }
@@ -1530,7 +1607,7 @@ public class DisasterModeActivity extends Activity {
                         isSaved = false;
                     }
                     else {
-                        currentAttendance = mAttendanceSheet.getByStudentNo(currentAttendance.getStudentNo());
+                        currentAttendance = mAttendanceSheet.getByStudentNo(mStudent.getStudentNo());
                         position = mAttendanceListAdapter.getPosition(currentAttendance);
                         Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
                     }
@@ -1539,7 +1616,7 @@ public class DisasterModeActivity extends Activity {
                     isExisted = true;
                 }
             }
-            
+
             if (!isExisted) {
                 readNfcId = id;
                 showDialog(DisasterModeActivity.DIALOG_ASK_REGISTER_READ_ID);

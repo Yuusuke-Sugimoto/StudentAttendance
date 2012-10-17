@@ -50,8 +50,19 @@
               android:listSelector="@drawable/list_selector_background"
               android:choiceMode="singleChoice" />
     <include layout="@layout/horizontal_divider" />
-    <Button android:id="@+id/read_start"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/attendance_read_start_label" />
+    <LinearLayout android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal">
+        <Button android:id="@+id/read_start"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/attendance_read_start_label" />
+        <Button android:id="@+id/send_pause"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:enabled="false"
+                android:text="@string/disaster_send_resume_label" />
+    </LinearLayout>
 </LinearLayout>

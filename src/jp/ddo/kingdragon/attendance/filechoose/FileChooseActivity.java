@@ -35,17 +35,25 @@ import jp.ddo.kingdragon.attendance.R;
 /**
  * ファイルの選択を行うアクティビティ<br />
  * [パラメータ]<br />
- * initDirPath:初期ディレクトリ[String]<br />
- * filter:一覧に表示するファイル名の正規表現[String]<br />
- * extension:一覧に表示する拡張子の正規表現[String]<br />
- * dirMode:選択対象をディレクトリにするかどうか[boolean]<br />
+ * INIT_DIR_PATH:初期ディレクトリ[String]<br />
+ * FILTER:一覧に表示するファイル名の正規表現[String]<br />
+ * EXTENSION:一覧に表示する拡張子の正規表現[String]<br />
+ * DIR_MODE:選択対象をディレクトリにするかどうか[boolean]<br />
  * [戻り値]<br />
- * fileName:ファイル名[String]<br />
- * filePath:ファイルの絶対パス[String]
+ * FILE_NAME:ファイル名[String]<br />
+ * FILE_PATH:ファイルの絶対パス[String]
  * @author 杉本祐介
  */
 public class FileChooseActivity extends Activity {
     // 定数の宣言
+    // パラメータ
+    public static final String INIT_DIR_PATH = "initDirPath";
+    public static final String FILTER = "filter";
+    public static final String EXTENSION = "extension";
+    public static final String DIR_MODE = "dirMode";
+    // 戻り値
+    public static final String FILE_NAME = "fileName";
+    public static final String FILE_PATH = "filePath";
     // ダイアログのID
     private static final int DIALOG_CREATE_FILE             = 0;
     private static final int DIALOG_FILE_ALREADY_EXISTS     = 1;
@@ -117,23 +125,23 @@ public class FileChooseActivity extends Activity {
         setContentView(R.layout.file_choose);
 
         Intent mIntent = getIntent();
-        String initDirPath = mIntent.getStringExtra("initDirPath");
+        String initDirPath = mIntent.getStringExtra(FileChooseActivity.INIT_DIR_PATH);
         if (initDirPath == null) {
             initDirPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         }
         currentDir = new File(initDirPath);
 
-        filter = mIntent.getStringExtra("filter");
+        filter = mIntent.getStringExtra(FileChooseActivity.FILTER);
         if (filter == null) {
             filter = ".*";
         }
 
-        extension = mIntent.getStringExtra("extension");
+        extension = mIntent.getStringExtra(FileChooseActivity.EXTENSION);
         if (extension == null) {
             extension = ".*";
         }
 
-        isDirModeEnabled = mIntent.getBooleanExtra("dirMode", false);
+        isDirModeEnabled = mIntent.getBooleanExtra(FileChooseActivity.DIR_MODE, false);
 
         fileListView = (ListView)findViewById(R.id.file_list);
         fileListView.setOnItemClickListener(new OnItemClickListener() {
@@ -142,8 +150,8 @@ public class FileChooseActivity extends Activity {
                 File selectedFile = (File)parent.getItemAtPosition(position);
                 if (selectedFile.isFile()) {
                     Intent mIntent = new Intent();
-                    mIntent.putExtra("fileName", selectedFile.getName());
-                    mIntent.putExtra("filePath", selectedFile.getAbsolutePath());
+                    mIntent.putExtra(FileChooseActivity.FILE_NAME, selectedFile.getName());
+                    mIntent.putExtra(FileChooseActivity.FILE_PATH, selectedFile.getAbsolutePath());
                     setResult(Activity.RESULT_OK, mIntent);
                     finish();
                 }
@@ -164,8 +172,8 @@ public class FileChooseActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     Intent mIntent = new Intent();
-                    mIntent.putExtra("fileName", currentDir.getName());
-                    mIntent.putExtra("filePath", currentDir.getAbsolutePath());
+                    mIntent.putExtra(FileChooseActivity.FILE_NAME, currentDir.getName());
+                    mIntent.putExtra(FileChooseActivity.FILE_PATH, currentDir.getAbsolutePath());
                     setResult(Activity.RESULT_OK, mIntent);
                     finish();
                 }
