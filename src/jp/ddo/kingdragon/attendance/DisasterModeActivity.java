@@ -71,22 +71,21 @@ public class DisasterModeActivity extends Activity {
     private static final int REQUEST_CHOOSE_OPEN_FILE = 2;
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING = 0;
-    private static final int DIALOG_ASK_OPEN_WITHOUT_SAVING = 1;
-    private static final int DIALOG_DISASTER_MENU           = 2;
-    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 3;
-    private static final int DIALOG_CSV_FILE_LIST           = 4;
-    private static final int DIALOG_STUDENT_LIST            = 5;
-    private static final int DIALOG_SEARCH_STUDENT_NO       = 6;
-    private static final int DIALOG_INPUT_STUDENT_INFO      = 7;
-    private static final int DIALOG_ASK_REGISTER_READ_ID    = 8;
-    private static final int DIALOG_REGISTER_ID_MENU        = 9;
-    private static final int DIALOG_CSV_FILE_LIST_R         = 10;
-    private static final int DIALOG_STUDENT_LIST_R          = 11;
-    private static final int DIALOG_SEARCH_STUDENT_NO_R     = 12;
-    private static final int DIALOG_ASK_OVERWRITE           = 13;
-    private static final int DIALOG_FETCHING_LOCATION       = 14;
-    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 15;
-    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 16;
+    private static final int DIALOG_DISASTER_MENU           = 1;
+    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 2;
+    private static final int DIALOG_CSV_FILE_LIST           = 3;
+    private static final int DIALOG_STUDENT_LIST            = 4;
+    private static final int DIALOG_SEARCH_STUDENT_NO       = 5;
+    private static final int DIALOG_INPUT_STUDENT_INFO      = 6;
+    private static final int DIALOG_ASK_REGISTER_READ_ID    = 7;
+    private static final int DIALOG_REGISTER_ID_MENU        = 8;
+    private static final int DIALOG_CSV_FILE_LIST_R         = 9;
+    private static final int DIALOG_STUDENT_LIST_R          = 10;
+    private static final int DIALOG_SEARCH_STUDENT_NO_R     = 11;
+    private static final int DIALOG_ASK_OVERWRITE           = 12;
+    private static final int DIALOG_FETCHING_LOCATION       = 13;
+    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 14;
+    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 15;
     /**
      * CSVファイルへの保存に使用する文字コード
      */
@@ -639,7 +638,7 @@ public class DisasterModeActivity extends Activity {
             case DisasterModeActivity.REQUEST_CHOOSE_OPEN_FILE: {
                 if (resultCode == Activity.RESULT_OK) {
                     String fileName = data.getStringExtra(FileChooseActivity.FILE_NAME);
-                    String filePath = data.getStringExtra(FileChooseActivity.FILE_NAME);
+                    String filePath = data.getStringExtra(FileChooseActivity.FILE_PATH);
                     try {
                         AttendanceSheet tempAttendanceSheet = new AttendanceSheet(new File(filePath), DisasterModeActivity.CHARACTER_CODE,
                                                                                   getResources());
@@ -697,16 +696,11 @@ public class DisasterModeActivity extends Activity {
                 break;
             }
             case R.id.menu_open: {
-                if (!isSaved) {
-                    showDialog(DisasterModeActivity.DIALOG_ASK_OPEN_WITHOUT_SAVING);
-                }
-                else {
-                    Intent mIntent = new Intent(DisasterModeActivity.this, FileChooseActivity.class);
-                    mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, saveDir.getAbsolutePath());
-                    mIntent.putExtra(FileChooseActivity.FILTER, ".*");
-                    mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
-                    startActivityForResult(mIntent, DisasterModeActivity.REQUEST_CHOOSE_OPEN_FILE);
-                }
+                Intent mIntent = new Intent(DisasterModeActivity.this, FileChooseActivity.class);
+                mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, saveDir.getAbsolutePath());
+                mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
+                startActivityForResult(mIntent, DisasterModeActivity.REQUEST_CHOOSE_OPEN_FILE);
 
                 break;
             }
@@ -786,27 +780,6 @@ public class DisasterModeActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         DisasterModeActivity.super.onBackPressed();
-                    }
-                });
-                builder.setNegativeButton(android.R.string.no, null);
-                builder.setCancelable(true);
-                retDialog = builder.create();
-
-                break;
-            }
-            case DisasterModeActivity.DIALOG_ASK_OPEN_WITHOUT_SAVING: {
-                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
-                builder.setIcon(android.R.drawable.ic_dialog_alert);
-                builder.setTitle(R.string.dialog_ask);
-                builder.setMessage(R.string.dialog_ask_remove_without_saving);
-                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent mIntent = new Intent(DisasterModeActivity.this, FileChooseActivity.class);
-                        mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, listDir.getAbsolutePath());
-                        mIntent.putExtra(FileChooseActivity.FILTER, ".*");
-                        mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
-                        startActivityForResult(mIntent, DisasterModeActivity.REQUEST_CHOOSE_OPEN_FILE);
                     }
                 });
                 builder.setNegativeButton(android.R.string.no, null);
