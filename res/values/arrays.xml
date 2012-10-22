@@ -64,5 +64,6 @@
     <string-array name="dialog_register_id_menu">
         <item>@string/dialog_add_attendance_menu_list</item>
         <item>@string/dialog_add_attendance_menu_search</item>
+        <item>@string/dialog_register_id_menu_barcode</item>
     </string-array>
 </resources>

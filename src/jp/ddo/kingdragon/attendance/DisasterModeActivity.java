@@ -34,7 +34,9 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,10 +84,11 @@ public class DisasterModeActivity extends Activity {
     private static final int DIALOG_CSV_FILE_LIST_R         = 9;
     private static final int DIALOG_STUDENT_LIST_R          = 10;
     private static final int DIALOG_SEARCH_STUDENT_NO_R     = 11;
-    private static final int DIALOG_ASK_OVERWRITE           = 12;
-    private static final int DIALOG_FETCHING_LOCATION       = 13;
-    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 14;
-    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 15;
+    private static final int DIALOG_READING_BARCODE         = 12;
+    private static final int DIALOG_ASK_OVERWRITE           = 13;
+    private static final int DIALOG_FETCHING_LOCATION       = 14;
+    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 15;
+    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 16;
     /**
      * CSVファイルへの保存に使用する文字コード
      */
@@ -118,6 +121,10 @@ public class DisasterModeActivity extends Activity {
      * 送信中かどうか
      */
     private boolean isSending;
+    /**
+     * NFCタグを登録中かどうか
+     */
+    private boolean isRegistering;
     /**
      * 保存済みかどうか
      */
@@ -263,6 +270,7 @@ public class DisasterModeActivity extends Activity {
 
         isReading = false;
         isSending = true;
+        isRegistering = false;
         isSaved = true;
         isFetchingLocation = false;
 
@@ -277,6 +285,7 @@ public class DisasterModeActivity extends Activity {
         if (savedInstanceState != null) {
             isReading = savedInstanceState.getBoolean("IsReading");
             isSending = savedInstanceState.getBoolean("IsSending");
+            isRegistering = savedInstanceState.getBoolean("IsRegistering");
             isSaved = savedInstanceState.getBoolean("IsSaved");
             isFetchingLocation = savedInstanceState.getBoolean("IsFetchingLocation");
             readNfcId = savedInstanceState.getString("ReadNfcId");
@@ -1065,6 +1074,13 @@ public class DisasterModeActivity extends Activity {
 
                                 break;
                             }
+                            case 2: {
+                                // バーコードを読み取る
+                                isRegistering = true;
+                                showDialog(DisasterModeActivity.DIALOG_READING_BARCODE);
+
+                                break;
+                            }
                         }
                     }
                 });
@@ -1182,64 +1198,40 @@ public class DisasterModeActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String studentNo = editTextForStudentNo.getText().toString().toUpperCase();
-                        boolean isExisted = false;
-                        if (studentSheets.size() != 0) {
-                            for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
-                                StudentSheet tempStudentSheet = studentSheets.get(i);
-                                if (tempStudentSheet.hasStudentNo(studentNo)) {
-                                    Student mStudent = tempStudentSheet.getByStudentNo(studentNo);
-                                    mStudent.addNfcId(readNfcId);
-                                    try {
-                                        tempStudentSheet.saveCsvFile(tempStudentSheet.getBaseFile(), DisasterModeActivity.CHARACTER_CODE);
-                                        Toast.makeText(DisasterModeActivity.this, R.string.notice_id_registered, Toast.LENGTH_SHORT).show();
-
-                                        currentAttendance = new Attendance(mStudent, getResources());
-                                        int position;
-                                        if (!mAttendanceSheet.hasStudentNo(studentNo)) {
-                                            if (!mPreferenceUtil.isLocationEnabled(false)) {
-                                                currentAttendance.setStatus(Attendance.ATTENDANCE);
-                                            }
-                                            else {
-                                                currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
-                                            }
-                                            addAttendance(currentAttendance.getStudentNo(), currentAttendance);
-                                            position = mAttendanceListAdapter.getCount() - 1;
-                                            isSaved = false;
-                                        }
-                                        else {
-                                            currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
-                                            if (currentAttendance.getStatus() == Attendance.ABSENCE) {
-                                                if (!mPreferenceUtil.isLocationEnabled(false)) {
-                                                    currentAttendance.setStatus(Attendance.ATTENDANCE);
-                                                }
-                                                else {
-                                                    currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
-                                                }
-                                                isSaved = false;
-                                            }
-                                            else {
-                                                Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
-                                            }
-                                            position = mAttendanceListAdapter.getPosition(currentAttendance);
-                                        }
-                                        attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
-                                        attendanceListView.setSelection(position);
-
-                                        refreshStudentSheets();
-                                    }
-                                    catch (IOException e) {
-                                        Toast.makeText(DisasterModeActivity.this, R.string.error_id_register_failed, Toast.LENGTH_SHORT).show();
-                                        Log.e("onCreateDialog", e.getMessage(), e);
-                                    }
-                                    isExisted = true;
-                                }
+                        try {
+                            if (!registerByStudentNo(studentNo, readNfcId)) {
+                                Toast.makeText(DisasterModeActivity.this, R.string.error_student_not_found, Toast.LENGTH_SHORT).show();
                             }
+                        }
+                        catch (IOException e) {
+                            Toast.makeText(DisasterModeActivity.this, R.string.error_id_register_failed, Toast.LENGTH_SHORT).show();
+                            Log.e("onCreateDialog", e.getMessage(), e);
                         }
                     }
                 });
                 builder.setNegativeButton(android.R.string.cancel, null);
                 builder.setCancelable(true);
                 retDialog = builder.create();
+
+                break;
+            }
+            case DisasterModeActivity.DIALOG_READING_BARCODE: {
+                ProgressDialog mProgressDialog = new ProgressDialog(DisasterModeActivity.this);
+                mProgressDialog.setMessage(getString(R.string.dialog_reading_barcode));
+                mProgressDialog.setCancelable(true);
+                mProgressDialog.setOnKeyListener(new DialogInterface.OnKeyListener() {
+                    @Override
+                    public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                        boolean retBool = false;
+
+                        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                            retBool = onKeyDown(keyCode, event);
+                        }
+
+                        return retBool;
+                    }
+                });
+                retDialog = mProgressDialog;
 
                 break;
             }
@@ -1403,6 +1395,7 @@ public class DisasterModeActivity extends Activity {
     public void onSaveInstanceState(Bundle outState) {
         outState.putBoolean("IsReading", isReading);
         outState.putBoolean("IsSending", isSending);
+        outState.putBoolean("IsRegistering", isRegistering);
         outState.putBoolean("IsSaved", isSaved);
         outState.putBoolean("IsFetchingLocation", isFetchingLocation);
         outState.putString("ReadNfcId", readNfcId);
@@ -1500,53 +1493,73 @@ public class DisasterModeActivity extends Activity {
      * @param studentNo 学籍番号
      */
     public void onStudentNoReaded(String studentNo) {
-        if (isReading) {
-            int position;
-            if (mAttendanceSheet.hasStudentNo(studentNo)) {
-                // 既に学籍番号に対応するデータが存在する場合はその行を選択する
-                currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
-                if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+        if (!isRegistering) {
+            // 通常時
+            if (isReading) {
+                int position;
+                if (mAttendanceSheet.hasStudentNo(studentNo)) {
+                    // 既に学籍番号に対応するデータが存在する場合はその行を選択する
+                    currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
+                    if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                        if (!mPreferenceUtil.isLocationEnabled(false)) {
+                            currentAttendance.setStatus(Attendance.ATTENDANCE);
+                        }
+                        else {
+                            currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                        }
+                        isSaved = false;
+                    }
+                    else {
+                        Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                    }
+                    position = mAttendanceListAdapter.getPosition(currentAttendance);
+                }
+                else {
+                    // 存在しない場合は他のリストを検索する
+                    boolean isExisted = false;
+                    if (studentSheets.size() != 0) {
+                        for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
+                            StudentSheet tempStudentSheet = studentSheets.get(i);
+                            if (tempStudentSheet.hasStudentNo(studentNo)) {
+                                currentAttendance = new Attendance(tempStudentSheet.getByStudentNo(studentNo), getResources());
+                                isExisted = true;
+                            }
+                        }
+                    }
+                    if (!isExisted) {
+                        // 他のリストにも存在しない場合は学籍番号のみで追加する
+                        currentAttendance = new Attendance(new Student(studentNo), getResources());
+                    }
                     if (!mPreferenceUtil.isLocationEnabled(false)) {
                         currentAttendance.setStatus(Attendance.ATTENDANCE);
                     }
                     else {
                         currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
                     }
+                    addAttendance(studentNo, currentAttendance);
+                    position = mAttendanceListAdapter.getCount() - 1;
                     isSaved = false;
                 }
-                else {
-                    Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
-                }
-                position = mAttendanceListAdapter.getPosition(currentAttendance);
+                attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                attendanceListView.setSelection(position);
             }
-            else {
-                // 存在しない場合は他のリストを検索する
-                boolean isExisted = false;
-                if (studentSheets.size() != 0) {
-                    for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
-                        StudentSheet tempStudentSheet = studentSheets.get(i);
-                        if (tempStudentSheet.hasStudentNo(studentNo)) {
-                            currentAttendance = new Attendance(tempStudentSheet.getByStudentNo(studentNo), getResources());
-                            isExisted = true;
-                        }
-                    }
+        }
+        else {
+            // NFCタグ登録時
+            try {
+                if (!registerByStudentNo(studentNo, readNfcId)) {
+                    Toast.makeText(DisasterModeActivity.this, R.string.error_student_not_found, Toast.LENGTH_SHORT).show();
                 }
-                if (!isExisted) {
-                    // 他のリストにも存在しない場合は学籍番号のみで追加する
-                    currentAttendance = new Attendance(new Student(studentNo), getResources());
-                }
-                if (!mPreferenceUtil.isLocationEnabled(false)) {
-                    currentAttendance.setStatus(Attendance.ATTENDANCE);
-                }
-                else {
-                    currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
-                }
-                addAttendance(studentNo, currentAttendance);
-                position = mAttendanceListAdapter.getCount() - 1;
-                isSaved = false;
             }
-            attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
-            attendanceListView.setSelection(position);
+            catch (IOException e) {
+                Toast.makeText(DisasterModeActivity.this, R.string.error_id_register_failed, Toast.LENGTH_SHORT).show();
+                Log.e("onStudentNoReaded", e.getMessage(), e);
+            }
+            isRegistering = false;
+            try {
+                dismissDialog(DisasterModeActivity.DIALOG_READING_BARCODE);
+            }
+            catch (IllegalArgumentException e) {}
         }
     }
 
@@ -1609,6 +1622,67 @@ public class DisasterModeActivity extends Activity {
         if (mPreferenceUtil.isSendServerEnabled(false)) {
             attendanceQueue.enqueue(inAttendance);
         }
+    }
+
+    /**
+     * 学生データにNFCタグを登録して出席データを追加する
+     * @param studentNo 学籍番号
+     * @param id NFCタグ
+     * @return 学生が存在したならばtrue しなかったならばfalse
+     * @throws IOException
+     * @throws FileNotFoundException
+     * @throws UnsupportedEncodingException
+     */
+    public boolean registerByStudentNo(String studentNo, String id) throws UnsupportedEncodingException, FileNotFoundException, IOException {
+        boolean isExisted = false;
+        if (studentSheets.size() != 0) {
+            for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
+                StudentSheet tempStudentSheet = studentSheets.get(i);
+                if (tempStudentSheet.hasStudentNo(studentNo)) {
+                    isExisted = true;
+                    Student mStudent = tempStudentSheet.getByStudentNo(studentNo);
+                    mStudent.addNfcId(id);
+                    tempStudentSheet.saveCsvFile(tempStudentSheet.getBaseFile(), DisasterModeActivity.CHARACTER_CODE);
+                    Toast.makeText(DisasterModeActivity.this, R.string.notice_id_registered, Toast.LENGTH_SHORT).show();
+
+                    currentAttendance = new Attendance(mStudent, getResources());
+                    int position;
+                    if (!mAttendanceSheet.hasStudentNo(studentNo)) {
+                        if (!mPreferenceUtil.isLocationEnabled(false)) {
+                            currentAttendance.setStatus(Attendance.ATTENDANCE);
+                        }
+                        else {
+                            currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                        }
+                        addAttendance(currentAttendance.getStudentNo(), currentAttendance);
+                        position = mAttendanceListAdapter.getCount() - 1;
+                        isSaved = false;
+                    }
+                    else {
+                        currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
+                        if (currentAttendance.getStatus() == Attendance.ABSENCE) {
+                            if (!mPreferenceUtil.isLocationEnabled(false)) {
+                                currentAttendance.setStatus(Attendance.ATTENDANCE);
+                            }
+                            else {
+                                currentAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
+                            }
+                            isSaved = false;
+                        }
+                        else {
+                            Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                        }
+                        position = mAttendanceListAdapter.getPosition(currentAttendance);
+                    }
+                    attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
+                    attendanceListView.setSelection(position);
+
+                    refreshStudentSheets();
+                }
+            }
+        }
+
+        return isExisted;
     }
 
     /**
