@@ -10,7 +10,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import android.util.Log;
@@ -21,7 +20,7 @@ import jp.ddo.kingdragon.attendance.student.Attendance;
  * サーバに送信する出席データを管理するクラス
  * @author 杉本祐介
  */
-public class SendAttendanceQueue implements Iterable<Attendance>, Serializable {
+public class SendAttendanceQueue implements Serializable {
     // 定数の宣言
     /**
      * シリアルバージョンUID
@@ -75,11 +74,6 @@ public class SendAttendanceQueue implements Iterable<Attendance>, Serializable {
         this.timeout = timeout;
         sendingAttendance = null;
         queue = new LinkedList<Attendance>();
-    }
-
-    @Override
-    public Iterator<Attendance> iterator() {
-        return queue.iterator();
     }
 
     /**

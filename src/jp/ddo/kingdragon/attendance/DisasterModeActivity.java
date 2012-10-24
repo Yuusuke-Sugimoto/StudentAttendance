@@ -555,14 +555,17 @@ public class DisasterModeActivity extends Activity {
                 sendPauseButton.setEnabled(true);
                 if (!isSending) {
                     sendPauseButton.setText(R.string.disaster_send_resume_label);
+                    attendanceQueue.pause();
                 }
                 else {
                     sendPauseButton.setText(R.string.disaster_send_pause_label);
+                    attendanceQueue.resume();
                 }
             }
             else {
                 sendPauseButton.setEnabled(false);
                 sendPauseButton.setText(R.string.disaster_send_resume_label);
+                attendanceQueue.pause();
                 isSending = false;
             }
 
@@ -580,14 +583,15 @@ public class DisasterModeActivity extends Activity {
             finish();
         }
     }
-
+    
     @Override
     public void onPause() {
         super.onPause();
-
+        
         if (mNfcAdapter != null) {
             mNfcAdapter.disableForegroundDispatch(DisasterModeActivity.this);
         }
+        attendanceQueue.pause();
 
         if (!mWakeLock.isHeld()) {
             mWakeLock.acquire();
