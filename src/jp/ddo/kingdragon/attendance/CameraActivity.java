@@ -162,14 +162,6 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
 
         mPreferenceUtil = new PreferenceUtil(CameraActivity.this);
 
-        Intent mIntent = getIntent();
-        captureMode = mIntent.getIntExtra(CAPTURE_MODE, CAPTURE_MODE_PHOTO);
-
-        rotation = 0;
-        magneticValues = null;
-        accelValues = null;
-        degrees = new int[3];
-
         // 保存用ディレクトリの作成
         baseDir = new File(Environment.getExternalStorageDirectory(), "StudentAttendance");
         File webDir = new File(baseDir, "WebDoc");
@@ -179,6 +171,14 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
 
             finish();
         }
+
+        Intent mIntent = getIntent();
+        captureMode = mIntent.getIntExtra(CAPTURE_MODE, CAPTURE_MODE_PHOTO);
+
+        rotation = 0;
+        magneticValues = null;
+        accelValues = null;
+        degrees = new int[3];
 
         captureButton = (ImageButton)findViewById(R.id.capture);
         captureButton.setOnClickListener(new View.OnClickListener() {

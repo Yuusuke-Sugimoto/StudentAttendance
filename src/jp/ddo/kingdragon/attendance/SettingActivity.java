@@ -356,6 +356,12 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
      * 各項目の表示を更新する
      */
     public void updateUi() {
+        ListPreference behaviorStudentNoPref = (ListPreference)findPreference("setting_behavior_student_no");
+        behaviorStudentNoPref.setSummary(behaviorStudentNoPref.getEntry());
+
+        ListPreference behaviorNfcIdPref = (ListPreference)findPreference("setting_behavior_nfc_id");
+        behaviorNfcIdPref.setSummary(behaviorNfcIdPref.getEntry());
+
         ListPreference locationProviderPref = (ListPreference)findPreference("setting_location_provider");
         locationProviderPref.setSummary(locationProviderPref.getEntry());
 

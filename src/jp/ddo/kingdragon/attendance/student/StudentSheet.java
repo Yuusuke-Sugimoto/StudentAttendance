@@ -145,6 +145,17 @@ public class StudentSheet implements Serializable {
         }
         br.close();
     }
+    /**
+     * 引数で渡されたシートのコピーを生成する
+     * @param inStudent コピーするシート
+     */
+    public StudentSheet(StudentSheet inStudentSheet) {
+        subject = inStudentSheet.subject;
+        time = inStudentSheet.time;
+        baseFile = inStudentSheet.baseFile;
+        studentsStudentNo = new LinkedHashMap<String, Student>(inStudentSheet.studentsStudentNo);
+        studentsNfcId = new LinkedHashMap<String, Student>(inStudentSheet.studentsNfcId);
+    }
 
     // アクセッサ
     /**

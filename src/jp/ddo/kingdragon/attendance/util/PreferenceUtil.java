@@ -12,6 +12,10 @@ import android.preference.PreferenceManager;
  */
 public class PreferenceUtil {
     // 定数の宣言
+    // "リスト外学籍番号の読取"用
+    // "未知のNFCタグの読取"用
+    public static final int BEHAVIOR_DIALOG = 0;
+    public static final int BEHAVIOR_IGNORE = 1;
     // "位置情報の取得方法"用
     public static final int LOCATION_PROVIDER_NETWORK = 0;
     public static final int LOCATION_PROVIDER_GPS     = 1;
@@ -55,6 +59,24 @@ public class PreferenceUtil {
         else {
             throw new IllegalArgumentException("PreferenceUtil : inContextの値がnullです。");
         }
+    }
+
+    /**
+     * "リスト外学籍番号の読取"の設定値を取得する
+     * @param defValue デフォルト値
+     * @return "リスト外学籍番号の読取"の設定値 未設定ならばデフォルト値
+     */
+    public int getBehaviorStudentNo(int defValue) {
+        return Integer.parseInt(getString("setting_behavior_student_no", String.valueOf(defValue)));
+    }
+
+    /**
+     * "未知のNFCタグの読取"の設定値を取得する
+     * @param defValue デフォルト値
+     * @return "未知のNFCタグの読取"の設定値 未設定ならばデフォルト値
+     */
+    public int getBehaviorNfcId(int defValue) {
+        return Integer.parseInt(getString("setting_behavior_nfc_id", String.valueOf(defValue)));
     }
 
     /**

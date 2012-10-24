@@ -86,11 +86,23 @@ public class Student implements Serializable {
             }
         }
     }
-    
+    /**
+     * 引数で渡された学生データのコピーを生成する
+     * @param inStudent コピーする学生データ
+     */
+    public Student(Student inStudent) {
+        studentNo = inStudent.studentNo;
+        studentNum = inStudent.studentNum;
+        className = inStudent.className;
+        studentName = inStudent.studentName;
+        studentRuby = inStudent.studentRuby;
+        nfcIds = new ArrayList<String>(inStudent.nfcIds);
+    }
+
     @Override
     public boolean equals(Object o) {
         boolean retBool = false;
-        
+
         if (o instanceof Student) {
             Student s = (Student)o;
             if (studentNo.equals(s.studentNo)
@@ -100,14 +112,14 @@ public class Student implements Serializable {
                 retBool = true;
             }
         }
-        
+
         return retBool;
     }
-    
+
     @Override
     public int hashCode() {
         int hash = studentNo.hashCode() + className.hashCode() + studentName.hashCode() + studentRuby.hashCode();
-        
+
         return hash;
     }
 
@@ -237,14 +249,6 @@ public class Student implements Serializable {
      */
     public boolean hasNfcId(String id) {
         return nfcIds.contains(id);
-    }
-
-    /**
-     * 学籍番号とNFCタグのIDが揃ったかどうかを調べる
-     * @return 揃っていればtrue 揃っていなければfalse
-     */
-    public boolean isDataPrepared() {
-        return studentNo.length() != 0 && !nfcIds.isEmpty();
     }
 
     /**

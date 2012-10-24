@@ -25,6 +25,12 @@
 
     <string name="setting_title">設定画面</string>
     <string name="setting_general_title">一般設定</string>
+    <string name="setting_behavior_student_no_title">リスト外学籍番号の読取</string>
+    <string name="setting_behavior_student_no_dialog">ダイアログを表示する</string>
+    <string name="setting_behavior_student_no_ignore">無視する</string>
+    <string name="setting_behavior_nfc_id_title">未知のNFCタグの読取</string>
+    <string name="setting_behavior_nfc_id_dialog">ダイアログを表示する</string>
+    <string name="setting_behavior_nfc_id_ignore">無視する</string>
     <string name="setting_location_title">位置情報設定</string>
     <string name="setting_add_location_title">位置情報を付加する</string>
     <string name="setting_add_location_summary">出席データに位置情報を付加します。</string>
@@ -111,6 +117,7 @@
     <string name="dialog_ask">確認</string>
     <string name="dialog_ask_exit_without_saving">保存せずに終了してもよろしいですか?</string>
     <string name="dialog_ask_remove_without_saving">保存されていない内容を破棄してもよろしいですか?</string>
+    <string name="dialog_ask_add_student_by_student_no">リスト外の学籍番号が読み取られました。該当する学生データを追加しますか?</string>
     <string name="dialog_attendance_menu_title">出欠メニュー</string>
     <string name="dialog_ask_overwrite">に上書きしてもよろしいですか?</string>
     <string name="dialog_save_as">別名で保存</string>
@@ -182,6 +189,8 @@
     <string name="error_opening_failed">を開けませんでした</string>
     <string name="error_saving_failed">への保存に失敗しました</string>
     <string name="error_saving_data_null">保存するデータがありません</string>
+    <string name="error_list_file_open_failed">リストファイルの読み込みに失敗しました</string>
+    <string name="error_list_file_not_found">リストファイルが見つかりません</string>
     <string name="error_student_not_found">対応する学生データが見つかりません</string>
     <string name="error_id_register_failed">NFCタグの登録に失敗しました</string>
     <string name="error_file_already_exists">既に同名のファイルが存在します。</string>
@@ -191,7 +200,6 @@
     <string name="error_directory_create_failed">フォルダの作成に失敗しました。</string>
     <string name="error_illegal_directory_name">フォルダ名に使用できない文字が含まれています。</string>
     <string name="error_directory_name_null">フォルダ名が入力されていません。</string>
-    <string name="error_list_file_not_found">リストファイルが見つかりません</string>
     <string name="error_old_password_not_match">旧パスワードが間違っています。</string>
     <string name="error_new_password_not_match">新パスワードが一致しません。</string>
     <string name="error_long_password">新パスワードが長すぎます。</string>
