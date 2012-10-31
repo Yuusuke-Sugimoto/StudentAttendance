@@ -42,7 +42,6 @@ public class StudentListAdapter extends ArrayAdapter<Student> {
             convertView = inflater.inflate(R.layout.student_view, null);
 
             holder = new ViewHolder();
-            holder.studentNum  = (TextView)convertView.findViewById(R.id.student_num);
             holder.studentNo   = (TextView)convertView.findViewById(R.id.student_no);
             holder.studentName = (TextView)convertView.findViewById(R.id.student_name);
             holder.numOfNfcId  = (TextView)convertView.findViewById(R.id.num_of_nfc_id);
@@ -53,14 +52,6 @@ public class StudentListAdapter extends ArrayAdapter<Student> {
             holder = (ViewHolder)convertView.getTag();
         }
 
-        String studentNum;
-        if (mStudent.getStudentNum() != -1) {
-            studentNum = String.valueOf(mStudent.getStudentNum());
-        }
-        else {
-            studentNum = "";
-        }
-        holder.studentNum.setText(studentNum);
         holder.studentNo.setText(mStudent.getStudentNo());
         holder.studentName.setText(mStudent.getStudentName());
         holder.numOfNfcId.setText(String.valueOf(mStudent.getNumOfNfcId()));
@@ -106,7 +97,6 @@ public class StudentListAdapter extends ArrayAdapter<Student> {
      * @author 杉本祐介
      */
     private static class ViewHolder {
-        TextView studentNum;
         TextView studentNo;
         TextView studentName;
         TextView numOfNfcId;

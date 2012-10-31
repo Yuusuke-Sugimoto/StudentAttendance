@@ -94,7 +94,7 @@ public class StudentListServlet extends HttpServlet {
                         String photoPath = mAttendance.getExtra(Attendance.PHOTO_PATH, null);
                         String moviePath = mAttendance.getExtra(Attendance.MOVIE_PATH, null);
                         pw.println("<tr>");
-                        pw.println("<td>" + mAttendance.getStudentNum() + "</td>");
+                        pw.println("<td>" + mAttendance.getAttendanceNo() + "</td>");
                         pw.println("<td>" + mAttendance.getClassName() + "</td>");
                         pw.println("<td>" + mAttendance.getStudentNo() + "</td>");
                         pw.println("<td>" + mAttendance.getStudentName() + "</td>");

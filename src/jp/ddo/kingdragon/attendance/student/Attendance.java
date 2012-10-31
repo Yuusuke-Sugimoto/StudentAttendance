@@ -19,7 +19,7 @@ public class Attendance implements Serializable {
     /**
      * シリアルバージョンUID
      */
-    private static final long serialVersionUID = -139773677012287047L;
+    private static final long serialVersionUID = 6607703008569368040L;
     // 出席種別
     public static final int ATTENDANCE  = 0;
     public static final int LATENESS    = 1;
@@ -34,6 +34,10 @@ public class Attendance implements Serializable {
      * 学生データ
      */
     private final Student mStudent;
+    /**
+     * 出席番号
+     */
+    private int attendanceNo;
     /**
      * 出席種別
      */
@@ -71,7 +75,17 @@ public class Attendance implements Serializable {
      * @param inResources アプリのリソース
      */
     public Attendance(Student inStudent, Resources inResources) {
+        this(inStudent, -1, inResources);
+    }
+    /**
+     * 出席番号を指定してインスタンスを作成する
+     * @param inStudent 学生データ
+     * @param attendanceNo 出席番号
+     * @param inResources アプリのリソース
+     */
+    public Attendance(Student inStudent, int attendanceNo, Resources inResources) {
         mStudent = inStudent;
+        this.attendanceNo = attendanceNo;
         status = Attendance.ABSENCE;
         timeStamp = -1;
         extras = new HashMap<String, String>();
@@ -108,18 +122,18 @@ public class Attendance implements Serializable {
     }
 
     /**
-     * 連番を変更する
-     * @param studentNum 連番
+     * 出席番号を変更する
+     * @param attendanceNo 出席番号
      */
-    public void setStudentNum(int studentNum) {
-        mStudent.setStudentNum(studentNum);
+    public void setAttendanceNo(int attendanceNo) {
+        this.attendanceNo = attendanceNo;
     }
     /**
-     * 連番を取得する
-     * @return 連番
+     * 出席番号を取得する
+     * @return 出席番号
      */
-    public int getStudentNum() {
-        return mStudent.getStudentNum();
+    public int getAttendanceNo() {
+        return attendanceNo;
     }
 
     /**
@@ -310,8 +324,8 @@ public class Attendance implements Serializable {
      */
     public String[] getAttendanceData(boolean isLatitudeEnabled, boolean isLongitudeEnabled, boolean isAccuracyEnabled) {
         ArrayList<String> attendanceData = new ArrayList<String>();
-        if (getStudentNum() != -1) {
-            attendanceData.add(String.valueOf(getStudentNum()));
+        if (getAttendanceNo() != -1) {
+            attendanceData.add(String.valueOf(getAttendanceNo()));
         }
         else {
             attendanceData.add("");

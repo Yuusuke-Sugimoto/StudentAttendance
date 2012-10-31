@@ -102,7 +102,7 @@ public class SearchStudentServlet extends HttpServlet {
                         String photoPath = target.getExtra(Attendance.PHOTO_PATH, null);
                         String moviePath = target.getExtra(Attendance.MOVIE_PATH, null);
                         pw.println("<tr>");
-                        pw.println("<td>" + target.getStudentNum() + "</td>");
+                        pw.println("<td>" + target.getAttendanceNo() + "</td>");
                         pw.println("<td>" + target.getClassName() + "</td>");
                         pw.println("<td>" + target.getStudentNo() + "</td>");
                         pw.println("<td>" + target.getStudentName() + "</td>");

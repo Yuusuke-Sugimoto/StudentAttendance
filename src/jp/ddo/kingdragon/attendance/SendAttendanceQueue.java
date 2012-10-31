@@ -162,7 +162,7 @@ public class SendAttendanceQueue implements Serializable {
 
                     SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                     ps = new PrintStream(connection.getOutputStream());
-                    ps.print("number="       + URLEncoder.encode(String.valueOf(inAttendance.getStudentNum()), characterCode)
+                    ps.print("number="       + URLEncoder.encode(String.valueOf(inAttendance.getAttendanceNo()), characterCode)
                              + "&belong="    + URLEncoder.encode(inAttendance.getClassName(), characterCode)
                              + "&id="        + URLEncoder.encode(inAttendance.getStudentNo(), characterCode)
                              + "&name="      + URLEncoder.encode(inAttendance.getStudentName(), characterCode)

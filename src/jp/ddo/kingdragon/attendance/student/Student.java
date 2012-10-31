@@ -12,17 +12,13 @@ public class Student implements Serializable {
     /**
      * シリアルバージョンUID
      */
-    private static final long serialVersionUID = 3083355134434853138L;
+    private static final long serialVersionUID = -2959850874518622078L;
 
     // 変数の宣言
     /**
      * 学籍番号
      */
     private String studentNo;
-    /**
-     * 連番
-     */
-    private int studentNum;
     /**
      * 所属
      */
@@ -62,20 +58,18 @@ public class Student implements Serializable {
      * @param nfcIds NFCタグのID(複数可)
      */
     public Student(String studentNo, String... nfcIds) {
-        this(studentNo, -1, "", "", "", nfcIds);
+        this(studentNo, "", "", "", nfcIds);
     }
     /**
-     * 学籍番号、連番、所属、氏名、カナ、NFCタグのIDがセットされたインスタンスを生成する
+     * 学籍番号、所属、氏名、カナ、NFCタグのIDがセットされたインスタンスを生成する
      * @param studentNo 学籍番号
-     * @param num 連番
      * @param className 所属
      * @param name 氏名
      * @param ruby カナ
      * @param nfcIds NFCタグのID(複数可)
      */
-    public Student(String studentNo, int num, String className, String name, String ruby, String... nfcIds) {
+    public Student(String studentNo, String className, String name, String ruby, String... nfcIds) {
         this.studentNo = studentNo;
-        this.studentNum = num;
         this.className = className;
         this.studentName = name;
         this.studentRuby = ruby;
@@ -92,7 +86,6 @@ public class Student implements Serializable {
      */
     public Student(Student inStudent) {
         studentNo = inStudent.studentNo;
-        studentNum = inStudent.studentNum;
         className = inStudent.className;
         studentName = inStudent.studentName;
         studentRuby = inStudent.studentRuby;
@@ -137,21 +130,6 @@ public class Student implements Serializable {
      */
     public String getStudentNo() {
         return studentNo;
-    }
-
-    /**
-     * 連番を変更する
-     * @param studentNum 連番
-     */
-    public void setStudentNum(int studentNum) {
-        this.studentNum = studentNum;
-    }
-    /**
-     * 連番を取得する
-     * @return 連番
-     */
-    public int getStudentNum() {
-        return studentNum;
     }
 
     /**
@@ -258,13 +236,6 @@ public class Student implements Serializable {
     public String[] getStudentData() {
         ArrayList<String> studentData = new ArrayList<String>();
 
-        if (getStudentNum() != -1) {
-            studentData.add(String.valueOf(getStudentNum()));
-        }
-        else {
-            studentData.add("");
-        }
-        studentData.add(className);
         studentData.add(studentNo);
         studentData.add(studentName);
         studentData.add(studentRuby);

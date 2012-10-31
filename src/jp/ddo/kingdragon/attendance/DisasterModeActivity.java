@@ -19,6 +19,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.tech.TagTechnology;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
@@ -32,6 +33,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -71,22 +73,25 @@ public class DisasterModeActivity extends Activity {
     private static final int REQUEST_CHOOSE_OPEN_FILE = 2;
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING = 0;
-    private static final int DIALOG_DISASTER_MENU           = 1;
-    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 2;
-    private static final int DIALOG_CSV_FILE_LIST           = 3;
-    private static final int DIALOG_STUDENT_LIST            = 4;
-    private static final int DIALOG_SEARCH_STUDENT_NO       = 5;
-    private static final int DIALOG_INPUT_STUDENT_INFO      = 6;
-    private static final int DIALOG_ASK_REGISTER_READ_ID    = 7;
-    private static final int DIALOG_REGISTER_ID_MENU        = 8;
-    private static final int DIALOG_CSV_FILE_LIST_R         = 9;
-    private static final int DIALOG_STUDENT_LIST_R          = 10;
-    private static final int DIALOG_SEARCH_STUDENT_NO_R     = 11;
-    private static final int DIALOG_READING_BARCODE         = 12;
-    private static final int DIALOG_ASK_OVERWRITE           = 13;
-    private static final int DIALOG_FETCHING_LOCATION       = 14;
-    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 15;
-    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 16;
+    private static final int DIALOG_EDIT_SUBJECT            = 1;
+    private static final int DIALOG_EDIT_TIME               = 2;
+    private static final int DIALOG_DISASTER_MENU           = 3;
+    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 4;
+    private static final int DIALOG_CSV_FILE_LIST           = 5;
+    private static final int DIALOG_STUDENT_LIST            = 6;
+    private static final int DIALOG_SEARCH_STUDENT_NO       = 7;
+    private static final int DIALOG_INPUT_STUDENT_INFO      = 8;
+    private static final int DIALOG_ASK_REGISTER_READ_ID    = 9;
+    private static final int DIALOG_REGISTER_ID_MENU        = 10;
+    private static final int DIALOG_CSV_FILE_LIST_R         = 11;
+    private static final int DIALOG_STUDENT_LIST_R          = 12;
+    private static final int DIALOG_SEARCH_STUDENT_NO_R     = 13;
+    private static final int DIALOG_READING_BARCODE         = 14;
+    private static final int DIALOG_ASK_OVERWRITE           = 15;
+    private static final int DIALOG_FETCHING_LOCATION       = 16;
+    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 17;
+    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 18;
+    private static final int DIALOG_REFRESHING_MASTER_FILE  = 19;
     /**
      * CSVファイルへの保存に使用する文字コード
      */
@@ -110,6 +115,11 @@ public class DisasterModeActivity extends Activity {
      * アプリケーションコンテキストを格納すること。
      */
     private static Context applicationContextForServlet;
+
+    /**
+     * 他スレッドからのUIの更新に使用
+     */
+    private Handler mHandler;
 
     /**
      * 読み取り中かどうか
@@ -136,6 +146,10 @@ public class DisasterModeActivity extends Activity {
      * ベースフォルダ
      */
     private File baseDir;
+    /**
+     * マスタフォルダ
+     */
+    private File masterDir;
     /**
      * リスト格納用フォルダ
      */
@@ -188,6 +202,26 @@ public class DisasterModeActivity extends Activity {
      * 送信停止ボタン
      */
     private Button sendPauseButton;
+    /**
+     * 科目名用のTextView
+     */
+    private TextView textViewForSubject;
+    /**
+     * 授業時間用のTextView
+     */
+    private TextView textViewForTime;
+    /**
+     * 出席人数表示用のTextView
+     */
+    private TextView textViewForCount;
+    /**
+     * 科目名用のEditText
+     */
+    private EditText editTextForSubject;
+    /**
+     * 授業時間用のEditText
+     */
+    private EditText editTextForTime;
     /**
      * 学籍番号用のEditText
      */
@@ -261,8 +295,9 @@ public class DisasterModeActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.disaster_mode);
 
-        mAttendanceSheet = new AttendanceSheet();
         applicationContextForServlet = getApplicationContext();
+
+        mHandler = new Handler();
 
         isReading = false;
         isSending = true;
@@ -274,10 +309,16 @@ public class DisasterModeActivity extends Activity {
 
         // 各フォルダの作成
         baseDir = new File(Environment.getExternalStorageDirectory(), "StudentAttendance");
+        masterDir = new File(baseDir, "StudentMaster");
         listDir = new File(baseDir, "StudentList");
         saveDir = new File(mPreferenceUtil.getAttendanceDir(baseDir.getAbsolutePath() + "/AttendanceData"));
         File webDir = new File(baseDir, "WebDoc");
         File servletDir = new File(baseDir, "Servlet");
+        if (!masterDir.exists() && !masterDir.mkdirs()) {
+            Toast.makeText(DisasterModeActivity.this, R.string.error_make_master_directory_failed, Toast.LENGTH_SHORT).show();
+
+            finish();
+        }
         if (!listDir.exists() && !listDir.mkdirs()) {
             Toast.makeText(DisasterModeActivity.this, R.string.error_make_list_directory_failed, Toast.LENGTH_SHORT).show();
 
@@ -300,19 +341,15 @@ public class DisasterModeActivity extends Activity {
         }
 
         inputBuffer = new StringBuilder();
-        readNfcId = null;
-        currentAttendance = null;
-        selectedSheet = null;
         try {
-            master = new StudentMaster(listDir, DisasterModeActivity.CHARACTER_CODE);
+            master = new StudentMaster(masterDir, DisasterModeActivity.CHARACTER_CODE);
         }
         catch (IOException e) {
-            Toast.makeText(DisasterModeActivity.this, R.string.error_list_file_open_failed, Toast.LENGTH_SHORT).show();
+            Toast.makeText(DisasterModeActivity.this, R.string.error_master_file_open_failed, Toast.LENGTH_SHORT).show();
             Log.e("onCreate", e.getMessage(), e);
 
             finish();
         }
-        mAttendanceLocation = null;
 
         // アクティビティ再生成前のデータがあれば復元する
         if (savedInstanceState != null) {
@@ -330,9 +367,15 @@ public class DisasterModeActivity extends Activity {
             mAttendanceLocation = (AttendanceLocation)savedInstanceState.getSerializable("AttendanceLocation");
         }
         else {
+            readNfcId = null;
+            currentAttendance = null;
+            selectedSheet = null;
+            mAttendanceSheet = new AttendanceSheet();
+            mAttendanceSheet.setSubject(getString(R.string.disaster_title));
+            mAttendanceListAdapter = new AttendanceListAdapter(DisasterModeActivity.this, 0);
+            mAttendanceLocation = null;
             attendanceQueue = new SendAttendanceQueue(mPreferenceUtil.getServerAddress(PreferenceUtil.DEFAULT_SERVER_ADDRESS),
                                                       DisasterModeActivity.CHARACTER_CODE_FOR_SEND, 100);
-            mAttendanceListAdapter = new AttendanceListAdapter(DisasterModeActivity.this, 0);
         }
 
         // 設定情報にデフォルト値をセットする
@@ -402,6 +445,35 @@ public class DisasterModeActivity extends Activity {
                     attendanceQueue.resume();
                     isSending = true;
                 }
+            }
+        });
+
+        textViewForSubject = (TextView)findViewById(R.id.subject);
+        textViewForSubject.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDialog(DisasterModeActivity.DIALOG_EDIT_SUBJECT);
+            }
+        });
+        if (mAttendanceSheet.getSubject().length() != 0) {
+            textViewForSubject.setText(mAttendanceSheet.getSubject());
+        }
+
+        textViewForTime = (TextView)findViewById(R.id.time);
+        textViewForTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDialog(DisasterModeActivity.DIALOG_EDIT_TIME);
+            }
+        });
+        if (mAttendanceSheet.getTime().length() != 0) {
+            textViewForTime.setText(mAttendanceSheet.getTime());
+        }
+
+        textViewForCount = (TextView)findViewById(R.id.count);
+        textViewForCount.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
             }
         });
 
@@ -666,7 +738,7 @@ public class DisasterModeActivity extends Activity {
                             if (mAttendance.getStatus() != Attendance.ABSENCE) {
                                 if (!mAttendanceSheet.hasStudentNo(mAttendance.getStudentNo())) {
                                     currentAttendance = mAttendance;
-                                    addAttendance(currentAttendance.getStudentNo(), currentAttendance);
+                                    addAttendance(currentAttendance);
                                 }
                             }
                         }
@@ -675,6 +747,10 @@ public class DisasterModeActivity extends Activity {
                     }
                     catch (IOException e) {
                         Toast.makeText(DisasterModeActivity.this, fileName + getString(R.string.error_opening_failed), Toast.LENGTH_SHORT).show();
+                        Log.e("onActivityResult", e.getMessage(), e);
+                    }
+                    catch (ArrayIndexOutOfBoundsException e) {
+                        Toast.makeText(DisasterModeActivity.this, getString(R.string.error_unsupported_list_file), Toast.LENGTH_SHORT).show();
                         Log.e("onActivityResult", e.getMessage(), e);
                     }
                 }
@@ -711,15 +787,7 @@ public class DisasterModeActivity extends Activity {
                 break;
             }
             case R.id.menu_refresh: {
-                try {
-                    master.refresh();
-                }
-                catch (IOException e) {
-                    Toast.makeText(DisasterModeActivity.this, R.string.error_list_file_open_failed, Toast.LENGTH_SHORT).show();
-                    Log.e("onOptionsItemSelected", e.getMessage(), e);
-
-                    finish();
-                }
+                refreshStudentMaster();
 
                 break;
             }
@@ -739,11 +807,11 @@ public class DisasterModeActivity extends Activity {
                     // 科目名を置換
                     int subjectPos;
                     while ((subjectPos = rawFileName.indexOf("%S")) != -1) {
-                        rawFileName.replace(subjectPos, subjectPos + 2, getString(R.string.disaster_title));
+                        rawFileName.replace(subjectPos, subjectPos + 2, mAttendanceSheet.getSubject());
                     }
                     int timePos;
                     while ((timePos = rawFileName.indexOf("%t")) != -1) {
-                        rawFileName.replace(timePos, timePos + 2, "");
+                        rawFileName.replace(timePos, timePos + 2, mAttendanceSheet.getTime());
                     }
 
                     // 年月日時分秒を置換
@@ -816,6 +884,54 @@ public class DisasterModeActivity extends Activity {
 
                 break;
             }
+            case DisasterModeActivity.DIALOG_EDIT_SUBJECT: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
+                builder.setTitle(R.string.dialog_edit_subject_title);
+
+                LayoutInflater inflater = LayoutInflater.from(DisasterModeActivity.this);
+                View mView = inflater.inflate(R.layout.dialog_edit_subject, null);
+                editTextForSubject = (EditText)mView.findViewById(R.id.dialog_subject);
+
+                builder.setView(mView);
+                builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String subject = editTextForSubject.getEditableText().toString();
+                        mAttendanceSheet.setSubject(subject);
+                        textViewForSubject.setText(subject);
+                        isSaved = false;
+                    }
+                });
+                builder.setNegativeButton(android.R.string.cancel, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
+            case DisasterModeActivity.DIALOG_EDIT_TIME: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
+                builder.setTitle(R.string.dialog_edit_time_title);
+
+                LayoutInflater inflater = LayoutInflater.from(DisasterModeActivity.this);
+                View mView = inflater.inflate(R.layout.dialog_edit_time, null);
+                editTextForTime = (EditText)mView.findViewById(R.id.dialog_time);
+
+                builder.setView(mView);
+                builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String time = editTextForTime.getEditableText().toString();
+                        mAttendanceSheet.setTime(time);
+                        textViewForTime.setText(time);
+                        isSaved = false;
+                    }
+                });
+                builder.setNegativeButton(android.R.string.cancel, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+
+                break;
+            }
             case DisasterModeActivity.DIALOG_DISASTER_MENU: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
                 builder.setTitle(R.string.dialog_attendance_menu_title);
@@ -860,7 +976,7 @@ public class DisasterModeActivity extends Activity {
                                     showDialog(DisasterModeActivity.DIALOG_CSV_FILE_LIST);
                                 }
                                 else {
-                                    Toast.makeText(DisasterModeActivity.this, R.string.error_list_file_not_found, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(DisasterModeActivity.this, R.string.error_master_file_not_found, Toast.LENGTH_SHORT).show();
                                 }
 
                                 break;
@@ -871,7 +987,7 @@ public class DisasterModeActivity extends Activity {
                                     showDialog(DisasterModeActivity.DIALOG_SEARCH_STUDENT_NO);
                                 }
                                 else {
-                                    Toast.makeText(DisasterModeActivity.this, R.string.error_list_file_not_found, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(DisasterModeActivity.this, R.string.error_master_file_not_found, Toast.LENGTH_SHORT).show();
                                 }
 
                                 break;
@@ -894,11 +1010,11 @@ public class DisasterModeActivity extends Activity {
                 selectedSheet = null;
                 AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
                 builder.setTitle(R.string.dialog_csv_file_list_title);
-                String[] subjects = new String[master.size()];
+                String[] classNames = new String[master.size()];
                 for (int i = 0; i < master.size(); i++) {
-                    subjects[i] = master.getStudentSheet(i).getSubject();
+                    classNames[i] = master.getStudentSheet(i).getClassName();
                 }
-                builder.setItems(subjects, new DialogInterface.OnClickListener() {
+                builder.setItems(classNames, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         selectedSheet = master.getStudentSheet(which);
@@ -918,7 +1034,7 @@ public class DisasterModeActivity extends Activity {
             }
             case DisasterModeActivity.DIALOG_STUDENT_LIST: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
-                builder.setTitle(selectedSheet.getSubject());
+                builder.setTitle(selectedSheet.getClassName());
                 final ArrayList<Student> students = selectedSheet.getStudentList();
                 String[] labels = new String[students.size()];
                 for (int i = 0; i < students.size(); i++) {
@@ -944,7 +1060,7 @@ public class DisasterModeActivity extends Activity {
                         else {
                             currentAttendance = new Attendance(mStudent, getResources());
                             updateStatus(currentAttendance, Attendance.ATTENDANCE);
-                            addAttendance(currentAttendance.getStudentNo(), currentAttendance);
+                            addAttendance(currentAttendance);
                             position = mAttendanceListAdapter.getCount() - 1;
                         }
                         attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
@@ -973,13 +1089,15 @@ public class DisasterModeActivity extends Activity {
                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        boolean beforeReadingFlag = isReading;
-                        if (!isReading) {
-                            isReading = true;
-                        }
                         String studentNo = editTextForStudentNo.getText().toString().toUpperCase();
-                        onStudentNoReaded(studentNo);
-                        isReading = beforeReadingFlag;
+                        if (studentNo.length() != 0) {
+                            boolean beforeReadingFlag = isReading;
+                            if (!isReading) {
+                                isReading = true;
+                            }
+                            onStudentNoReaded(studentNo);
+                            isReading = beforeReadingFlag;
+                        }
                     }
                 });
                 builder.setNegativeButton(android.R.string.cancel, null);
@@ -1020,10 +1138,10 @@ public class DisasterModeActivity extends Activity {
                             position = mAttendanceListAdapter.getPosition(currentAttendance);
                         }
                         else {
-                            currentAttendance = new Attendance(new Student(studentNo, -1, className, studentName,
-                                                                           studentRuby, (String[])null), getResources());
+                            currentAttendance = new Attendance(new Student(studentNo, className, studentName,
+                                                                           studentRuby, (String[])null), -1, getResources());
                             updateStatus(currentAttendance, Attendance.ATTENDANCE);
-                            addAttendance(studentNo, currentAttendance);
+                            addAttendance(currentAttendance);
                             position = mAttendanceListAdapter.getCount() - 1;
                         }
                         attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
@@ -1066,7 +1184,7 @@ public class DisasterModeActivity extends Activity {
                                     showDialog(DisasterModeActivity.DIALOG_CSV_FILE_LIST_R);
                                 }
                                 else {
-                                    Toast.makeText(DisasterModeActivity.this, R.string.error_list_file_not_found, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(DisasterModeActivity.this, R.string.error_master_file_not_found, Toast.LENGTH_SHORT).show();
                                 }
 
                                 break;
@@ -1077,7 +1195,7 @@ public class DisasterModeActivity extends Activity {
                                     showDialog(DisasterModeActivity.DIALOG_SEARCH_STUDENT_NO_R);
                                 }
                                 else {
-                                    Toast.makeText(DisasterModeActivity.this, R.string.error_list_file_not_found, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(DisasterModeActivity.this, R.string.error_master_file_not_found, Toast.LENGTH_SHORT).show();
                                 }
 
                                 break;
@@ -1101,11 +1219,11 @@ public class DisasterModeActivity extends Activity {
                 selectedSheet = null;
                 AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
                 builder.setTitle(R.string.dialog_csv_file_list_title);
-                String[] subjects = new String[master.size()];
+                String[] classNames = new String[master.size()];
                 for (int i = 0; i < master.size(); i++) {
-                    subjects[i] = master.getStudentSheet(i).getSubject();
+                    classNames[i] = master.getStudentSheet(i).getClassName();
                 }
-                builder.setItems(subjects, new DialogInterface.OnClickListener() {
+                builder.setItems(classNames, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         selectedSheet = master.getStudentSheet(which);
@@ -1125,7 +1243,7 @@ public class DisasterModeActivity extends Activity {
             }
             case DisasterModeActivity.DIALOG_STUDENT_LIST_R: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
-                builder.setTitle(selectedSheet.getSubject());
+                builder.setTitle(selectedSheet.getClassName());
                 final ArrayList<Student> students = selectedSheet.getStudentList();
                 final String[] studentNos = new String[students.size()];
                 String[] labels = new String[students.size()];
@@ -1191,7 +1309,7 @@ public class DisasterModeActivity extends Activity {
                     public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
                         boolean retBool = false;
 
-                        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                        if (event.isPrintingKey() && event.getAction() == KeyEvent.ACTION_DOWN) {
                             retBool = onKeyDown(keyCode, event);
                         }
 
@@ -1284,6 +1402,14 @@ public class DisasterModeActivity extends Activity {
 
                 break;
             }
+            case DisasterModeActivity.DIALOG_REFRESHING_MASTER_FILE: {
+                ProgressDialog mProgressDialog = new ProgressDialog(DisasterModeActivity.this);
+                mProgressDialog.setMessage(getString(R.string.dialog_refreshing_master_file));
+                mProgressDialog.setCancelable(false);
+                retDialog = mProgressDialog;
+
+                break;
+            }
         }
 
         return(retDialog);
@@ -1297,6 +1423,16 @@ public class DisasterModeActivity extends Activity {
         }
 
         switch (id) {
+        case DisasterModeActivity.DIALOG_EDIT_SUBJECT: {
+            editTextForSubject.setText(mAttendanceSheet.getSubject());
+
+            break;
+        }
+        case DisasterModeActivity.DIALOG_EDIT_TIME: {
+            editTextForTime.setText(mAttendanceSheet.getTime());
+
+            break;
+        }
             case DisasterModeActivity.DIALOG_DISASTER_MENU: {
                 mAlertDialog.setTitle(currentAttendance.getStudentNo() + " " + currentAttendance.getStudentName());
 
@@ -1458,7 +1594,7 @@ public class DisasterModeActivity extends Activity {
                     }
 
                     updateStatus(currentAttendance, Attendance.ATTENDANCE);
-                    addAttendance(studentNo, currentAttendance);
+                    addAttendance(currentAttendance);
                     position = mAttendanceListAdapter.getCount() - 1;
                 }
                 attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
@@ -1504,7 +1640,7 @@ public class DisasterModeActivity extends Activity {
                 else {
                     currentAttendance = new Attendance(mStudent, getResources());
                     updateStatus(currentAttendance, Attendance.ATTENDANCE);
-                    addAttendance(id, currentAttendance);
+                    addAttendance(currentAttendance);
                     position = mAttendanceListAdapter.getCount() - 1;
                 }
                 attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
@@ -1524,13 +1660,13 @@ public class DisasterModeActivity extends Activity {
 
     /**
      * 出席データを追加する
-     * @param id NFCタグのID
      * @param inAttendance 出席データ
      */
-    public void addAttendance(String id, Attendance inAttendance) {
-        inAttendance.setStudentNum(mAttendanceSheet.size() + 1);
-        mAttendanceSheet.add(id, inAttendance);
+    public void addAttendance(Attendance inAttendance) {
+        inAttendance.setAttendanceNo(mAttendanceSheet.size() + 1);
+        mAttendanceSheet.add(inAttendance);
         mAttendanceListAdapter.add(inAttendance);
+        textViewForCount.setText(String.valueOf(mAttendanceSheet.size()));
 
         if (mPreferenceUtil.isSendServerEnabled(false)) {
             attendanceQueue.enqueue(inAttendance);
@@ -1578,26 +1714,50 @@ public class DisasterModeActivity extends Activity {
                 else {
                     currentAttendance = new Attendance(mStudent, getResources());
                     updateStatus(currentAttendance, Attendance.ATTENDANCE);
-                    addAttendance(id, currentAttendance);
+                    addAttendance(currentAttendance);
                     position = mAttendanceListAdapter.getCount() - 1;
                 }
                 attendanceListView.performItemClick(attendanceListView, position, attendanceListView.getItemIdAtPosition(position));
                 attendanceListView.setSelection(position);
 
-                try {
-                    master.refresh();
-                }
-                catch (IOException e) {
-                    Toast.makeText(DisasterModeActivity.this, R.string.error_list_file_open_failed, Toast.LENGTH_SHORT).show();
-                    Log.e("registerNfcId", e.getMessage(), e);
-
-                    finish();
-                }
+                refreshStudentMaster();
             }
         }
         catch (IOException e) {
             Log.e("registerNfcId", e.getMessage(), e);
         }
+    }
+
+    /**
+     * 学生マスタを読み込み直す
+     */
+    public void refreshStudentMaster() {
+        showDialog(DisasterModeActivity.DIALOG_REFRESHING_MASTER_FILE);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    master.refresh();
+                }
+                catch (IOException e) {
+                    Toast.makeText(DisasterModeActivity.this, R.string.error_master_file_open_failed, Toast.LENGTH_SHORT).show();
+                    Log.e("refreshStudentMaster", e.getMessage(), e);
+
+                    finish();
+                }
+                finally {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                dismissDialog(DisasterModeActivity.DIALOG_REFRESHING_MASTER_FILE);
+                            }
+                            catch (IllegalArgumentException e) {}
+                        }
+                    });
+                }
+            }
+        }).start();
     }
 
     /**

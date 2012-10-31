@@ -17,7 +17,7 @@ public class StudentMaster {
     /**
      * 学生マスタ格納フォルダ
      */
-    private File listDir;
+    private File masterDir;
     /**
      * 読み込みに使用する文字コード
      */
@@ -32,14 +32,14 @@ public class StudentMaster {
     // コンストラクタ
     /**
      * 学生マスタの位置と文字コードを指定してインスタンスを生成する
-     * @param listDir 学生マスタ格納フォルダ
+     * @param masterDir 学生マスタ格納フォルダ
      * @param characterCode 展開に使用する文字コード
      * @throws IOException
      * @throws FileNotFoundException
      * @throws UnsupportedEncodingException
      */
-    public StudentMaster(File listDir, String characterCode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
-        this.listDir = listDir;
+    public StudentMaster(File masterDir, String characterCode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
+        this.masterDir = masterDir;
         this.characterCode = characterCode;
 
         refresh();
@@ -81,7 +81,7 @@ public class StudentMaster {
             }
         }
 
-        return new Student(retStudent);
+        return retStudent;
     }
 
     /**
@@ -144,7 +144,7 @@ public class StudentMaster {
     public void refresh() throws UnsupportedEncodingException, FileNotFoundException, IOException {
         studentSheets = new ArrayList<StudentSheet>();
         ArrayList<File> csvFiles = new ArrayList<File>();
-        for (File mFile : listDir.listFiles()) {
+        for (File mFile : masterDir.listFiles()) {
             if (mFile.getName().endsWith(".csv")) {
                 csvFiles.add(mFile);
             }

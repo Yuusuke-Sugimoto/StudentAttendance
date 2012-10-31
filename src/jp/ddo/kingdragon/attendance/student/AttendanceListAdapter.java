@@ -54,8 +54,8 @@ public class AttendanceListAdapter extends ArrayAdapter<Attendance> {
         }
 
         String studentNum;
-        if (mAttendance.getStudentNum() != -1) {
-            studentNum = String.valueOf(mAttendance.getStudentNum());
+        if (mAttendance.getAttendanceNo() != -1) {
+            studentNum = String.valueOf(mAttendance.getAttendanceNo());
         }
         else {
             studentNum = "";

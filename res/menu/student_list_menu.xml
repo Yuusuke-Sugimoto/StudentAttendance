@@ -4,8 +4,8 @@
           android:title="@string/menu_new_sheet"
           android:icon="@drawable/ic_new_sheet"
           android:numericShortcut="1" />
-    <item android:id="@+id/menu_edit_info"
-          android:title="@string/menu_edit_info"
+    <item android:id="@+id/menu_edit_class_name"
+          android:title="@string/menu_edit_class_name"
           android:icon="@android:drawable/ic_menu_edit"
           android:numericShortcut="2" />
     <item android:id="@+id/menu_add_attendance"

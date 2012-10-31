@@ -93,10 +93,10 @@
     <string name="setting_movie_quality_low">低画質</string>
     <string name="setting_movie_quality_high">高画質</string>
 
-    <string name="header_student_num">連番</string>
     <string name="header_student_no">学籍番号</string>
     <string name="header_student_name">氏名</string>
     <string name="header_student_num_of_nfc_id">数</string>
+    <string name="header_attendance_no">出番</string>
     <string name="header_student_status">出欠</string>
 
     <string name="menu_make_list">リストを作成する</string>
@@ -104,6 +104,7 @@
     <string name="menu_open">CSVファイルを開く</string>
     <string name="menu_save">CSVファイルに保存する</string>
     <string name="menu_new_sheet">新規シート</string>
+    <string name="menu_edit_class_name">所属名を変更する</string>
     <string name="menu_edit_info">講義情報を編集する</string>
     <string name="menu_show_invisible_file">隠しファイルを表示する</string>
     <string name="menu_hide_invisible_file">隠しファイルを隠す</string>
@@ -134,7 +135,7 @@
     <string name="dialog_edit_student_no_label">学籍番号:</string>
     <string name="dialog_edit_student_no_hint">学籍番号を入力</string>
     <string name="dialog_edit_class_name_label">所属:</string>
-    <string name="dialog_edit_class_name_hint">所属を入力</string>
+    <string name="dialog_edit_class_name_hint">所属名を入力</string>
     <string name="dialog_edit_student_name_label">氏名:</string>
     <string name="dialog_edit_student_name_hint">氏名を入力</string>
     <string name="dialog_edit_student_ruby_label">カナ:</string>
@@ -143,10 +144,10 @@
     <string name="dialog_remove_nfc_id_message">のNFCタグを削除しますか?</string>
     <string name="dialog_remove_student_title">学生データの削除</string>
     <string name="dialog_remove_student_message">のデータを削除しますか?</string>
-    <string name="dialog_edit_info_title">講義情報の編集</string>
-    <string name="dialog_edit_subject_label">科目名:</string>
+    <string name="dialog_edit_class_name_title">所属名の変更</string>
+    <string name="dialog_edit_subject_title">科目名の編集</string>
     <string name="dialog_edit_subject_hint">科目名を入力</string>
-    <string name="dialog_edit_time_label">授業時間:</string>
+    <string name="dialog_edit_time_title">授業時間の編集</string>
     <string name="dialog_edit_time_hint">授業時間を入力</string>
     <string name="dialog_create_file_title">新規ファイルの作成</string>
     <string name="dialog_create_file_hint">ファイル名を入力</string>
@@ -167,6 +168,7 @@
     <string name="dialog_register_id_menu_title">NFCタグの登録</string>
     <string name="dialog_register_id_menu_barcode">バーコードを読み取る</string>
     <string name="dialog_reading_barcode">登録する学生のバーコードを読み取ってください。\n(バックボタンで中止)</string>
+    <string name="dialog_refreshing_master_file">学生マスタを読み込んでいます…</string>
 
     <string name="notice_location_fetched">現在地を取得しました</string>
     <string name="notice_add_location_disabled">\"位置情報を付加する\"は無効になりました</string>
@@ -179,6 +181,7 @@
     <string name="notice_id_registered">NFCタグを登録しました</string>
 
     <string name="error">エラー</string>
+    <string name="error_make_master_directory_failed">マスタフォルダの作成に失敗しました</string>
     <string name="error_make_list_directory_failed">リストフォルダの作成に失敗しました</string>
     <string name="error_make_save_directory_failed">保存フォルダの作成に失敗しました</string>
     <string name="error_make_web_directory_failed">Webフォルダの作成に失敗しました</string>
@@ -186,11 +189,12 @@
     <string name="error_make_media_directory_failed">メディアフォルダの作成に失敗しました</string>
     <string name="error_student_already_readed">既に出席確認済みの学生です</string>
     <string name="error_nfc_id_already_registered">既に他の学生に登録されているNFCタグです</string>
-    <string name="error_opening_failed">を開けませんでした</string>
+    <string name="error_opening_failed">からの読み込みに失敗しました</string>
+    <string name="error_unsupported_list_file">非対応フォーマットのリストです</string>
     <string name="error_saving_failed">への保存に失敗しました</string>
     <string name="error_saving_data_null">保存するデータがありません</string>
-    <string name="error_list_file_open_failed">リストファイルの読み込みに失敗しました</string>
-    <string name="error_list_file_not_found">リストファイルが見つかりません</string>
+    <string name="error_master_file_open_failed">マスタファイルの読み込みに失敗しました</string>
+    <string name="error_master_file_not_found">マスタファイルが見つかりません</string>
     <string name="error_student_not_found">対応する学生データが見つかりません</string>
     <string name="error_id_register_failed">NFCタグの登録に失敗しました</string>
     <string name="error_file_already_exists">既に同名のファイルが存在します。</string>

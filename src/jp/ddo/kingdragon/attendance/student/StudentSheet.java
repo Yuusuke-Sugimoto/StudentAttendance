@@ -1,8 +1,5 @@
 package jp.ddo.kingdragon.attendance.student;
 
-import au.com.bytecode.opencsv.CSVParser;
-import au.com.bytecode.opencsv.CSVWriter;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,6 +13,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
+import au.com.bytecode.opencsv.CSVParser;
+import au.com.bytecode.opencsv.CSVWriter;
+
 /**
  * 学生リストを管理するクラス
  * @author 杉本祐介
@@ -25,17 +25,13 @@ public class StudentSheet implements Serializable {
     /**
      * シリアルバージョンUID
      */
-    private static final long serialVersionUID = -6227987707663359448L;
+    private static final long serialVersionUID = -2244045392695564663L;
 
     // 変数の宣言
     /**
-     * 科目
+     * 所属
      */
-    private String subject;
-    /**
-     * 授業時間
-     */
-    private String time;
+    private String className;
     /**
      * 元のファイル
      */
@@ -56,8 +52,7 @@ public class StudentSheet implements Serializable {
      * 空のシートを生成する
      */
     public StudentSheet() {
-        subject = "";
-        time = "";
+        className = "";
         baseFile = null;
         studentsStudentNo = new LinkedHashMap<String, Student>();
         studentsNfcId = new LinkedHashMap<String, Student>();
@@ -76,8 +71,12 @@ public class StudentSheet implements Serializable {
         baseFile = csvFile;
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
         CSVParser parser = new CSVParser();
-        boolean isSubjectRecord = false;
+        boolean isClassNameRecord = false;
         boolean isStudentRecord = false;
+        int studentNoIndex = -1;
+        int studentNameIndex = -1;
+        int studentRubyIndex = -1;
+        int nfcIdIndex = -1;
         String line;
         while ((line = br.readLine()) != null) {
             StringBuilder rawLine = new StringBuilder(line);
@@ -86,61 +85,61 @@ public class StudentSheet implements Serializable {
             }
             String[] values = parser.parseLine(rawLine.toString());
 
-            if (isSubjectRecord) {
-                subject = values[0];
-                time = values[1];
-                isSubjectRecord = false;
+            if (isClassNameRecord) {
+                className = values[0];
+                isClassNameRecord = false;
             }
             else if (isStudentRecord) {
                 String[] nfcIds;
-                if (values.length == 6) {
-                    // NFCのタグのIDが1つ
-                    if (values[5].length() != 0) {
-                        nfcIds = new String[] {values[5]};
-                    }
-                    else {
-                        nfcIds = new String[0];
-                    }
-                }
-                else if (values.length > 6) {
-                    // NFCタグのIDが複数セットされている場合は配列に直す
-                    ArrayList<String> tempNfcIds = new ArrayList<String>();
-                    for (int i = 5; i < values.length; i++) {
-                        if (values[i].length() != 0) {
-                            tempNfcIds.add(values[i]);
+                if (nfcIdIndex != -1) {
+                    if (values.length == nfcIdIndex + 1) {
+                        // NFCのタグのIDが1つ
+                        if (values[nfcIdIndex].length() != 0) {
+                            nfcIds = new String[] {values[nfcIdIndex]};
+                        }
+                        else {
+                            nfcIds = new String[0];
                         }
                     }
-                    nfcIds = tempNfcIds.toArray(new String[tempNfcIds.size()]);
+                    else {
+                        // NFCタグのIDが複数セットされている場合は配列に直す
+                        ArrayList<String> tempNfcIds = new ArrayList<String>();
+                        for (int i = nfcIdIndex; i < values.length; i++) {
+                            if (values[i].length() != 0) {
+                                tempNfcIds.add(values[i]);
+                            }
+                        }
+                        nfcIds = tempNfcIds.toArray(new String[tempNfcIds.size()]);
+                    }
                 }
                 else {
                     // NFCのタグのIDが未登録
                     nfcIds = new String[0];
                 }
-                int num;
-                if (values[0].length() != 0) {
-                    // 連番が設定されている場合
-                    try {
-                        num = Integer.parseInt(values[0]);
-                    }
-                    catch (Exception ex) {
-                        num = -1;
-                    }
-                }
-                else {
-                    num = -1;
-                }
-                Student mStudent = new Student(values[2], num, values[1], values[3], values[4], nfcIds);
-                studentsStudentNo.put(values[2], mStudent);
+                Student mStudent = new Student(values[studentNoIndex], className, values[studentNameIndex], values[studentRubyIndex], nfcIds);
+                studentsStudentNo.put(values[studentNoIndex], mStudent);
                 for (String nfcId : nfcIds) {
                     studentsNfcId.put(nfcId, mStudent);
                 }
             }
 
-            if (values[0].equals("科目")) {
-                isSubjectRecord = true;
+            if (values[0].equals("所属")) {
+                isClassNameRecord = true;
             }
-            else if (values[1].equals("所属")) {
+            else if (values[0].equals("学籍番号")) {
                 isStudentRecord = true;
+                studentNoIndex = 0;
+                for (int i = 1; i < values.length; i++) {
+                    if (values[i].equals("氏名")) {
+                        studentNameIndex = i;
+                    }
+                    else if (values[i].equals("カナ")) {
+                        studentRubyIndex = i;
+                    }
+                    else if (values[i].equals("UID")) {
+                        nfcIdIndex = i;
+                    }
+                }
             }
         }
         br.close();
@@ -150,8 +149,7 @@ public class StudentSheet implements Serializable {
      * @param inStudent コピーするシート
      */
     public StudentSheet(StudentSheet inStudentSheet) {
-        subject = inStudentSheet.subject;
-        time = inStudentSheet.time;
+        className = inStudentSheet.className;
         baseFile = inStudentSheet.baseFile;
         studentsStudentNo = new LinkedHashMap<String, Student>(inStudentSheet.studentsStudentNo);
         studentsNfcId = new LinkedHashMap<String, Student>(inStudentSheet.studentsNfcId);
@@ -159,33 +157,18 @@ public class StudentSheet implements Serializable {
 
     // アクセッサ
     /**
-     * 科目名をセットする
-     * @param subject 科目名
+     * 所属をセットする
+     * @param className 所属
      */
-    public void setSubject(String subject) {
-        this.subject = subject;
+    public void setClassName(String className) {
+        this.className = className;
     }
     /**
-     * 科目名を取得する
-     * @return 科目名
+     * 所属を取得する
+     * @return 所属
      */
-    public String getSubject() {
-        return subject;
-    }
-
-    /**
-     * 授業時間をセットする
-     * @param time 授業時間
-     */
-    public void setTime(String time) {
-        this.time = time;
-    }
-    /**
-     * 授業時間を取得する
-     * @return 授業時間
-     */
-    public String getTime() {
-        return time;
+    public String getClassName() {
+        return className;
     }
 
     /**
@@ -203,7 +186,6 @@ public class StudentSheet implements Serializable {
      */
     public void add(Student inStudent) {
         if (!studentsStudentNo.containsKey(inStudent.getStudentNo())) {
-            inStudent.setStudentNum(studentsStudentNo.size() + 1);
             studentsStudentNo.put(inStudent.getStudentNo(), inStudent);
             if (inStudent.getNumOfNfcId() != 0) {
                 for (String nfcId : inStudent.getNfcIds()) {
@@ -307,9 +289,9 @@ public class StudentSheet implements Serializable {
     public void saveCsvFile(File csvFile, String encode) throws UnsupportedEncodingException, FileNotFoundException, IOException {
         baseFile = csvFile;
         CSVWriter writer = new CSVWriter(new OutputStreamWriter(new FileOutputStream(csvFile), encode));
-        writer.writeNext(new String[] {"科目", "授業時間", "受講者数"});
-        writer.writeNext(new String[] {subject, time, String.valueOf(studentsStudentNo.size())});
-        writer.writeNext(new String[] {"", "所属", "学籍番号", "氏名", "カナ"});
+        writer.writeNext(new String[] {"所属"});
+        writer.writeNext(new String[] {className});
+        writer.writeNext(new String[] {"学籍番号", "氏名", "カナ", "UID"});
         for (String key : studentsStudentNo.keySet()) {
             writer.writeNext(studentsStudentNo.get(key).getStudentData());
         }
