@@ -750,7 +750,7 @@ public class DisasterModeActivity extends Activity {
                         Log.e("onActivityResult", e.getMessage(), e);
                     }
                     catch (ArrayIndexOutOfBoundsException e) {
-                        Toast.makeText(DisasterModeActivity.this, getString(R.string.error_unsupported_list_file), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(DisasterModeActivity.this, R.string.error_unsupported_list_file, Toast.LENGTH_SHORT).show();
                         Log.e("onActivityResult", e.getMessage(), e);
                     }
                 }

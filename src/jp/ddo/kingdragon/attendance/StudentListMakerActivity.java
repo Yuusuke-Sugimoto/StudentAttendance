@@ -301,7 +301,7 @@ public class StudentListMakerActivity extends Activity {
                         Log.e("onActivityResult", e.getMessage(), e);
                     }
                     catch (ArrayIndexOutOfBoundsException e) {
-                        Toast.makeText(StudentListMakerActivity.this, getString(R.string.error_unsupported_list_file), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(StudentListMakerActivity.this, R.string.error_unsupported_list_file, Toast.LENGTH_SHORT).show();
                         Log.e("onActivityResult", e.getMessage(), e);
                     }
                 }

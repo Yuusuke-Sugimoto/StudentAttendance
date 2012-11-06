@@ -47,6 +47,19 @@ public class AttendanceSheet implements Serializable {
      * 元のファイル
      */
     private File baseFile;
+    
+    /**
+     * 出席者の数
+     */
+    private int numOfAttendance;
+    /**
+     * 遅刻者の数
+     */
+    private int numOfLateness;
+    /**
+     * 早退者の数
+     */
+    private int numOfLeaveEarly;
 
     // コレクションの宣言
     /**
@@ -62,6 +75,9 @@ public class AttendanceSheet implements Serializable {
         subject = "";
         time = "";
         baseFile = null;
+        numOfAttendance = 0;
+        numOfLateness = 0;
+        numOfLeaveEarly = 0;
         attendancesStudentNo = new LinkedHashMap<String, Attendance>();
     }
     /**
@@ -165,6 +181,7 @@ public class AttendanceSheet implements Serializable {
                             else {
                                 mAttendance.setStatus(Attendance.ATTENDANCE);
                             }
+                            numOfAttendance++;
                         }
                         else if (values[statusIndex].equals(inResources.getString(R.string.lateness))) {
                             if (mAttendanceLocation != null) {
@@ -173,6 +190,7 @@ public class AttendanceSheet implements Serializable {
                             else {
                                 mAttendance.setStatus(Attendance.LATENESS);
                             }
+                            numOfLateness++;
                         }
                         else if (values[statusIndex].equals(inResources.getString(R.string.leave_early))) {
                             if (mAttendanceLocation != null) {
@@ -181,6 +199,7 @@ public class AttendanceSheet implements Serializable {
                             else {
                                 mAttendance.setStatus(Attendance.LEAVE_EARLY);
                             }
+                            numOfLeaveEarly++;
                         }
 
                         try {
@@ -269,6 +288,28 @@ public class AttendanceSheet implements Serializable {
      */
     public File getBaseFile() {
         return baseFile;
+    }
+    
+    /**
+     * 出席者の数を取得する
+     * @return 出席者の数
+     */
+    public int getNumOfAttendance() {
+        return numOfAttendance;
+    }
+    /**
+     * 遅刻者の数を取得する
+     * @return 遅刻者の数
+     */
+    public int getNumOfLateness() {
+        return numOfLateness;
+    }
+    /**
+     * 早退者の数を取得する
+     * @return 早退者の数
+     */
+    public int getNumOfLeaveEarly() {
+        return numOfLeaveEarly;
     }
 
     /**
@@ -362,20 +403,11 @@ public class AttendanceSheet implements Serializable {
         if (isLatitudeEnabled) {
             labels.add("緯度");
         }
-        else {
-            labels.add("");
-        }
         if (isLongitudeEnabled) {
             labels.add("経度");
         }
-        else {
-            labels.add("");
-        }
         if (isAccuracyEnabled) {
             labels.add("精度");
-        }
-        else {
-            labels.add("");
         }
         writer.writeNext(labels.toArray(new String[labels.size()]));
         for (Attendance mAttendance : attendancesStudentNo.values()) {

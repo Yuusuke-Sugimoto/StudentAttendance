@@ -161,14 +161,6 @@ public class Attendance implements Serializable {
     }
 
     /**
-     * NFCタグのIDの配列を取得する
-     * @return NFCタグの配列
-     */
-    public String[] getNfcIds() {
-        return mStudent.getNfcIds();
-    }
-
-    /**
      * 出席種別を変更する
      * @param status 出席種別
      */
@@ -341,32 +333,20 @@ public class Attendance implements Serializable {
             if (isLatitudeEnabled) {
                 attendanceData.add(String.valueOf(mAttendanceLocation.getLatitude()));
             }
-            else {
-                attendanceData.add("");
-            }
             if (isLongitudeEnabled) {
                 attendanceData.add(String.valueOf(mAttendanceLocation.getLongitude()));
-            }
-            else {
-                attendanceData.add("");
             }
             if (isAccuracyEnabled) {
                 attendanceData.add(String.valueOf(mAttendanceLocation.getAccuracy()));
             }
-            else {
-                attendanceData.add("");
-            }
             if (extras.containsKey(Attendance.PHOTO_PATH)) {
                 attendanceData.add(extras.get(Attendance.PHOTO_PATH));
             }
-            else {
+            else if (extras.containsKey(Attendance.MOVIE_PATH)) {
                 attendanceData.add("");
             }
             if (extras.containsKey(Attendance.MOVIE_PATH)) {
                 attendanceData.add(extras.get(Attendance.MOVIE_PATH));
-            }
-            else {
-                attendanceData.add("");
             }
         }
 
