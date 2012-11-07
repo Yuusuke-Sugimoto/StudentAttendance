@@ -63,6 +63,40 @@ public class StudentMaster {
     }
 
     /**
+     * 所属名の配列を取得する
+     * @return 所属名の配列
+     */
+    public String[] getClassNames() {
+        ArrayList<String> classNames = new ArrayList<String>();
+
+        for (int i = 0; i < studentSheets.size(); i++) {
+            classNames.add(studentSheets.get(i).getClassName());
+        }
+
+        return classNames.toArray(new String[classNames.size()]);
+    }
+
+    /**
+     * 引数で指定された所属に属する学生数を取得する
+     * @param className 所属名
+     * @return 指定された所属に属する学生数
+     */
+    public int getNumOfStudents(String className) {
+        int retInt = 0;
+
+        boolean isExisted = false;
+        for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
+            StudentSheet mSheet = studentSheets.get(i);
+            if (mSheet.getClassName().equals(className)) {
+                retInt = mSheet.size();
+                isExisted = true;
+            }
+        }
+
+        return retInt;
+    }
+
+    /**
      * 指定された学籍番号を持つ学生データを取得する
      * @param studentNo 学籍番号
      * @return 学生データのコピー 該当するデータがなければnull
@@ -71,13 +105,11 @@ public class StudentMaster {
         Student retStudent = null;
 
         boolean isExisted = false;
-        if (studentSheets.size() != 0) {
-            for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
-                StudentSheet tempStudentSheet = studentSheets.get(i);
-                if (tempStudentSheet.hasStudentNo(studentNo)) {
-                    retStudent = new Student(tempStudentSheet.getByStudentNo(studentNo));
-                    isExisted = true;
-                }
+        for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
+            StudentSheet mSheet = studentSheets.get(i);
+            if (mSheet.hasStudentNo(studentNo)) {
+                retStudent = new Student(mSheet.getByStudentNo(studentNo));
+                isExisted = true;
             }
         }
 
@@ -93,13 +125,11 @@ public class StudentMaster {
         Student retStudent = null;
 
         boolean isExisted = false;
-        if (studentSheets.size() != 0) {
-            for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
-                StudentSheet tempStudentSheet = studentSheets.get(i);
-                if (tempStudentSheet.hasNfcId(id)) {
-                    retStudent = new Student(tempStudentSheet.getByNfcId(id));
-                    isExisted = true;
-                }
+        for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
+            StudentSheet mSheet = studentSheets.get(i);
+            if (mSheet.hasNfcId(id)) {
+                retStudent = new Student(mSheet.getByNfcId(id));
+                isExisted = true;
             }
         }
 
@@ -119,16 +149,14 @@ public class StudentMaster {
         Student retStudent = null;
 
         boolean isExisted = false;
-        if (studentSheets.size() != 0) {
-            for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
-                StudentSheet tempStudentSheet = studentSheets.get(i);
-                if (tempStudentSheet.hasStudentNo(studentNo)) {
-                    Student mStudent = tempStudentSheet.getByStudentNo(studentNo);
-                    mStudent.addNfcId(id);
-                    tempStudentSheet.saveCsvFile(tempStudentSheet.getBaseFile(), characterCode);
-                    retStudent = new Student(mStudent);
-                    isExisted = true;
-                }
+        for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
+            StudentSheet mSheet = studentSheets.get(i);
+            if (mSheet.hasStudentNo(studentNo)) {
+                Student mStudent = mSheet.getByStudentNo(studentNo);
+                mStudent.addNfcId(id);
+                mSheet.saveCsvFile(mSheet.getBaseFile(), characterCode);
+                retStudent = new Student(mStudent);
+                isExisted = true;
             }
         }
 

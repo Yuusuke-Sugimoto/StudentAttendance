@@ -54,6 +54,10 @@ public class Attendance implements Serializable {
      * その他情報
      */
     private HashMap<String, String> extras;
+    /**
+     * この出席データを管理している親シート
+     */
+    private AttendanceSheet parentSheet;
 
     /**
      * "出席"の文字列表現
@@ -88,7 +92,9 @@ public class Attendance implements Serializable {
         this.attendanceNo = attendanceNo;
         status = Attendance.ABSENCE;
         timeStamp = -1;
+        mAttendanceLocation = null;
         extras = new HashMap<String, String>();
+        parentSheet = null;
 
         attendanceString = inResources.getString(R.string.attendance);
         latenessString   = inResources.getString(R.string.lateness);
@@ -161,7 +167,8 @@ public class Attendance implements Serializable {
     }
 
     /**
-     * 出席種別を変更する
+     * 出席種別を変更する<br />
+     * {@link #setStatus(int, AttendanceLocation)}の第2引数がnullのものに同じ。
      * @param status 出席種別
      */
     public void setStatus(int status) {
@@ -170,13 +177,53 @@ public class Attendance implements Serializable {
     /**
      * 出席種別を変更する
      * @param status 出席種別
-     * @param inAttendanceLocation 座標
+     * @param inAttendanceLocation 座標 セットしない場合はnull
      */
     public void setStatus(int status, AttendanceLocation inAttendanceLocation) {
         if (status >= Attendance.ATTENDANCE && status <= Attendance.ABSENCE) {
+            if (parentSheet != null) {
+                switch (this.status) {
+                    case Attendance.ATTENDANCE: {
+                        parentSheet.decNumOfAttendance(getClassName());
+
+                        break;
+                    }
+                    case Attendance.LATENESS: {
+                        parentSheet.decNumOfLateness(getClassName());
+
+                        break;
+                    }
+                    case Attendance.LEAVE_EARLY: {
+                        parentSheet.decNumOfLeaveEarly(getClassName());
+
+                        break;
+                    }
+                }
+            }
+
             this.status = status;
             setTimeStamp(System.currentTimeMillis());
             mAttendanceLocation = inAttendanceLocation;
+
+            if (parentSheet != null) {
+                switch (this.status) {
+                    case Attendance.ATTENDANCE: {
+                        parentSheet.incNumOfAttendance(getClassName());
+
+                        break;
+                    }
+                    case Attendance.LATENESS: {
+                        parentSheet.incNumOfLateness(getClassName());
+
+                        break;
+                    }
+                    case Attendance.LEAVE_EARLY: {
+                        parentSheet.incNumOfLeaveEarly(getClassName());
+
+                        break;
+                    }
+                }
+            }
         }
         else {
             throw new IllegalArgumentException("setStatus : 引数の値が正しくありません。");
@@ -299,7 +346,16 @@ public class Attendance implements Serializable {
     }
 
     /**
-     * 出席データの内容を配列で取得する
+     * 親シートをセットする
+     * @param inSheet 親シート
+     */
+    protected void setParentSheet(AttendanceSheet inSheet) {
+        parentSheet = inSheet;
+    }
+
+    /**
+     * 出席データの内容を配列で取得する<br />
+     * {@link #getAttendanceData(boolean, boolean, boolean)}の全引数がfalseのものに同じ。
      * @return 出席データの内容を配列に格納したもの
      */
     public String[] getAttendanceData() {
@@ -330,15 +386,17 @@ public class Attendance implements Serializable {
             attendanceData.add(getStatusString());
             SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             attendanceData.add(format.format(new Date(timeStamp)));
+
             if (isLatitudeEnabled) {
-                attendanceData.add(String.valueOf(mAttendanceLocation.getLatitude()));
+                attendanceData.add(String.valueOf(getLatitude()));
             }
             if (isLongitudeEnabled) {
-                attendanceData.add(String.valueOf(mAttendanceLocation.getLongitude()));
+                attendanceData.add(String.valueOf(getLongitude()));
             }
             if (isAccuracyEnabled) {
-                attendanceData.add(String.valueOf(mAttendanceLocation.getAccuracy()));
+                attendanceData.add(String.valueOf(getAccuracy()));
             }
+
             if (extras.containsKey(Attendance.PHOTO_PATH)) {
                 attendanceData.add(extras.get(Attendance.PHOTO_PATH));
             }

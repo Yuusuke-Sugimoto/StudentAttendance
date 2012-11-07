@@ -10,6 +10,8 @@
               android:layout_weight="4"
               android:gravity="center"
               android:textSize="20sp"
+              android:singleLine="true"
+              android:ellipsize="end"
               android:textColor="@drawable/list_selector_text" />
     <include layout="@layout/vertical_divider" />
     <TextView android:id="@+id/student_name"
@@ -18,6 +20,8 @@
               android:layout_weight="6"
               android:gravity="center"
               android:textSize="20sp"
+              android:singleLine="true"
+              android:ellipsize="end"
               android:textColor="@drawable/list_selector_text" />
     <include layout="@layout/vertical_divider" />
     <TextView android:id="@+id/num_of_nfc_id"
@@ -26,5 +30,7 @@
               android:layout_weight="1"
               android:gravity="center"
               android:textSize="20sp"
+              android:singleLine="true"
+              android:ellipsize="end"
               android:textColor="@drawable/list_selector_text" />
 </LinearLayout>

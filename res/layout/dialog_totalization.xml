@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+    <TableLayout android:id="@+id/dialog_totalization_layout"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:stretchColumns="0,1,2,3,4,5">
+        <TableRow>
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:text="@string/dialog_totalization_class_label" />
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:text="@string/dialog_totalization_total_label" />
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:text="@string/attendance" />
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:text="@string/lateness" />
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:text="@string/leave_early" />
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:text="@string/absence" />
+        </TableRow>
+        <TableRow>
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:text="@string/dialog_totalization_whole" />
+            <TextView android:id="@+id/whole_num_of_students"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="right" />
+            <TextView android:id="@+id/whole_num_of_attendance"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="right" />
+            <TextView android:id="@+id/whole_num_of_lateness"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="right" />
+            <TextView android:id="@+id/whole_num_of_leave_early"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="right" />
+            <TextView android:id="@+id/whole_num_of_absence"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:gravity="right" />
+        </TableRow>
+    </TableLayout>
+</ScrollView>

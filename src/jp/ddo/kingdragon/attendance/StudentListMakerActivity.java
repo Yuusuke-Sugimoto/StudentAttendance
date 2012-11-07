@@ -125,9 +125,13 @@ public class StudentListMakerActivity extends Activity {
      */
     private StudentListAdapter mStudentListAdapter;
     /**
-     * 学籍番号用のEditText
+     * 検索時の学籍番号用のEditText
      */
-    private EditText editTextForStudentNo;
+    private EditText editTextForStudentNoForSearch;
+    /**
+     * 手動登録時の学籍番号用のEditText
+     */
+    private EditText editTextForStudentNoForManual;
     /**
      * 所属用のEditText
      */
@@ -723,13 +727,13 @@ public class StudentListMakerActivity extends Activity {
                 builder.setTitle(R.string.dialog_search_student_no_title);
 
                 LayoutInflater inflater = LayoutInflater.from(StudentListMakerActivity.this);
-                editTextForStudentNo = (EditText)inflater.inflate(R.layout.dialog_search_student_no, null);
+                editTextForStudentNoForSearch = (EditText)inflater.inflate(R.layout.dialog_search_student_no, null);
 
-                builder.setView(editTextForStudentNo);
+                builder.setView(editTextForStudentNoForSearch);
                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String studentNo = editTextForStudentNo.getText().toString().toUpperCase();
+                        String studentNo = editTextForStudentNoForSearch.getText().toString().toUpperCase();
                         if (studentNo.length() != 0) {
                             onStudentNoReaded(studentNo);
                         }
@@ -747,15 +751,15 @@ public class StudentListMakerActivity extends Activity {
 
                 LayoutInflater inflater = LayoutInflater.from(StudentListMakerActivity.this);
                 View mView = inflater.inflate(R.layout.dialog_input_student_info, null);
-                editTextForStudentNo   = (EditText)mView.findViewById(R.id.dialog_student_no);
-                editTextForStudentName = (EditText)mView.findViewById(R.id.dialog_student_name);
-                editTextForStudentRuby = (EditText)mView.findViewById(R.id.dialog_student_ruby);
+                editTextForStudentNoForManual = (EditText)mView.findViewById(R.id.dialog_student_no);
+                editTextForStudentName        = (EditText)mView.findViewById(R.id.dialog_student_name);
+                editTextForStudentRuby        = (EditText)mView.findViewById(R.id.dialog_student_ruby);
 
                 builder.setView(mView);
                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String studentNo = editTextForStudentNo.getEditableText().toString();
+                        String studentNo   = editTextForStudentNoForManual.getEditableText().toString();
                         String studentName = editTextForStudentName.getEditableText().toString();
                         String studentRuby = editTextForStudentRuby.getEditableText().toString();
 
@@ -867,12 +871,12 @@ public class StudentListMakerActivity extends Activity {
                 break;
             }
             case StudentListMakerActivity.DIALOG_SEARCH_STUDENT_NO: {
-                editTextForStudentNo.setText("");
+                editTextForStudentNoForSearch.setText("");
 
                 break;
             }
             case StudentListMakerActivity.DIALOG_INPUT_STUDENT_INFO: {
-                editTextForStudentNo.setText("");
+                editTextForStudentNoForManual.setText("");
                 editTextForStudentName.setText("");
                 editTextForStudentRuby.setText("");
 

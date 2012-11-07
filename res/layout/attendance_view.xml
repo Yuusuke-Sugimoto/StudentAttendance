@@ -9,6 +9,8 @@
               android:layout_weight="2"
               android:gravity="center"
               android:textSize="20sp"
+              android:singleLine="true"
+              android:ellipsize="end"
               android:textColor="@drawable/list_selector_text" />
     <include layout="@layout/vertical_divider" />
     <TextView android:id="@+id/student_no"
@@ -17,6 +19,8 @@
               android:layout_weight="4"
               android:gravity="center"
               android:textSize="20sp"
+              android:singleLine="true"
+              android:ellipsize="end"
               android:textColor="@drawable/list_selector_text" />
     <include layout="@layout/vertical_divider" />
     <TextView android:id="@+id/student_name"
@@ -25,6 +29,8 @@
               android:layout_weight="6"
               android:gravity="center"
               android:textSize="20sp"
+              android:singleLine="true"
+              android:ellipsize="end"
               android:textColor="@drawable/list_selector_text" />
     <include layout="@layout/vertical_divider" />
     <TextView android:id="@+id/student_status"
@@ -33,5 +39,7 @@
               android:layout_weight="2"
               android:gravity="center"
               android:textSize="20sp"
+              android:singleLine="true"
+              android:ellipsize="end"
               android:textColor="@drawable/list_selector_text" />
 </LinearLayout>

@@ -43,29 +43,17 @@ public class AttendanceSheet implements Serializable {
      * 授業時間
      */
     private String time;
-    /**
-     * 元のファイル
-     */
-    private File baseFile;
-    
-    /**
-     * 出席者の数
-     */
-    private int numOfAttendance;
-    /**
-     * 遅刻者の数
-     */
-    private int numOfLateness;
-    /**
-     * 早退者の数
-     */
-    private int numOfLeaveEarly;
 
     // コレクションの宣言
     /**
      * 現在管理している出席データを学籍番号をキーとして格納したリスト
      */
     private LinkedHashMap<String, Attendance> attendancesStudentNo;
+
+    /**
+     * 学生数を所属別にまとめたリスト
+     */
+    private LinkedHashMap<String, StudentCounter> studentCounters;
 
     // コンストラクタ
     /**
@@ -74,11 +62,9 @@ public class AttendanceSheet implements Serializable {
     public AttendanceSheet() {
         subject = "";
         time = "";
-        baseFile = null;
-        numOfAttendance = 0;
-        numOfLateness = 0;
-        numOfLeaveEarly = 0;
+
         attendancesStudentNo = new LinkedHashMap<String, Attendance>();
+        studentCounters = new LinkedHashMap<String, StudentCounter>();
     }
     /**
      * CSVファイルからシートを生成する
@@ -92,7 +78,6 @@ public class AttendanceSheet implements Serializable {
     public AttendanceSheet(File csvFile, String encode, Resources inResources) throws UnsupportedEncodingException, FileNotFoundException, IOException {
         this();
 
-        baseFile = csvFile;
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
         CSVParser parser = new CSVParser();
         boolean isSubjectRecord = false;
@@ -134,8 +119,6 @@ public class AttendanceSheet implements Serializable {
                                                         attendanceNo, inResources);
                 if (statusIndex != -1) {
                     // 出席データが格納されたCSVファイル
-                    baseFile = null;
-
                     double latitude = -1.0;
                     double longitude = -1.0;
                     float accuracy = -1.0f;
@@ -175,31 +158,13 @@ public class AttendanceSheet implements Serializable {
 
                     if (values.length >= statusIndex + 1 && values[statusIndex].length() != 0) {
                         if (values[statusIndex].equals(inResources.getString(R.string.attendance))) {
-                            if (mAttendanceLocation != null) {
-                                mAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
-                            }
-                            else {
-                                mAttendance.setStatus(Attendance.ATTENDANCE);
-                            }
-                            numOfAttendance++;
+                            mAttendance.setStatus(Attendance.ATTENDANCE, mAttendanceLocation);
                         }
                         else if (values[statusIndex].equals(inResources.getString(R.string.lateness))) {
-                            if (mAttendanceLocation != null) {
-                                mAttendance.setStatus(Attendance.LATENESS, mAttendanceLocation);
-                            }
-                            else {
-                                mAttendance.setStatus(Attendance.LATENESS);
-                            }
-                            numOfLateness++;
+                            mAttendance.setStatus(Attendance.LATENESS, mAttendanceLocation);
                         }
                         else if (values[statusIndex].equals(inResources.getString(R.string.leave_early))) {
-                            if (mAttendanceLocation != null) {
-                                mAttendance.setStatus(Attendance.LEAVE_EARLY, mAttendanceLocation);
-                            }
-                            else {
-                                mAttendance.setStatus(Attendance.LEAVE_EARLY);
-                            }
-                            numOfLeaveEarly++;
+                            mAttendance.setStatus(Attendance.LEAVE_EARLY, mAttendanceLocation);
                         }
 
                         try {
@@ -210,7 +175,7 @@ public class AttendanceSheet implements Serializable {
                         }
                     }
                 }
-                attendancesStudentNo.put(values[studentNoIndex], mAttendance);
+                add(mAttendance);
             }
 
             if (values[0].equals("科目")) {
@@ -283,41 +248,105 @@ public class AttendanceSheet implements Serializable {
     }
 
     /**
-     * 元のファイルを取得する
-     * @return 元のファイル 展開も保存も行われていない場合はnull
+     * 出席確認者数を返す
+     * @return 出席確認者数
      */
-    public File getBaseFile() {
-        return baseFile;
+    public int getNumOfConfirmedStudents() {
+        int retInt = 0;
+
+        for (StudentCounter mCounter : studentCounters.values()) {
+            retInt += mCounter.getNumOfConfirmedStudents();
+        }
+
+        return retInt;
     }
-    
+
     /**
-     * 出席者の数を取得する
-     * @return 出席者の数
+     * 出席者数をインクリメントする
      */
-    public int getNumOfAttendance() {
-        return numOfAttendance;
+    protected void incNumOfAttendance(String className) {
+        if (!studentCounters.containsKey(className)) {
+            studentCounters.put(className, new StudentCounter(1));
+        }
+        studentCounters.get(className).incNumOfAttendance();
     }
     /**
-     * 遅刻者の数を取得する
-     * @return 遅刻者の数
+     * 出席者数をデクリメントする
      */
-    public int getNumOfLateness() {
-        return numOfLateness;
+    protected void decNumOfAttendance(String className) {
+        if (studentCounters.containsKey(className)) {
+            studentCounters.get(className).decNumOfAttendance();
+        }
+    }
+
+    /**
+     * 遅刻者数をインクリメントする
+     */
+    protected void incNumOfLateness(String className) {
+        if (!studentCounters.containsKey(className)) {
+            studentCounters.put(className, new StudentCounter(1));
+        }
+        studentCounters.get(className).incNumOfLateness();
     }
     /**
-     * 早退者の数を取得する
-     * @return 早退者の数
+     * 遅刻者数をデクリメントする
      */
-    public int getNumOfLeaveEarly() {
-        return numOfLeaveEarly;
+    protected void decNumOfLateness(String className) {
+        if (studentCounters.containsKey(className)) {
+            studentCounters.get(className).decNumOfLateness();
+        }
+    }
+
+    /**
+     * 早退者数をインクリメントする
+     */
+    protected void incNumOfLeaveEarly(String className) {
+        if (!studentCounters.containsKey(className)) {
+            studentCounters.put(className, new StudentCounter(1));
+        }
+        studentCounters.get(className).incNumOfLeaveEarly();
+    }
+    /**
+     * 早退者数をデクリメントする
+     */
+    protected void decNumOfLeaveEarly(String className) {
+        if (studentCounters.containsKey(className)) {
+            studentCounters.get(className).decNumOfLeaveEarly();
+        }
     }
 
     /**
      * 出席データをリストに追加する
-     * @param mAttendance 出席データ
+     * @param inAttendance 出席データ
      */
-    public void add(Attendance mAttendance) {
-        attendancesStudentNo.put(mAttendance.getStudentNo(), mAttendance);
+    public void add(Attendance inAttendance) {
+        attendancesStudentNo.put(inAttendance.getStudentNo(), inAttendance);
+        inAttendance.setParentSheet(AttendanceSheet.this);
+
+        String className = inAttendance.getClassName();
+        if (studentCounters.containsKey(className)) {
+            studentCounters.get(className).incNumOfStudents();
+        }
+        else {
+            studentCounters.put(className, new StudentCounter(1));
+        }
+        switch (inAttendance.getStatus()) {
+            case Attendance.ATTENDANCE: {
+                incNumOfAttendance(className);
+
+                break;
+            }
+            case Attendance.LATENESS: {
+                incNumOfLateness(className);
+
+                break;
+            }
+            case Attendance.LEAVE_EARLY: {
+                incNumOfLeaveEarly(className);
+
+                break;
+            }
+        }
     }
 
     /**
@@ -348,11 +377,11 @@ public class AttendanceSheet implements Serializable {
 
     /**
      * 引数で渡された出席データが存在するかどうかを調べる
-     * @param mAttendance 出席データ
+     * @param inAttendance 出席データ
      * @return 存在するならばtrue 存在しなければfalse
      */
-    public boolean hasAttendance(Attendance mAttendance) {
-        return attendancesStudentNo.containsValue(mAttendance);
+    public boolean hasAttendance(Attendance inAttendance) {
+        return attendancesStudentNo.containsValue(inAttendance);
     }
 
     /**
@@ -364,7 +393,25 @@ public class AttendanceSheet implements Serializable {
     }
 
     /**
-     * 出席データをCSV形式で保存する
+     * 現在扱っている所属のリストを取得する
+     * @return 所属のリスト
+     */
+    public ArrayList<String> getClassNames() {
+        return new ArrayList<String>(studentCounters.keySet());
+    }
+
+    /**
+     * 引数で指定した所属の学生数を取得する
+     * @param className 所属
+     * @return 指定された所属の学生数を格納したインスタンス 指定された所属に対応するデータがなければnull
+     */
+    public StudentCounter getStudentCounter(String className) {
+        return studentCounters.get(className);
+    }
+
+    /**
+     * 出席データをCSV形式で保存する<br />
+     * {@link #saveCsvFile(File, String, boolean, boolean, boolean)}の第3引数以降がfalseのものに同じ。
      * @param csvFile 保存先のインスタンス
      * @param encode 書き込む際に使用する文字コード
      * @throws FileNotFoundException

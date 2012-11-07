@@ -24,6 +24,7 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,6 +34,8 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +43,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 
 import org.eclipse.jetty.server.Server;
@@ -56,6 +61,7 @@ import jp.ddo.kingdragon.attendance.student.AttendanceListAdapter;
 import jp.ddo.kingdragon.attendance.student.AttendanceLocation;
 import jp.ddo.kingdragon.attendance.student.AttendanceSheet;
 import jp.ddo.kingdragon.attendance.student.Student;
+import jp.ddo.kingdragon.attendance.student.StudentCounter;
 import jp.ddo.kingdragon.attendance.student.StudentMaster;
 import jp.ddo.kingdragon.attendance.student.StudentSheet;
 import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
@@ -75,23 +81,24 @@ public class DisasterModeActivity extends Activity {
     private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING = 0;
     private static final int DIALOG_EDIT_SUBJECT            = 1;
     private static final int DIALOG_EDIT_TIME               = 2;
-    private static final int DIALOG_DISASTER_MENU           = 3;
-    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 4;
-    private static final int DIALOG_CSV_FILE_LIST           = 5;
-    private static final int DIALOG_STUDENT_LIST            = 6;
-    private static final int DIALOG_SEARCH_STUDENT_NO       = 7;
-    private static final int DIALOG_INPUT_STUDENT_INFO      = 8;
-    private static final int DIALOG_ASK_REGISTER_READ_ID    = 9;
-    private static final int DIALOG_REGISTER_ID_MENU        = 10;
-    private static final int DIALOG_CSV_FILE_LIST_R         = 11;
-    private static final int DIALOG_STUDENT_LIST_R          = 12;
-    private static final int DIALOG_SEARCH_STUDENT_NO_R     = 13;
-    private static final int DIALOG_READING_BARCODE         = 14;
-    private static final int DIALOG_ASK_OVERWRITE           = 15;
-    private static final int DIALOG_FETCHING_LOCATION       = 16;
-    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 17;
-    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 18;
-    private static final int DIALOG_REFRESHING_MASTER_FILE  = 19;
+    private static final int DIALOG_TOTALIZATION            = 3;
+    private static final int DIALOG_DISASTER_MENU           = 4;
+    private static final int DIALOG_ADD_ATTENDANCE_MENU     = 5;
+    private static final int DIALOG_CSV_FILE_LIST           = 6;
+    private static final int DIALOG_STUDENT_LIST            = 7;
+    private static final int DIALOG_SEARCH_STUDENT_NO       = 8;
+    private static final int DIALOG_INPUT_STUDENT_INFO      = 9;
+    private static final int DIALOG_ASK_REGISTER_READ_ID    = 10;
+    private static final int DIALOG_REGISTER_ID_MENU        = 11;
+    private static final int DIALOG_CSV_FILE_LIST_R         = 12;
+    private static final int DIALOG_STUDENT_LIST_R          = 13;
+    private static final int DIALOG_SEARCH_STUDENT_NO_R     = 14;
+    private static final int DIALOG_READING_BARCODE         = 15;
+    private static final int DIALOG_ASK_OVERWRITE           = 16;
+    private static final int DIALOG_FETCHING_LOCATION       = 17;
+    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 18;
+    private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 19;
+    private static final int DIALOG_REFRESHING_MASTER_FILE  = 20;
     /**
      * CSVファイルへの保存に使用する文字コード
      */
@@ -223,9 +230,13 @@ public class DisasterModeActivity extends Activity {
      */
     private EditText editTextForTime;
     /**
-     * 学籍番号用のEditText
+     * 検索時の学籍番号用のEditText
      */
-    private EditText editTextForStudentNo;
+    private EditText editTextForStudentNoForSearch;
+    /**
+     * 手動登録時の学籍番号用のEditText
+     */
+    private EditText editTextForStudentNoForManual;
     /**
      * 所属用のEditText
      */
@@ -238,6 +249,14 @@ public class DisasterModeActivity extends Activity {
      * カナ用のEditText
      */
     private EditText editTextForStudentRuby;
+    /**
+     * NFCタグ登録時の学籍番号用のEditText
+     */
+    private EditText editTextForStudentNoForRegister;
+    /**
+     * 集計表示用のTableLayout
+     */
+    private TableLayout tableLayoutForTotalization;
 
     /**
      * 設定内容の読み取り/変更に使用
@@ -474,8 +493,10 @@ public class DisasterModeActivity extends Activity {
         textViewForCount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                showDialog(DisasterModeActivity.DIALOG_TOTALIZATION);
             }
         });
+        textViewForCount.setText(String.valueOf(mAttendanceSheet.getNumOfConfirmedStudents()));
 
         mNfcAdapter = NfcAdapter.getDefaultAdapter(DisasterModeActivity.this);
         mPendingIntent = PendingIntent.getActivity(DisasterModeActivity.this, 0,
@@ -932,6 +953,27 @@ public class DisasterModeActivity extends Activity {
 
                 break;
             }
+            case DisasterModeActivity.DIALOG_TOTALIZATION: {
+                AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
+                builder.setTitle(R.string.dialog_totalization_title);
+
+                LayoutInflater inflater = LayoutInflater.from(DisasterModeActivity.this);
+                View mView = inflater.inflate(R.layout.dialog_totalization, null);
+                tableLayoutForTotalization = (TableLayout)mView.findViewById(R.id.dialog_totalization_layout);
+
+                builder.setView(mView);
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setCancelable(true);
+                retDialog = builder.create();
+                retDialog.setOnDismissListener(new OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        removeDialog(id);
+                    }
+                });
+
+                break;
+            }
             case DisasterModeActivity.DIALOG_DISASTER_MENU: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
                 builder.setTitle(R.string.dialog_attendance_menu_title);
@@ -1010,10 +1052,7 @@ public class DisasterModeActivity extends Activity {
                 selectedSheet = null;
                 AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
                 builder.setTitle(R.string.dialog_csv_file_list_title);
-                String[] classNames = new String[master.size()];
-                for (int i = 0; i < master.size(); i++) {
-                    classNames[i] = master.getStudentSheet(i).getClassName();
-                }
+                String[] classNames = master.getClassNames();
                 builder.setItems(classNames, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -1083,13 +1122,13 @@ public class DisasterModeActivity extends Activity {
                 builder.setTitle(R.string.dialog_search_student_no_title);
 
                 LayoutInflater inflater = LayoutInflater.from(DisasterModeActivity.this);
-                editTextForStudentNo = (EditText)inflater.inflate(R.layout.dialog_search_student_no, null);
+                editTextForStudentNoForSearch = (EditText)inflater.inflate(R.layout.dialog_search_student_no, null);
 
-                builder.setView(editTextForStudentNo);
+                builder.setView(editTextForStudentNoForSearch);
                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String studentNo = editTextForStudentNo.getText().toString().toUpperCase();
+                        String studentNo = editTextForStudentNoForSearch.getText().toString().toUpperCase();
                         if (studentNo.length() != 0) {
                             boolean beforeReadingFlag = isReading;
                             if (!isReading) {
@@ -1112,16 +1151,16 @@ public class DisasterModeActivity extends Activity {
 
                 LayoutInflater inflater = LayoutInflater.from(DisasterModeActivity.this);
                 View mView = inflater.inflate(R.layout.dialog_input_student_info, null);
-                editTextForStudentNo   = (EditText)mView.findViewById(R.id.dialog_student_no);
-                editTextForClassName   = (EditText)mView.findViewById(R.id.dialog_class_name);
-                editTextForStudentName = (EditText)mView.findViewById(R.id.dialog_student_name);
-                editTextForStudentRuby = (EditText)mView.findViewById(R.id.dialog_student_ruby);
+                editTextForStudentNoForManual = (EditText)mView.findViewById(R.id.dialog_student_no);
+                editTextForClassName          = (EditText)mView.findViewById(R.id.dialog_class_name);
+                editTextForStudentName        = (EditText)mView.findViewById(R.id.dialog_student_name);
+                editTextForStudentRuby        = (EditText)mView.findViewById(R.id.dialog_student_ruby);
 
                 builder.setView(mView);
                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        String studentNo   = editTextForStudentNo.getEditableText().toString();
+                        String studentNo   = editTextForStudentNoForManual.getEditableText().toString();
                         String className   = editTextForClassName.getEditableText().toString();
                         String studentName = editTextForStudentName.getEditableText().toString();
                         String studentRuby = editTextForStudentRuby.getEditableText().toString();
@@ -1219,10 +1258,7 @@ public class DisasterModeActivity extends Activity {
                 selectedSheet = null;
                 AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
                 builder.setTitle(R.string.dialog_csv_file_list_title);
-                String[] classNames = new String[master.size()];
-                for (int i = 0; i < master.size(); i++) {
-                    classNames[i] = master.getStudentSheet(i).getClassName();
-                }
+                String[] classNames = master.getClassNames();
                 builder.setItems(classNames, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -1276,14 +1312,14 @@ public class DisasterModeActivity extends Activity {
                 builder.setTitle(R.string.dialog_search_student_no_title);
 
                 LayoutInflater inflater = LayoutInflater.from(DisasterModeActivity.this);
-                editTextForStudentNo = (EditText)inflater.inflate(R.layout.dialog_search_student_no, null);
+                editTextForStudentNoForRegister = (EditText)inflater.inflate(R.layout.dialog_search_student_no, null);
 
-                builder.setView(editTextForStudentNo);
+                builder.setView(editTextForStudentNoForRegister);
                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (readNfcId != null) {
-                            String studentNo = editTextForStudentNo.getText().toString().toUpperCase();
+                            String studentNo = editTextForStudentNoForRegister.getText().toString().toUpperCase();
                             registerNfcId(studentNo, readNfcId);
                         }
                     }
@@ -1423,31 +1459,126 @@ public class DisasterModeActivity extends Activity {
         }
 
         switch (id) {
-        case DisasterModeActivity.DIALOG_EDIT_SUBJECT: {
-            editTextForSubject.setText(mAttendanceSheet.getSubject());
+            case DisasterModeActivity.DIALOG_EDIT_SUBJECT: {
+                editTextForSubject.setText(mAttendanceSheet.getSubject());
 
-            break;
-        }
-        case DisasterModeActivity.DIALOG_EDIT_TIME: {
-            editTextForTime.setText(mAttendanceSheet.getTime());
+                break;
+            }
+            case DisasterModeActivity.DIALOG_EDIT_TIME: {
+                editTextForTime.setText(mAttendanceSheet.getTime());
 
-            break;
-        }
+                break;
+            }
+            case DisasterModeActivity.DIALOG_TOTALIZATION: {
+                ArrayList<String> classNames = new ArrayList<String>(Arrays.asList(master.getClassNames()));
+                for (String className : mAttendanceSheet.getClassNames()) {
+                    if (!classNames.contains(className)) {
+                        classNames.add(className);
+                    }
+                }
+                Collections.sort(classNames);
+
+                int wholeNumOfStudents   = 0;
+                int wholeNumOfAttendance = 0;
+                int wholeNumOfLateness   = 0;
+                int wholeNumOfLeaveEarly = 0;
+                int wholeNumOfAbsence    = 0;
+                for (String className : classNames) {
+                    int numOfStudents = master.getNumOfStudents(className);
+                    int numOfAttendance;
+                    int numOfLateness;
+                    int numOfLeaveEarly;
+                    int numOfAbsence;
+                    StudentCounter mCounter = mAttendanceSheet.getStudentCounter(className);
+                    if (mCounter != null) {
+                        if (numOfStudents == 0) {
+                            numOfStudents = mCounter.getNumOfStudents();
+                        }
+                        numOfAttendance = mCounter.getNumOfAttendance();
+                        numOfLateness   = mCounter.getNumOfLateness();
+                        numOfLeaveEarly = mCounter.getNumOfLeaveEarly();
+                        numOfAbsence    = numOfStudents - (numOfAttendance + numOfLateness + numOfLeaveEarly);
+                    }
+                    else {
+                        numOfAttendance = 0;
+                        numOfLateness   = 0;
+                        numOfLeaveEarly = 0;
+                        numOfAbsence    = numOfStudents;
+                    }
+                    wholeNumOfStudents   += numOfStudents;
+                    wholeNumOfAttendance += numOfAttendance;
+                    wholeNumOfLateness   += numOfLateness;
+                    wholeNumOfLeaveEarly += numOfLeaveEarly;
+                    wholeNumOfAbsence    += numOfAbsence;
+
+                    TableRow mTableRow = new TableRow(DisasterModeActivity.this);
+
+                    TextView textViewForClassName = new TextView(DisasterModeActivity.this);
+                    textViewForClassName.setGravity(Gravity.CENTER);
+                    textViewForClassName.setText(className);
+                    mTableRow.addView(textViewForClassName);
+
+                    TextView textViewForNumOfStudents = new TextView(DisasterModeActivity.this);
+                    textViewForNumOfStudents.setGravity(Gravity.RIGHT);
+                    textViewForNumOfStudents.setText(String.valueOf(numOfStudents));
+                    mTableRow.addView(textViewForNumOfStudents);
+
+                    TextView textViewForNumOfAttendance = new TextView(DisasterModeActivity.this);
+                    textViewForNumOfAttendance.setGravity(Gravity.RIGHT);
+                    textViewForNumOfAttendance.setText(String.valueOf(numOfAttendance));
+                    mTableRow.addView(textViewForNumOfAttendance);
+
+                    TextView textViewForNumOfLateness = new TextView(DisasterModeActivity.this);
+                    textViewForNumOfLateness.setGravity(Gravity.RIGHT);
+                    textViewForNumOfLateness.setText(String.valueOf(numOfLateness));
+                    mTableRow.addView(textViewForNumOfLateness);
+
+                    TextView textViewForNumOfLeaveEarly = new TextView(DisasterModeActivity.this);
+                    textViewForNumOfLeaveEarly.setGravity(Gravity.RIGHT);
+                    textViewForNumOfLeaveEarly.setText(String.valueOf(numOfLeaveEarly));
+                    mTableRow.addView(textViewForNumOfLeaveEarly);
+
+                    TextView textViewForNumOfAbsence = new TextView(DisasterModeActivity.this);
+                    textViewForNumOfAbsence.setGravity(Gravity.RIGHT);
+                    textViewForNumOfAbsence.setText(String.valueOf(numOfAbsence));
+                    mTableRow.addView(textViewForNumOfAbsence);
+
+                    tableLayoutForTotalization.addView(mTableRow);
+                }
+
+                TextView tvForWholeNumOfStudents = (TextView)tableLayoutForTotalization.findViewById(R.id.whole_num_of_students);
+                tvForWholeNumOfStudents.setText(String.valueOf(wholeNumOfStudents));
+                TextView tvForWholeNumOfAttendance = (TextView)tableLayoutForTotalization.findViewById(R.id.whole_num_of_attendance);
+                tvForWholeNumOfAttendance.setText(String.valueOf(wholeNumOfAttendance));
+                TextView tvForWholeNumOfLateness = (TextView)tableLayoutForTotalization.findViewById(R.id.whole_num_of_lateness);
+                tvForWholeNumOfLateness.setText(String.valueOf(wholeNumOfLateness));
+                TextView tvForWholeNumOfLeaveEarly = (TextView)tableLayoutForTotalization.findViewById(R.id.whole_num_of_leave_early);
+                tvForWholeNumOfLeaveEarly.setText(String.valueOf(wholeNumOfLeaveEarly));
+                TextView tvForWholeNumOfAbsence = (TextView)tableLayoutForTotalization.findViewById(R.id.whole_num_of_absence);
+                tvForWholeNumOfAbsence.setText(String.valueOf(wholeNumOfAbsence));
+
+                break;
+            }
             case DisasterModeActivity.DIALOG_DISASTER_MENU: {
                 mAlertDialog.setTitle(currentAttendance.getStudentNo() + " " + currentAttendance.getStudentName());
 
                 break;
             }
             case DisasterModeActivity.DIALOG_SEARCH_STUDENT_NO: {
-                editTextForStudentNo.setText("");
+                editTextForStudentNoForSearch.setText("");
 
                 break;
             }
             case DisasterModeActivity.DIALOG_INPUT_STUDENT_INFO: {
-                editTextForStudentNo.setText("");
+                editTextForStudentNoForManual.setText("");
                 editTextForClassName.setText("");
                 editTextForStudentName.setText("");
                 editTextForStudentRuby.setText("");
+
+                break;
+            }
+            case DisasterModeActivity.DIALOG_SEARCH_STUDENT_NO_R: {
+                editTextForStudentNoForRegister.setText("");
 
                 break;
             }
@@ -1666,7 +1797,7 @@ public class DisasterModeActivity extends Activity {
         inAttendance.setAttendanceNo(mAttendanceSheet.size() + 1);
         mAttendanceSheet.add(inAttendance);
         mAttendanceListAdapter.add(inAttendance);
-        textViewForCount.setText(String.valueOf(mAttendanceSheet.size()));
+        textViewForCount.setText(String.valueOf(mAttendanceSheet.getNumOfConfirmedStudents()));
 
         if (mPreferenceUtil.isSendServerEnabled(false)) {
             attendanceQueue.enqueue(inAttendance);
@@ -1679,13 +1810,9 @@ public class DisasterModeActivity extends Activity {
      * @param status 出席種別
      */
     public void updateStatus(Attendance inAttendance, int status) {
-        if (!mPreferenceUtil.isLocationEnabled(false)) {
-            inAttendance.setStatus(status);
-        }
-        else {
-            inAttendance.setStatus(status, mAttendanceLocation);
-        }
+        inAttendance.setStatus(status, mAttendanceLocation);
         isSaved = false;
+        textViewForCount.setText(String.valueOf(mAttendanceSheet.getNumOfConfirmedStudents()));
     }
 
     /**
