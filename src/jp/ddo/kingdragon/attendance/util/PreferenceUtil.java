@@ -35,11 +35,12 @@ public class PreferenceUtil {
     public static final int QUALITY_LOW  = 0;
     public static final int QUALITY_HIGH = 1;
     // デフォルト値
-    public static final int    DEFAULT_LOCATION_INTERVAL = 5;
-    public static final String DEFAULT_ATTENDANCE_DIR    = Environment.getExternalStorageDirectory().getAbsolutePath() + "/StudentAttendance/AttendanceData";
-    public static final String DEFAULT_ATTENDANCE_NAME   = "%S_%y%M%d%h%m%s";
-    public static final String DEFAULT_PASSWORD          = "test1234";
-    public static final String DEFAULT_SERVER_ADDRESS    = "http://192.168.11.2:8080/ams/ams8.jsp";
+    public static final int    DEFAULT_LOCATION_INTERVAL  = 5;
+    public static final String DEFAULT_ATTENDANCE_DIR     = Environment.getExternalStorageDirectory().getAbsolutePath() + "/StudentAttendance/AttendanceData";
+    public static final String DEFAULT_ATTENDANCE_NAME    = "%S_%y%M%d%h%m%s";
+    public static final int    DEFAULT_AUTO_SAVE_INTERVAL = 3;
+    public static final String DEFAULT_PASSWORD           = "test1234";
+    public static final String DEFAULT_SERVER_ADDRESS     = "http://192.168.11.2:8080/ams/ams8.jsp";
 
     // 変数の宣言
     /**
@@ -189,6 +190,36 @@ public class PreferenceUtil {
      */
     public void removeAttendanceName() {
         remove("setting_attendance_name");
+    }
+    /**
+     * "出席データを自動保存する"が有効かどうかを取得する
+     * @param defValue デフォルト値
+     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
+     */
+    public boolean isAutoSaveEnabled(boolean defValue) {
+        return getBoolean("setting_auto_save", defValue);
+    }
+
+    /**
+     * 自動保存の間隔を変更する
+     * @param autoSaveInterval 自動保存の間隔
+     */
+    public void putAutoSaveInterval(int autoSaveInterval) {
+        putString("setting_auto_save_interval", String.valueOf(autoSaveInterval));
+    }
+    /**
+     * 自動保存の間隔を取得する
+     * @param defValue デフォルト値
+     * @return 自動保存の間隔 未設定ならばデフォルト値
+     */
+    public int getAutoSaveInterval(int defValue) {
+        return Integer.parseInt(getString("setting_auto_save_interval", String.valueOf(defValue)));
+    }
+    /**
+     * 位置情報の更新間隔を削除する
+     */
+    public void removeAutoSaveInterval() {
+        remove("setting_auto_save_interval");
     }
 
     /**

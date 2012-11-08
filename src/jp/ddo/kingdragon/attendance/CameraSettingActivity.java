@@ -88,7 +88,7 @@ public class CameraSettingActivity extends PreferenceActivity implements OnShare
     /**
      * 各項目の表示を更新する
      */
-    public void updateUi() {
+    private void updateUi() {
         ListPreference rotationPref = (ListPreference)findPreference("setting_rotation");
         rotationPref.setSummary(rotationPref.getEntry());
 

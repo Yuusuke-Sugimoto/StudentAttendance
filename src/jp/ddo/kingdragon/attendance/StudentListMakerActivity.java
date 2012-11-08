@@ -314,14 +314,8 @@ public class StudentListMakerActivity extends Activity {
             }
             case StudentListMakerActivity.REQUEST_CHOOSE_SAVE_FILE: {
                 if (resultCode == Activity.RESULT_OK) {
-                    String filePath = data.getStringExtra(FileChooseActivity.FILE_PATH);
-                    destFile = new File(filePath);
-                    if (destFile.exists()) {
-                        showDialog(StudentListMakerActivity.DIALOG_ASK_OVERWRITE);
-                    }
-                    else {
-                        saveCsvFile(destFile, StudentListMakerActivity.CHARACTER_CODE);
-                    }
+                    destFile = new File(data.getStringExtra(FileChooseActivity.FILE_PATH));
+                    saveCsvFileWithConfirmation(destFile, StudentListMakerActivity.CHARACTER_CODE);
                 }
 
                 break;
@@ -382,7 +376,7 @@ public class StudentListMakerActivity extends Activity {
             case R.id.menu_save: {
                 destFile = mStudentSheet.getBaseFile();
                 if (destFile != null) {
-                    showDialog(StudentListMakerActivity.DIALOG_ASK_OVERWRITE);
+                    saveCsvFileWithConfirmation(destFile, StudentListMakerActivity.CHARACTER_CODE);
                 }
                 else {
                     Intent mIntent = new Intent(StudentListMakerActivity.this, FileChooseActivity.class);
@@ -793,7 +787,7 @@ public class StudentListMakerActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        saveCsvFile(destFile, StudentListMakerActivity.CHARACTER_CODE);
+                        saveCsvFileWithConfirmation(destFile, StudentListMakerActivity.CHARACTER_CODE);
                     }
                 });
                 builder.setNeutralButton(R.string.dialog_save_as, new DialogInterface.OnClickListener() {
@@ -946,15 +940,20 @@ public class StudentListMakerActivity extends Activity {
      * @param csvFile 保存先のインスタンス
      * @param encode 書き込む際に使用する文字コード
      */
-    public void saveCsvFile(File csvFile, String encode) {
-        try {
-            mStudentSheet.saveCsvFile(csvFile, encode);
-            isSaved = true;
-            Toast.makeText(StudentListMakerActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
+    private void saveCsvFileWithConfirmation(File csvFile, String encode) {
+        if (csvFile.exists()) {
+            showDialog(StudentListMakerActivity.DIALOG_ASK_OVERWRITE);
         }
-        catch (IOException e) {
-            Toast.makeText(StudentListMakerActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
-            Log.e("onActivityResult", e.getMessage(), e);
+        else {
+            try {
+                mStudentSheet.saveCsvFile(csvFile, encode);
+                isSaved = true;
+                Toast.makeText(StudentListMakerActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
+            }
+            catch (IOException e) {
+                Toast.makeText(StudentListMakerActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
+                Log.e("saveCsvFile", e.getMessage(), e);
+            }
         }
     }
 
@@ -962,7 +961,7 @@ public class StudentListMakerActivity extends Activity {
      * 文字が入力された際に呼び出される
      * @param c 入力された文字
      */
-    public void onCharTyped(char c) {
+    private void onCharTyped(char c) {
         if (Character.isLetter(c)) {
             inputBuffer.setLength(0);
             c = Character.toUpperCase(c);
@@ -977,7 +976,7 @@ public class StudentListMakerActivity extends Activity {
      * 学籍番号を読み取った際に呼び出される
      * @param studentNo 学籍番号
      */
-    public void onStudentNoReaded(String studentNo) {
+    private void onStudentNoReaded(String studentNo) {
         if (mStudentSheet.hasStudentNo(studentNo)) {
             // 学籍番号に対応するデータが存在する場合はその行を選択する
             currentStudent = mStudentSheet.getByStudentNo(studentNo);
@@ -1000,7 +999,7 @@ public class StudentListMakerActivity extends Activity {
      * NFCタグを読み取った際に呼び出される
      * @param inIntent NFCタグを読み取った際に発生したインテント
      */
-    public void onNfcTagReaded(Intent inIntent) {
+    private void onNfcTagReaded(Intent inIntent) {
         if (currentStudent.getStudentNo().length() != 0) {
             StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
             while (rawId.length() < 16) {
@@ -1031,7 +1030,7 @@ public class StudentListMakerActivity extends Activity {
     /**
      * 新規シートを作成する
      */
-    public void makeNewSheet() {
+    private void makeNewSheet() {
         mStudentSheet = new StudentSheet();
         mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
         studentListView.setAdapter(mStudentListAdapter);
@@ -1042,7 +1041,7 @@ public class StudentListMakerActivity extends Activity {
      * 学生データを追加する
      * @param inStudent 学生データ
      */
-    public void addStudent(Student inStudent) {
+    private void addStudent(Student inStudent) {
         mStudentSheet.add(inStudent);
         mStudentListAdapter.add(inStudent);
     }
@@ -1050,7 +1049,7 @@ public class StudentListMakerActivity extends Activity {
     /**
      * 学生マスタを読み込み直す
      */
-    public void refreshStudentMaster() {
+    private void refreshStudentMaster() {
         showDialog(StudentListMakerActivity.DIALOG_REFRESHING_MASTER_FILE);
         new Thread(new Runnable() {
             @Override

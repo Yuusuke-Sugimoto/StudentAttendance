@@ -620,7 +620,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
      * 画面の向きを回転させる
      * @param inRotation 画面の角度
      */
-    public void changeRotation(int inRotation) {
+    private void changeRotation(int inRotation) {
         if (mCamera != null) {
             // Exif情報に書き込む向きを設定
             params.setRotation(inRotation);
@@ -650,7 +650,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
     /**
      * MediaRecorderを初期化する
      */
-    public void initRecorder() {
+    private void initRecorder() {
         /**
          * 動画を撮影する
          * 参考:Camera | Android Developers
@@ -714,7 +714,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
     /**
      * 動画撮影完了時に呼び出される
      */
-    public void onMovieTaken(File movieFile) {
+    private void onMovieTaken(File movieFile) {
         // 生成したファイル名で新規ファイルを登録
         String[] splittedName = movieFile.getName().split("\\.");
         String ext = splittedName[splittedName.length - 1];

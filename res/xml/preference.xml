@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="@string/setting_general_title">
+    <PreferenceCategory android:title="@string/setting_behavior_title">
         <ListPreference android:title="@string/setting_behavior_student_no_title"
                         android:key="setting_behavior_student_no"
                         android:defaultValue="0"
@@ -53,6 +53,15 @@
                             android:defaultValue="%S_%y%M%d%h%m%s"
                             android:inputType="text"
                             android:dialogMessage="@string/setting_change_attendance_name_message" />
+        <CheckBoxPreference android:title="@string/setting_auto_save_title"
+                            android:key="setting_auto_save"
+                            android:defaultValue="false"
+                            android:summary="@string/setting_auto_save_summary" />
+        <EditTextPreference android:title="@string/setting_auto_save_interval_title"
+                            android:key="setting_auto_save_interval"
+                            android:defaultValue="3"
+                            android:inputType="number"
+                            android:dependency="setting_auto_save" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting_disaster_title">
         <CheckBoxPreference android:title="@string/setting_disaster_mode_title"

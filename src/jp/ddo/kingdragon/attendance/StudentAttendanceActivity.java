@@ -63,6 +63,7 @@ public class StudentAttendanceActivity extends Activity {
     // 定数の宣言
     // リクエストコード
     private static final int REQUEST_CHOOSE_OPEN_FILE = 0;
+    private static final int REQUEST_CHOOSE_SAVE_FILE = 1;
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING       = 0;
     private static final int DIALOG_ASK_OPEN_WITHOUT_SAVING       = 1;
@@ -561,6 +562,14 @@ public class StudentAttendanceActivity extends Activity {
 
                 break;
             }
+            case StudentAttendanceActivity.REQUEST_CHOOSE_SAVE_FILE: {
+                if (resultCode == Activity.RESULT_OK) {
+                    destFile = new File(data.getStringExtra(FileChooseActivity.FILE_PATH));
+                    saveCsvFileWithConfirmation(destFile, StudentAttendanceActivity.CHARACTER_CODE);
+                }
+
+                break;
+            }
         }
     }
 
@@ -610,59 +619,8 @@ public class StudentAttendanceActivity extends Activity {
                 break;
             }
             case R.id.menu_save: {
-                if (mAttendanceSheet.size() != 0) {
-                    // ファイル名を生成
-                    StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName(PreferenceUtil.DEFAULT_ATTENDANCE_NAME) + ".csv");
-                    // 科目名と授業時間を置換
-                    int subjectPos;
-                    while ((subjectPos = rawFileName.indexOf("%S")) != -1) {
-                        rawFileName.replace(subjectPos, subjectPos + 2, mAttendanceSheet.getSubject());
-                    }
-                    int timePos;
-                    while ((timePos = rawFileName.indexOf("%t")) != -1) {
-                        rawFileName.replace(timePos, timePos + 2, mAttendanceSheet.getTime());
-                    }
-
-                    // 年月日時分秒を置換
-                    SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
-                    String dateString = format.format(new Date());
-                    int yearPos;
-                    while ((yearPos = rawFileName.indexOf("%y")) != -1) {
-                        rawFileName.replace(yearPos, yearPos + 2, dateString.substring(0, 4));
-                    }
-                    int monthPos;
-                    while ((monthPos = rawFileName.indexOf("%M")) != -1) {
-                        rawFileName.replace(monthPos, monthPos + 2, dateString.substring(4, 6));
-                    }
-                    int dayPos;
-                    while ((dayPos = rawFileName.indexOf("%d")) != -1) {
-                        rawFileName.replace(dayPos, dayPos + 2, dateString.substring(6, 8));
-                    }
-                    int hourPos;
-                    while ((hourPos = rawFileName.indexOf("%h")) != -1) {
-                        rawFileName.replace(hourPos, hourPos + 2, dateString.substring(8, 10));
-                    }
-                    int minutePos;
-                    while ((minutePos = rawFileName.indexOf("%m")) != -1) {
-                        rawFileName.replace(minutePos, minutePos + 2, dateString.substring(10, 12));
-                    }
-                    int secondPos;
-                    while ((secondPos = rawFileName.indexOf("%s")) != -1) {
-                        rawFileName.replace(secondPos, secondPos + 2, dateString.substring(12, 14));
-                    }
-
-                    String fileName = rawFileName.toString();
-                    destFile = new File(saveDir, fileName);
-                    if (destFile.exists()) {
-                        showDialog(StudentAttendanceActivity.DIALOG_ASK_OVERWRITE);
-                    }
-                    else {
-                        saveCsvFile(destFile, StudentAttendanceActivity.CHARACTER_CODE);
-                    }
-                }
-                else {
-                    Toast.makeText(StudentAttendanceActivity.this, R.string.error_saving_data_null, Toast.LENGTH_SHORT).show();
-                }
+                destFile = new File(saveDir, makeFileName());
+                saveCsvFileWithConfirmation(destFile, StudentAttendanceActivity.CHARACTER_CODE);
 
                 break;
             }
@@ -1188,7 +1146,25 @@ public class StudentAttendanceActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        saveCsvFile(destFile, StudentAttendanceActivity.CHARACTER_CODE);
+                        saveCsvFileWithOverwrite(destFile, StudentAttendanceActivity.CHARACTER_CODE);
+                    }
+                });
+                builder.setNeutralButton(R.string.dialog_save_as, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent mIntent = new Intent(StudentAttendanceActivity.this, FileChooseActivity.class);
+                        String initDirPath;
+                        File parent = destFile.getParentFile();
+                        if (parent != null) {
+                            initDirPath = parent.getAbsolutePath();
+                        }
+                        else {
+                            initDirPath = "/";
+                        }
+                        mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, initDirPath);
+                        mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                        mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
+                        startActivityForResult(mIntent, StudentAttendanceActivity.REQUEST_CHOOSE_SAVE_FILE);
                     }
                 });
                 builder.setNegativeButton(android.R.string.no, null);
@@ -1439,27 +1415,96 @@ public class StudentAttendanceActivity extends Activity {
         outState.putSerializable("AttendanceSheet", mAttendanceSheet);
         outState.putSerializable("AttendanceLocation", mAttendanceLocation);
     }
+    
+    /**
+     * 保存ファイル名を生成する
+     * @return 生成されたファイル名
+     */
+    private String makeFileName() {
+        // ファイル名を生成
+        StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName(PreferenceUtil.DEFAULT_ATTENDANCE_NAME) + ".csv");
+        // 科目名と授業時間を置換
+        int subjectPos;
+        while ((subjectPos = rawFileName.indexOf("%S")) != -1) {
+            rawFileName.replace(subjectPos, subjectPos + 2, mAttendanceSheet.getSubject());
+        }
+        int timePos;
+        while ((timePos = rawFileName.indexOf("%t")) != -1) {
+            rawFileName.replace(timePos, timePos + 2, mAttendanceSheet.getTime());
+        }
+
+        // 年月日時分秒を置換
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
+        String dateString = format.format(new Date());
+        int yearPos;
+        while ((yearPos = rawFileName.indexOf("%y")) != -1) {
+            rawFileName.replace(yearPos, yearPos + 2, dateString.substring(0, 4));
+        }
+        int monthPos;
+        while ((monthPos = rawFileName.indexOf("%M")) != -1) {
+            rawFileName.replace(monthPos, monthPos + 2, dateString.substring(4, 6));
+        }
+        int dayPos;
+        while ((dayPos = rawFileName.indexOf("%d")) != -1) {
+            rawFileName.replace(dayPos, dayPos + 2, dateString.substring(6, 8));
+        }
+        int hourPos;
+        while ((hourPos = rawFileName.indexOf("%h")) != -1) {
+            rawFileName.replace(hourPos, hourPos + 2, dateString.substring(8, 10));
+        }
+        int minutePos;
+        while ((minutePos = rawFileName.indexOf("%m")) != -1) {
+            rawFileName.replace(minutePos, minutePos + 2, dateString.substring(10, 12));
+        }
+        int secondPos;
+        while ((secondPos = rawFileName.indexOf("%s")) != -1) {
+            rawFileName.replace(secondPos, secondPos + 2, dateString.substring(12, 14));
+        }
+
+        return rawFileName.toString();
+    }
 
     /**
-     * 出席データをCSV形式で保存する
+     * 出席データをCSV形式で保存する<br />
+     * 同名のファイルが存在する場合は確認のダイアログを表示する。
      * @param csvFile 保存先のインスタンス
      * @param encode 書き込む際に使用する文字コード
      */
-    public void saveCsvFile(File csvFile, String encode) {
-        try {
-            if (!mPreferenceUtil.isLocationEnabled(false)) {
-                mAttendanceSheet.saveCsvFile(csvFile, encode);
-            }
-            else {
-                mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(false), mPreferenceUtil.isLongitudeEnabled(false),
-                                             mPreferenceUtil.isAccuracyEnabled(false));
-            }
-            isSaved = true;
-            Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
+    private void saveCsvFileWithConfirmation(File csvFile, String encode) {
+        if (csvFile.exists()) {
+            showDialog(StudentAttendanceActivity.DIALOG_ASK_OVERWRITE);
         }
-        catch (IOException e) {
-            Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
-            Log.e("saveCsvFile", e.getMessage(), e);
+        else {
+            saveCsvFileWithOverwrite(csvFile, encode);
+        }
+    }
+    
+    /**
+     * 出席データをCSV形式で保存する<br />
+     * 同名のファイルが存在する場合は上書き保存する。
+     * @param csvFile 保存先のインスタンス
+     * @param encode 書き込む際に使用する文字コード
+     */
+    private void saveCsvFileWithOverwrite(File csvFile, String encode) {
+        if (mAttendanceSheet.size() != 0) {
+            try {
+                if (!mPreferenceUtil.isLocationEnabled(false)) {
+                    mAttendanceSheet.saveCsvFile(csvFile, encode);
+                }
+                else {
+                    mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(false), mPreferenceUtil.isLongitudeEnabled(false),
+                                                 mPreferenceUtil.isAccuracyEnabled(false));
+                }
+                isSaved = true;
+                Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
+            }
+            catch (IOException e) {
+                Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
+                Log.e("saveCsvFileWithOverwrite", e.getMessage(), e);
+            }
+        }
+        else {
+            Toast.makeText(StudentAttendanceActivity.this, R.string.error_saving_data_null, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -1467,7 +1512,7 @@ public class StudentAttendanceActivity extends Activity {
      * 文字が入力された際に呼び出される
      * @param c 入力された文字
      */
-    public void onCharTyped(char c) {
+    private void onCharTyped(char c) {
         if (Character.isLetter(c)) {
             inputBuffer.setLength(0);
             c = Character.toUpperCase(c);
@@ -1482,7 +1527,7 @@ public class StudentAttendanceActivity extends Activity {
      * 学籍番号を読み取った際に呼び出される
      * @param studentNo 学籍番号
      */
-    public void onStudentNoReaded(String studentNo) {
+    private void onStudentNoReaded(String studentNo) {
         if (!isRegistering) {
             // 通常時
             if (isReading) {
@@ -1525,7 +1570,7 @@ public class StudentAttendanceActivity extends Activity {
      * NFCタグを読み取った際に呼び出される
      * @param inIntent NFCタグを読み取った際に発生したインテント
      */
-    public void onNfcTagReaded(Intent inIntent) {
+    private void onNfcTagReaded(Intent inIntent) {
         StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
         while (rawId.length() < 16) {
             rawId.append("0");
@@ -1572,7 +1617,7 @@ public class StudentAttendanceActivity extends Activity {
      * @param id NFCタグのID
      * @param inAttendance 出席データ
      */
-    public void addAttendance(Attendance inAttendance) {
+    private void addAttendance(Attendance inAttendance) {
         inAttendance.setAttendanceNo(mAttendanceSheet.size() + 1);
         mAttendanceSheet.add(inAttendance);
         mAttendanceListAdapter.add(inAttendance);
@@ -1584,7 +1629,7 @@ public class StudentAttendanceActivity extends Activity {
      * @param inAttendance 更新する出席データ
      * @param status 出席種別
      */
-    public void updateStatus(Attendance inAttendance, int status) {
+    private void updateStatus(Attendance inAttendance, int status) {
         inAttendance.setStatus(status, mAttendanceLocation);
         isSaved = false;
         textViewForCount.setText(String.valueOf(mAttendanceSheet.getNumOfConfirmedStudents()));
@@ -1595,7 +1640,7 @@ public class StudentAttendanceActivity extends Activity {
      * @param studentNo 学籍番号
      * @param id NFCタグ
      */
-    public void registerNfcId(String studentNo, String id) {
+    private void registerNfcId(String studentNo, String id) {
         try {
             Student mStudent = master.registerNfcId(studentNo, id);
             if (mStudent != null) {
@@ -1633,7 +1678,7 @@ public class StudentAttendanceActivity extends Activity {
     /**
      * 学生マスタを読み込み直す
      */
-    public void refreshStudentMaster() {
+    private void refreshStudentMaster() {
         showDialog(StudentAttendanceActivity.DIALOG_REFRESHING_MASTER_FILE);
         new Thread(new Runnable() {
             @Override
@@ -1665,7 +1710,7 @@ public class StudentAttendanceActivity extends Activity {
     /**
      * 位置情報の取得を開始する
      */
-    public void startUpdateLocation() {
+    private void startUpdateLocation() {
         if (mAttendanceLocation == null) {
             showDialog(StudentAttendanceActivity.DIALOG_FETCHING_LOCATION);
         }
@@ -1687,7 +1732,7 @@ public class StudentAttendanceActivity extends Activity {
     /**
      * 位置情報の取得を停止する
      */
-    public void stopUpdateLocation() {
+    private void stopUpdateLocation() {
         isFetchingLocation = false;
         mLocationManager.removeUpdates(mLocationListener);
     }

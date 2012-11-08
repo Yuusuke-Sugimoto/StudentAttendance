@@ -1661,7 +1661,7 @@ public class DisasterModeActivity extends Activity {
      * @param csvFile 保存先のインスタンス
      * @param encode 書き込む際に使用する文字コード
      */
-    public void saveCsvFile(File csvFile, String encode) {
+    private void saveCsvFile(File csvFile, String encode) {
         try {
             if (!mPreferenceUtil.isLocationEnabled(false)) {
                 mAttendanceSheet.saveCsvFile(csvFile, encode);
@@ -1683,7 +1683,7 @@ public class DisasterModeActivity extends Activity {
      * 文字が入力された際に呼び出される
      * @param c 入力された文字
      */
-    public void onCharTyped(char c) {
+    private void onCharTyped(char c) {
         if (Character.isLetter(c)) {
             inputBuffer.setLength(0);
             c = Character.toUpperCase(c);
@@ -1698,7 +1698,7 @@ public class DisasterModeActivity extends Activity {
      * 学籍番号を読み取った際に呼び出される
      * @param studentNo 学籍番号
      */
-    public void onStudentNoReaded(String studentNo) {
+    private void onStudentNoReaded(String studentNo) {
         if (!isRegistering) {
             // 通常時
             if (isReading) {
@@ -1747,7 +1747,7 @@ public class DisasterModeActivity extends Activity {
      * NFCタグを読み取った際に呼び出される
      * @param inIntent NFCタグを読み取った際に発生したインテント
      */
-    public void onNfcTagReaded(Intent inIntent) {
+    private void onNfcTagReaded(Intent inIntent) {
         StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
         while (rawId.length() < 16) {
             rawId.append("0");
@@ -1793,7 +1793,7 @@ public class DisasterModeActivity extends Activity {
      * 出席データを追加する
      * @param inAttendance 出席データ
      */
-    public void addAttendance(Attendance inAttendance) {
+    private void addAttendance(Attendance inAttendance) {
         inAttendance.setAttendanceNo(mAttendanceSheet.size() + 1);
         mAttendanceSheet.add(inAttendance);
         mAttendanceListAdapter.add(inAttendance);
@@ -1809,7 +1809,7 @@ public class DisasterModeActivity extends Activity {
      * @param inAttendance 更新する出席データ
      * @param status 出席種別
      */
-    public void updateStatus(Attendance inAttendance, int status) {
+    private void updateStatus(Attendance inAttendance, int status) {
         inAttendance.setStatus(status, mAttendanceLocation);
         isSaved = false;
         textViewForCount.setText(String.valueOf(mAttendanceSheet.getNumOfConfirmedStudents()));
@@ -1820,7 +1820,7 @@ public class DisasterModeActivity extends Activity {
      * @param studentNo 学籍番号
      * @param id NFCタグ
      */
-    public void registerNfcId(String studentNo, String id) {
+    private void registerNfcId(String studentNo, String id) {
         try {
             Student mStudent = master.registerNfcId(studentNo, id);
             if (mStudent != null) {
@@ -1858,7 +1858,7 @@ public class DisasterModeActivity extends Activity {
     /**
      * 学生マスタを読み込み直す
      */
-    public void refreshStudentMaster() {
+    private void refreshStudentMaster() {
         showDialog(DisasterModeActivity.DIALOG_REFRESHING_MASTER_FILE);
         new Thread(new Runnable() {
             @Override
@@ -1890,7 +1890,7 @@ public class DisasterModeActivity extends Activity {
     /**
      * 位置情報の取得を開始する
      */
-    public void startUpdateLocation() {
+    private void startUpdateLocation() {
         if (mAttendanceLocation == null) {
             showDialog(DisasterModeActivity.DIALOG_FETCHING_LOCATION);
         }
@@ -1912,7 +1912,7 @@ public class DisasterModeActivity extends Activity {
     /**
      * 位置情報の取得を停止する
      */
-    public void stopUpdateLocation() {
+    private void stopUpdateLocation() {
         isFetchingLocation = false;
         mLocationManager.removeUpdates(mLocationListener);
     }

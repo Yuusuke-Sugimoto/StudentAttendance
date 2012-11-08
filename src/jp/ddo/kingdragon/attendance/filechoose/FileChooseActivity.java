@@ -473,7 +473,7 @@ public class FileChooseActivity extends Activity {
      * ファイルの一覧をListViewに表示する
      * @param dir 対象となるディレクトリ
      */
-    public void showFileList(File dir) {
+    private void showFileList(File dir) {
         File limitDir = Environment.getExternalStorageDirectory();
         mFileListAdapter = new FileListAdapter(FileChooseActivity.this, 0);
         fileListView.setAdapter(mFileListAdapter);

@@ -125,6 +125,24 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
             }
         });
 
+        final EditTextPreference autoSaveIntervalPref = (EditTextPreference)findPreference("setting_auto_save_interval");
+        autoSaveIntervalPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                boolean retBool = true;
+
+                String newAutoSaveInterval = (String)newValue;
+                if (newAutoSaveInterval.length() == 0) {
+                    // 値が空だった場合初期値をセットする
+                    mPreferenceUtil.removeAutoSaveInterval();
+                    autoSaveIntervalPref.setText(String.valueOf(PreferenceUtil.DEFAULT_AUTO_SAVE_INTERVAL));
+                    retBool = false;
+                }
+
+                return retBool;
+            }
+        });
+
         Preference passwordPref = (Preference)findPreference("setting_password");
         passwordPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
@@ -355,7 +373,7 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
     /**
      * 各項目の表示を更新する
      */
-    public void updateUi() {
+    private void updateUi() {
         ListPreference behaviorStudentNoPref = (ListPreference)findPreference("setting_behavior_student_no");
         behaviorStudentNoPref.setSummary(behaviorStudentNoPref.getEntry());
 
@@ -395,6 +413,9 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
 
         EditTextPreference attendanceNamePref = (EditTextPreference)findPreference("setting_attendance_name");
         attendanceNamePref.setSummary(mPreferenceUtil.getAttendanceName(PreferenceUtil.DEFAULT_ATTENDANCE_NAME));
+
+        EditTextPreference autoSaveIntervalPref = (EditTextPreference)findPreference("setting_auto_save_interval");
+        autoSaveIntervalPref.setSummary(mPreferenceUtil.getAutoSaveInterval(PreferenceUtil.DEFAULT_AUTO_SAVE_INTERVAL) + "分");
 
         Preference passwordPref = (Preference)findPreference("setting_password");
         if (!mPreferenceUtil.getPassword(PreferenceUtil.DEFAULT_PASSWORD).equals(PreferenceUtil.DEFAULT_PASSWORD)) {
