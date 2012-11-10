@@ -92,6 +92,7 @@ public class StudentListMakerActivity extends Activity {
      * 保存先のファイル
      */
     private File destFile;
+
     /**
      * キーボード(バーコードリーダ)から入力された内容
      */
@@ -116,6 +117,7 @@ public class StudentListMakerActivity extends Activity {
      * 学生マスタ
      */
     private StudentMaster master;
+
     /**
      * 学生の一覧を表示するビュー
      */
@@ -203,6 +205,7 @@ public class StudentListMakerActivity extends Activity {
         if (savedInstanceState != null) {
             // アクティビティ再生成前のデータがあれば復元する
             isSaved = savedInstanceState.getBoolean("IsSaved");
+            destFile = (File)savedInstanceState.getSerializable("DestFile");
             readStudentNo = savedInstanceState.getString("ReadStudentNo");
             currentStudent = (Student)savedInstanceState.getSerializable("CurrentStudent");
             selectedSheet = (StudentSheet)savedInstanceState.getSerializable("SelectedSheet");
@@ -787,7 +790,7 @@ public class StudentListMakerActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        saveCsvFileWithConfirmation(destFile, StudentListMakerActivity.CHARACTER_CODE);
+                        saveCsvFileWithOverwrite(destFile, StudentListMakerActivity.CHARACTER_CODE);
                     }
                 });
                 builder.setNeutralButton(R.string.dialog_save_as, new DialogInterface.OnClickListener() {
@@ -929,6 +932,7 @@ public class StudentListMakerActivity extends Activity {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putBoolean("IsSaved", isSaved);
+        outState.putSerializable("DestFile", destFile);
         outState.putString("ReadStudentNo", readStudentNo);
         outState.putSerializable("CurrentStudent", currentStudent);
         outState.putSerializable("SelectedSheet", selectedSheet);
@@ -936,7 +940,8 @@ public class StudentListMakerActivity extends Activity {
     }
 
     /**
-     * 出席データをCSV形式で保存する
+     * 出席データをCSV形式で保存する<br />
+     * 同名のファイルが存在する場合は確認のダイアログを表示する。
      * @param csvFile 保存先のインスタンス
      * @param encode 書き込む際に使用する文字コード
      */
@@ -945,6 +950,18 @@ public class StudentListMakerActivity extends Activity {
             showDialog(StudentListMakerActivity.DIALOG_ASK_OVERWRITE);
         }
         else {
+            saveCsvFileWithOverwrite(csvFile, encode);
+        }
+    }
+
+    /**
+     * 出席データをCSV形式で保存する<br />
+     * 同名のファイルが存在する場合は上書き保存する。
+     * @param csvFile 保存先のインスタンス
+     * @param encode 書き込む際に使用する文字コード
+     */
+    private void saveCsvFileWithOverwrite(File csvFile, String encode) {
+        if (mStudentSheet.size() != 0) {
             try {
                 mStudentSheet.saveCsvFile(csvFile, encode);
                 isSaved = true;
@@ -952,8 +969,11 @@ public class StudentListMakerActivity extends Activity {
             }
             catch (IOException e) {
                 Toast.makeText(StudentListMakerActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
-                Log.e("saveCsvFile", e.getMessage(), e);
+                Log.e("saveCsvFileWithOverwrite", e.getMessage(), e);
             }
+        }
+        else {
+            Toast.makeText(StudentListMakerActivity.this, R.string.error_saving_data_null, Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -98,6 +98,10 @@ public class StudentAttendanceActivity extends Activity {
      * 他スレッドからのUIの更新に使用
      */
     private Handler mHandler;
+    /**
+     * 自動保存タスク
+     */
+    private Runnable autoSaveTask;
 
     /**
      * 読み取り中かどうか
@@ -136,6 +140,7 @@ public class StudentAttendanceActivity extends Activity {
      * 保存先のファイル
      */
     private File destFile;
+
     /**
      * キーボード(バーコードリーダ)から入力された内容
      */
@@ -164,6 +169,7 @@ public class StudentAttendanceActivity extends Activity {
      * 学生マスタ
      */
     private StudentMaster master;
+
     /**
      * 出席データの一覧を表示するビュー
      */
@@ -273,6 +279,15 @@ public class StudentAttendanceActivity extends Activity {
         setContentView(R.layout.student_attendance);
 
         mHandler = new Handler();
+        autoSaveTask = new Runnable() {
+            @Override
+            public void run() {
+                destFile = new File(saveDir, makeFileName());
+                saveCsvFileWithConfirmation(destFile, StudentAttendanceActivity.CHARACTER_CODE);
+
+                mHandler.postDelayed(autoSaveTask, mPreferenceUtil.getAutoSaveInterval(3) * 60000);
+            }
+        };
 
         isReading = false;
         isRegistering = false;
@@ -320,6 +335,7 @@ public class StudentAttendanceActivity extends Activity {
             isRegistering = savedInstanceState.getBoolean("IsRegistering");
             isSaved = savedInstanceState.getBoolean("IsSaved");
             isFetchingLocation = savedInstanceState.getBoolean("IsFetchingLocation");
+            destFile = (File)savedInstanceState.getSerializable("DestFile");
             readStudentNo = savedInstanceState.getString("ReadStudentNo");
             readNfcId = savedInstanceState.getString("ReadNfcId");
             attendanceKind = savedInstanceState.getInt("AttendanceKind");
@@ -505,6 +521,11 @@ public class StudentAttendanceActivity extends Activity {
             else {
                 readStartButton.setEnabled(false);
                 readStartButton.setText(R.string.attendance_read_start_label);
+                isReading = false;
+            }
+
+            if (mPreferenceUtil.isAutoSaveEnabled(false)) {
+                mHandler.postDelayed(autoSaveTask, mPreferenceUtil.getAutoSaveInterval(3) * 60000);
             }
         }
         else {
@@ -530,6 +551,8 @@ public class StudentAttendanceActivity extends Activity {
 
         // NFCタグ読み取り時にonPause()が実行されるためonStop()に移動
         stopUpdateLocation();
+
+        mHandler.removeCallbacks(autoSaveTask);
     }
 
     @Override
@@ -1407,6 +1430,7 @@ public class StudentAttendanceActivity extends Activity {
         outState.putBoolean("IsRegistering", isRegistering);
         outState.putBoolean("IsSaved", isSaved);
         outState.putBoolean("IsFetchingLocation", isFetchingLocation);
+        outState.putSerializable("DestFile", destFile);
         outState.putString("ReadStudentNo", readStudentNo);
         outState.putString("ReadNfcId", readNfcId);
         outState.putInt("AttendanceKind", attendanceKindSpinner.getSelectedItemPosition());
@@ -1415,7 +1439,7 @@ public class StudentAttendanceActivity extends Activity {
         outState.putSerializable("AttendanceSheet", mAttendanceSheet);
         outState.putSerializable("AttendanceLocation", mAttendanceLocation);
     }
-    
+
     /**
      * 保存ファイル名を生成する
      * @return 生成されたファイル名
@@ -1478,7 +1502,7 @@ public class StudentAttendanceActivity extends Activity {
             saveCsvFileWithOverwrite(csvFile, encode);
         }
     }
-    
+
     /**
      * 出席データをCSV形式で保存する<br />
      * 同名のファイルが存在する場合は上書き保存する。

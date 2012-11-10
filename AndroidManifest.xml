@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="jp.ddo.kingdragon.attendance"
           android:versionCode="12"
-          android:versionName="1.7.1"
+          android:versionName="1.8.0"
           android:installLocation="auto">
     <uses-sdk android:targetSdkVersion="10"
               android:minSdkVersion="10" />

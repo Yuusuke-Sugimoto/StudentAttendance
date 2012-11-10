@@ -2,4 +2,4 @@
 <View xmlns:android="http://schemas.android.com/apk/res/android"
       android:layout_width="1dip"
       android:layout_height="30dip"
-      android:background="#111" />
+      android:background="@color/border_gray" />

@@ -75,7 +75,7 @@
               android:layout_width="match_parent"
               android:layout_height="0dip"
               android:layout_weight="1"
-              android:divider="#111"
+              android:divider="@color/border_gray"
               android:dividerHeight="1dip"
               android:fastScrollEnabled="true"
               android:listSelector="@drawable/list_selector_background"

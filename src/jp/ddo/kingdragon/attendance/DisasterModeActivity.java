@@ -77,6 +77,7 @@ public class DisasterModeActivity extends Activity {
     private static final int REQUEST_CAPTURE_PHOTO    = 0;
     private static final int REQUEST_CAPTURE_MOVIE    = 1;
     private static final int REQUEST_CHOOSE_OPEN_FILE = 2;
+    private static final int REQUEST_CHOOSE_SAVE_FILE = 3;
     // ダイアログのID
     private static final int DIALOG_ASK_EXIT_WITHOUT_SAVING = 0;
     private static final int DIALOG_EDIT_SUBJECT            = 1;
@@ -127,6 +128,10 @@ public class DisasterModeActivity extends Activity {
      * 他スレッドからのUIの更新に使用
      */
     private Handler mHandler;
+    /**
+     * 自動保存タスク
+     */
+    private Runnable autoSaveTask;
 
     /**
      * 読み取り中かどうか
@@ -169,6 +174,7 @@ public class DisasterModeActivity extends Activity {
      * 保存先のファイル
      */
     private File destFile;
+
     /**
      * キーボード(バーコードリーダ)から入力された内容
      */
@@ -193,6 +199,7 @@ public class DisasterModeActivity extends Activity {
      * 出席データを送信するキュー
      */
     private SendAttendanceQueue attendanceQueue;
+
     /**
      * 出席データの一覧を表示するビュー
      */
@@ -317,6 +324,15 @@ public class DisasterModeActivity extends Activity {
         applicationContextForServlet = getApplicationContext();
 
         mHandler = new Handler();
+        autoSaveTask = new Runnable() {
+            @Override
+            public void run() {
+                destFile = new File(saveDir, makeFileName());
+                saveCsvFileWithConfirmation(destFile, DisasterModeActivity.CHARACTER_CODE);
+
+                mHandler.postDelayed(autoSaveTask, mPreferenceUtil.getAutoSaveInterval(3) * 60000);
+            }
+        };
 
         isReading = false;
         isSending = true;
@@ -377,6 +393,7 @@ public class DisasterModeActivity extends Activity {
             isRegistering = savedInstanceState.getBoolean("IsRegistering");
             isSaved = savedInstanceState.getBoolean("IsSaved");
             isFetchingLocation = savedInstanceState.getBoolean("IsFetchingLocation");
+            destFile = (File)savedInstanceState.getSerializable("DestFile");
             readNfcId = savedInstanceState.getString("ReadNfcId");
             attendanceQueue = (SendAttendanceQueue)savedInstanceState.getSerializable("AttendanceQueue");
             currentAttendance = (Attendance)savedInstanceState.getSerializable("CurrentAttendance");
@@ -651,6 +668,10 @@ public class DisasterModeActivity extends Activity {
                 isReading = false;
             }
 
+            if (mPreferenceUtil.isAutoSaveEnabled(false)) {
+                mHandler.postDelayed(autoSaveTask, mPreferenceUtil.getAutoSaveInterval(3) * 60000);
+            }
+
             if (mPreferenceUtil.isSendServerEnabled(false)) {
                 sendPauseButton.setEnabled(true);
                 if (!isSending) {
@@ -707,6 +728,8 @@ public class DisasterModeActivity extends Activity {
 
         // NFCタグ読み取り時にonPause()が実行されるためonStop()に移動
         stopUpdateLocation();
+
+        mHandler.removeCallbacks(autoSaveTask);
     }
 
     @Override
@@ -778,6 +801,14 @@ public class DisasterModeActivity extends Activity {
 
                 break;
             }
+            case DisasterModeActivity.REQUEST_CHOOSE_SAVE_FILE: {
+                if (resultCode == Activity.RESULT_OK) {
+                    destFile = new File(data.getStringExtra(FileChooseActivity.FILE_PATH));
+                    saveCsvFileWithConfirmation(destFile, DisasterModeActivity.CHARACTER_CODE);
+                }
+
+                break;
+            }
         }
     }
 
@@ -822,59 +853,8 @@ public class DisasterModeActivity extends Activity {
                 break;
             }
             case R.id.menu_save: {
-                if (mAttendanceSheet.size() != 0) {
-                    // ファイル名を生成
-                    StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName(PreferenceUtil.DEFAULT_ATTENDANCE_NAME) + ".csv");
-                    // 科目名を置換
-                    int subjectPos;
-                    while ((subjectPos = rawFileName.indexOf("%S")) != -1) {
-                        rawFileName.replace(subjectPos, subjectPos + 2, mAttendanceSheet.getSubject());
-                    }
-                    int timePos;
-                    while ((timePos = rawFileName.indexOf("%t")) != -1) {
-                        rawFileName.replace(timePos, timePos + 2, mAttendanceSheet.getTime());
-                    }
-
-                    // 年月日時分秒を置換
-                    SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
-                    String dateString = format.format(new Date());
-                    int yearPos;
-                    while ((yearPos = rawFileName.indexOf("%y")) != -1) {
-                        rawFileName.replace(yearPos, yearPos + 2, dateString.substring(0, 4));
-                    }
-                    int monthPos;
-                    while ((monthPos = rawFileName.indexOf("%M")) != -1) {
-                        rawFileName.replace(monthPos, monthPos + 2, dateString.substring(4, 6));
-                    }
-                    int dayPos;
-                    while ((dayPos = rawFileName.indexOf("%d")) != -1) {
-                        rawFileName.replace(dayPos, dayPos + 2, dateString.substring(6, 8));
-                    }
-                    int hourPos;
-                    while ((hourPos = rawFileName.indexOf("%h")) != -1) {
-                        rawFileName.replace(hourPos, hourPos + 2, dateString.substring(8, 10));
-                    }
-                    int minutePos;
-                    while ((minutePos = rawFileName.indexOf("%m")) != -1) {
-                        rawFileName.replace(minutePos, minutePos + 2, dateString.substring(10, 12));
-                    }
-                    int secondPos;
-                    while ((secondPos = rawFileName.indexOf("%s")) != -1) {
-                        rawFileName.replace(secondPos, secondPos + 2, dateString.substring(12, 14));
-                    }
-
-                    String fileName = rawFileName.toString();
-                    destFile = new File(saveDir, fileName);
-                    if (destFile.exists()) {
-                        showDialog(DisasterModeActivity.DIALOG_ASK_OVERWRITE);
-                    }
-                    else {
-                        saveCsvFile(destFile, DisasterModeActivity.CHARACTER_CODE);
-                    }
-                }
-                else {
-                    Toast.makeText(DisasterModeActivity.this, R.string.error_saving_data_null, Toast.LENGTH_SHORT).show();
-                }
+                destFile = new File(saveDir, makeFileName());
+                saveCsvFileWithConfirmation(destFile, DisasterModeActivity.CHARACTER_CODE);
 
                 break;
             }
@@ -1364,7 +1344,25 @@ public class DisasterModeActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        saveCsvFile(destFile, DisasterModeActivity.CHARACTER_CODE);
+                        saveCsvFileWithOverwrite(destFile, DisasterModeActivity.CHARACTER_CODE);
+                    }
+                });
+                builder.setNeutralButton(R.string.dialog_save_as, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent mIntent = new Intent(DisasterModeActivity.this, FileChooseActivity.class);
+                        String initDirPath;
+                        File parent = destFile.getParentFile();
+                        if (parent != null) {
+                            initDirPath = parent.getAbsolutePath();
+                        }
+                        else {
+                            initDirPath = "/";
+                        }
+                        mIntent.putExtra(FileChooseActivity.INIT_DIR_PATH, initDirPath);
+                        mIntent.putExtra(FileChooseActivity.FILTER, ".*");
+                        mIntent.putExtra(FileChooseActivity.EXTENSION, "csv");
+                        startActivityForResult(mIntent, DisasterModeActivity.REQUEST_CHOOSE_SAVE_FILE);
                     }
                 });
                 builder.setNegativeButton(android.R.string.no, null);
@@ -1632,6 +1630,7 @@ public class DisasterModeActivity extends Activity {
         outState.putBoolean("IsRegistering", isRegistering);
         outState.putBoolean("IsSaved", isSaved);
         outState.putBoolean("IsFetchingLocation", isFetchingLocation);
+        outState.putSerializable("DestFile", destFile);
         outState.putString("ReadNfcId", readNfcId);
         outState.putSerializable("AttendanceQueue", attendanceQueue);
         outState.putSerializable("CurrentAttendance", currentAttendance);
@@ -1657,25 +1656,94 @@ public class DisasterModeActivity extends Activity {
     }
 
     /**
-     * 出席データをCSV形式で保存する
+     * 保存ファイル名を生成する
+     * @return 生成されたファイル名
+     */
+    private String makeFileName() {
+        // ファイル名を生成
+        StringBuilder rawFileName = new StringBuilder(mPreferenceUtil.getAttendanceName(PreferenceUtil.DEFAULT_ATTENDANCE_NAME) + ".csv");
+        // 科目名を置換
+        int subjectPos;
+        while ((subjectPos = rawFileName.indexOf("%S")) != -1) {
+            rawFileName.replace(subjectPos, subjectPos + 2, mAttendanceSheet.getSubject());
+        }
+        int timePos;
+        while ((timePos = rawFileName.indexOf("%t")) != -1) {
+            rawFileName.replace(timePos, timePos + 2, mAttendanceSheet.getTime());
+        }
+
+        // 年月日時分秒を置換
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
+        String dateString = format.format(new Date());
+        int yearPos;
+        while ((yearPos = rawFileName.indexOf("%y")) != -1) {
+            rawFileName.replace(yearPos, yearPos + 2, dateString.substring(0, 4));
+        }
+        int monthPos;
+        while ((monthPos = rawFileName.indexOf("%M")) != -1) {
+            rawFileName.replace(monthPos, monthPos + 2, dateString.substring(4, 6));
+        }
+        int dayPos;
+        while ((dayPos = rawFileName.indexOf("%d")) != -1) {
+            rawFileName.replace(dayPos, dayPos + 2, dateString.substring(6, 8));
+        }
+        int hourPos;
+        while ((hourPos = rawFileName.indexOf("%h")) != -1) {
+            rawFileName.replace(hourPos, hourPos + 2, dateString.substring(8, 10));
+        }
+        int minutePos;
+        while ((minutePos = rawFileName.indexOf("%m")) != -1) {
+            rawFileName.replace(minutePos, minutePos + 2, dateString.substring(10, 12));
+        }
+        int secondPos;
+        while ((secondPos = rawFileName.indexOf("%s")) != -1) {
+            rawFileName.replace(secondPos, secondPos + 2, dateString.substring(12, 14));
+        }
+
+        return rawFileName.toString();
+    }
+
+    /**
+     * 出席データをCSV形式で保存する<br />
+     * 同名のファイルが存在する場合は確認のダイアログを表示する。
      * @param csvFile 保存先のインスタンス
      * @param encode 書き込む際に使用する文字コード
      */
-    private void saveCsvFile(File csvFile, String encode) {
-        try {
-            if (!mPreferenceUtil.isLocationEnabled(false)) {
-                mAttendanceSheet.saveCsvFile(csvFile, encode);
-            }
-            else {
-                mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(false), mPreferenceUtil.isLongitudeEnabled(false),
-                                             mPreferenceUtil.isAccuracyEnabled(false));
-            }
-            isSaved = true;
-            Toast.makeText(DisasterModeActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
+    private void saveCsvFileWithConfirmation(File csvFile, String encode) {
+        if (csvFile.exists()) {
+            showDialog(DisasterModeActivity.DIALOG_ASK_OVERWRITE);
         }
-        catch (IOException e) {
-            Toast.makeText(DisasterModeActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
-            Log.e("saveCsvFile", e.getMessage(), e);
+        else {
+            saveCsvFileWithOverwrite(csvFile, encode);
+        }
+    }
+
+    /**
+     * 出席データをCSV形式で保存する<br />
+     * 同名のファイルが存在する場合は上書き保存する。
+     * @param csvFile 保存先のインスタンス
+     * @param encode 書き込む際に使用する文字コード
+     */
+    private void saveCsvFileWithOverwrite(File csvFile, String encode) {
+        if (mAttendanceSheet.size() != 0) {
+            try {
+                if (!mPreferenceUtil.isLocationEnabled(false)) {
+                    mAttendanceSheet.saveCsvFile(csvFile, encode);
+                }
+                else {
+                    mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(false), mPreferenceUtil.isLongitudeEnabled(false),
+                                                 mPreferenceUtil.isAccuracyEnabled(false));
+                }
+                isSaved = true;
+                Toast.makeText(DisasterModeActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
+            }
+            catch (IOException e) {
+                Toast.makeText(DisasterModeActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
+                Log.e("saveCsvFileWithOverwrite", e.getMessage(), e);
+            }
+        }
+        else {
+            Toast.makeText(DisasterModeActivity.this, R.string.error_saving_data_null, Toast.LENGTH_SHORT).show();
         }
     }
 
