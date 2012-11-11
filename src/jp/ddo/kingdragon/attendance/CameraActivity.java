@@ -193,7 +193,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
                                         // 撮影中でなければ撮影
                                         isCapturing = true;
                                         captureButton.setEnabled(false);
-                                        if (!mPreferenceUtil.isTakeAutoFocusEnable(false) || isFocused) {
+                                        if (!mPreferenceUtil.isTakeAutoFocusEnable() || isFocused) {
                                             mCamera.takePicture(null, null, null, CameraActivity.this);
                                         }
                                         else {
@@ -241,7 +241,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             @Override
             public void onClick(View v) {
                 // 画面がタッチされたらオートフォーカスを実行
-                if (isCameraLaunched && mPreferenceUtil.isTapAutoFocusEnable(false) && !isFocusing
+                if (isCameraLaunched && mPreferenceUtil.isTapAutoFocusEnable() && !isFocusing
                     && captureMode == CameraActivity.CAPTURE_MODE_PHOTO) {
                     // オートフォーカス中でなければオートフォーカスを実行
                     // フラグを更新
@@ -403,7 +403,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         if (!isCameraLaunched && params != null) {
             // 未設定の時のみサイズの設定を行う
             // 各種パラメータの設定
-            if (!mPreferenceUtil.isSupportedPictureSizesSaved(false)) {
+            if (!mPreferenceUtil.isSupportedPictureSizesSaved()) {
                 List<Camera.Size> pictureSizes = params.getSupportedPictureSizes();
                 Collections.sort(pictureSizes, new Comparator<Camera.Size>() {
                     @Override
@@ -415,7 +415,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
                 mPreferenceUtil.putSupportedPictureSizesSaved(true);
             }
 
-            if (!mPreferenceUtil.isSupportedPreviewSizesSaved(false)) {
+            if (!mPreferenceUtil.isSupportedPreviewSizesSaved()) {
                 List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
                 Collections.sort(previewSizes, new Comparator<Camera.Size>() {
                     @Override

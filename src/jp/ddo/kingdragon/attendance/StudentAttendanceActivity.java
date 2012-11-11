@@ -484,12 +484,12 @@ public class StudentAttendanceActivity extends Activity {
     public void onResume() {
         super.onResume();
 
-        if (!mPreferenceUtil.isDisasterModeEnabled(false)) {
+        if (!mPreferenceUtil.isDisasterModeEnabled()) {
             if (mNfcAdapter != null) {
                 mNfcAdapter.enableForegroundDispatch(StudentAttendanceActivity.this, mPendingIntent, filters, techs);
             }
 
-            if (mPreferenceUtil.isLocationEnabled(false)) {
+            if (mPreferenceUtil.isLocationEnabled()) {
                 /**
                  * GPSが選択されていてGPSが無効になっている場合、設定画面を表示するか確認する
                  * 参考:[Android] GSPが有効か確認し、必要であればGPS設定画面を表示する。 | 株式会社ノベラック スタッフBlog
@@ -524,7 +524,7 @@ public class StudentAttendanceActivity extends Activity {
                 isReading = false;
             }
 
-            if (mPreferenceUtil.isAutoSaveEnabled(false)) {
+            if (mPreferenceUtil.isAutoSaveEnabled()) {
                 mHandler.postDelayed(autoSaveTask, mPreferenceUtil.getAutoSaveInterval(3) * 60000);
             }
         }
@@ -1512,12 +1512,12 @@ public class StudentAttendanceActivity extends Activity {
     private void saveCsvFileWithOverwrite(File csvFile, String encode) {
         if (mAttendanceSheet.size() != 0) {
             try {
-                if (!mPreferenceUtil.isLocationEnabled(false)) {
+                if (!mPreferenceUtil.isLocationEnabled()) {
                     mAttendanceSheet.saveCsvFile(csvFile, encode);
                 }
                 else {
-                    mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(false), mPreferenceUtil.isLongitudeEnabled(false),
-                                                 mPreferenceUtil.isAccuracyEnabled(false));
+                    mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(), mPreferenceUtil.isLongitudeEnabled(),
+                                                 mPreferenceUtil.isAccuracyEnabled());
                 }
                 isSaved = true;
                 Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();

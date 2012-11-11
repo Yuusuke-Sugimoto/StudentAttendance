@@ -89,11 +89,10 @@ public class PreferenceUtil {
     }
     /**
      * "位置情報を付加する"が有効かどうかを取得する
-     * @param defValue デフォルト値
-     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
+     * @return 有効ならばtrue 無効または未設定ならばfalse
      */
-    public boolean isLocationEnabled(boolean defValue) {
-        return getBoolean("setting_add_location", defValue);
+    public boolean isLocationEnabled() {
+        return getBoolean("setting_add_location", false);
     }
 
     /**
@@ -129,29 +128,26 @@ public class PreferenceUtil {
 
     /**
      * "緯度"が有効かどうかを取得する
-     * @param defValue デフォルト値
-     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
+     * @return 有効ならばtrue 無効または未設定ならばfalse
      */
-    public boolean isLatitudeEnabled(boolean defValue) {
-        return getBoolean("setting_location_format_latitude", defValue);
+    public boolean isLatitudeEnabled() {
+        return getBoolean("setting_location_format_latitude", false);
     }
 
     /**
      * "経度"が有効かどうかを取得する
-     * @param defValue デフォルト値
-     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
+     * @return 有効ならばtrue 無効または未設定ならばfalse
      */
-    public boolean isLongitudeEnabled(boolean defValue) {
-        return getBoolean("setting_location_format_longitude", defValue);
+    public boolean isLongitudeEnabled() {
+        return getBoolean("setting_location_format_longitude", false);
     }
 
     /**
      * "精度"が有効かどうかを取得する
-     * @param defValue デフォルト値
-     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
+     * @return 有効ならばtrue 無効または未設定ならばfalse
      */
-    public boolean isAccuracyEnabled(boolean defValue) {
-        return getBoolean("setting_location_format_accuracy", defValue);
+    public boolean isAccuracyEnabled() {
+        return getBoolean("setting_location_format_accuracy", false);
     }
 
     /**
@@ -178,7 +174,7 @@ public class PreferenceUtil {
         putString("setting_attendance_name", attendanceName);
     }
     /**
-     * 出席データの保存先を取得する
+     * 出席データの保存名を取得する
      * @param defValue デフォルト値
      * @return 出席データの保存名 未設定ならばデフォルト値
      */
@@ -191,13 +187,13 @@ public class PreferenceUtil {
     public void removeAttendanceName() {
         remove("setting_attendance_name");
     }
+
     /**
      * "出席データを自動保存する"が有効かどうかを取得する
-     * @param defValue デフォルト値
-     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
+     * @return 有効ならばtrue 無効または未設定ならばfalse
      */
-    public boolean isAutoSaveEnabled(boolean defValue) {
-        return getBoolean("setting_auto_save", defValue);
+    public boolean isAutoSaveEnabled() {
+        return getBoolean("setting_auto_save", false);
     }
 
     /**
@@ -224,11 +220,10 @@ public class PreferenceUtil {
 
     /**
      * 災害モードが有効かどうかを取得する
-     * @param defValue デフォルト値
-     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
+     * @return 有効ならばtrue 無効または未設定ならばfalse
      */
-    public boolean isDisasterModeEnabled(boolean defValue) {
-        return getBoolean("setting_disaster_mode", defValue);
+    public boolean isDisasterModeEnabled() {
+        return getBoolean("setting_disaster_mode", false);
     }
 
     /**
@@ -255,12 +250,12 @@ public class PreferenceUtil {
 
     /**
      * "サーバに送信する"が有効かどうかを取得する
-     * @param defValue デフォルト値
-     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
+     * @return 有効ならばtrue 無効または未設定ならばfalse
      */
-    public boolean isSendServerEnabled(boolean defValue) {
-        return getBoolean("setting_send_server", defValue);
+    public boolean isSendServerEnabled() {
+        return getBoolean("setting_send_server", false);
     }
+
     /**
      * サーバのアドレスを取得する
      * @param defValue デフォルト値
@@ -285,11 +280,10 @@ public class PreferenceUtil {
     }
     /**
      * 対応している画像サイズの一覧を保存したかどうかを取得する
-     * @param defValue デフォルト値
-     * @return 保存済みならばtrue そうでなければfalse 未設定ならばデフォルト値
+     * @return 保存済みならばtrue そうでなければfalse
      */
-    public boolean isSupportedPictureSizesSaved(boolean defValue) {
-        return getBoolean("SupportedPictureSizeSaved", defValue);
+    public boolean isSupportedPictureSizesSaved() {
+        return getBoolean("SupportedPictureSizeSaved", false);
     }
 
     /**
@@ -301,11 +295,10 @@ public class PreferenceUtil {
     }
     /**
      * 対応しているプレビューサイズの一覧を保存したかどうかを取得する
-     * @param defValue デフォルト値
-     * @return 保存済みならばtrue そうでなければfalse 未設定ならばデフォルト値
+     * @return 保存済みならばtrue そうでなければfalse
      */
-    public boolean isSupportedPreviewSizesSaved(boolean defValue) {
-        return getBoolean("SupportedPreviewSizeSaved", defValue);
+    public boolean isSupportedPreviewSizesSaved() {
+        return getBoolean("SupportedPreviewSizeSaved", false);
     }
 
     /**
@@ -327,21 +320,19 @@ public class PreferenceUtil {
     }
 
     /**
-     * "撮影時にAFを行う"が有効かどうかを調べる
-     * @param defValue デフォルト値
-     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
+     * "撮影時にAFを行う"が有効かどうかを取得する
+     * @return 有効ならばtrue 無効または未設定ならばfalse
      */
-    public boolean isTakeAutoFocusEnable(boolean defValue) {
-        return getBoolean("setting_use_take_autofocus", defValue);
+    public boolean isTakeAutoFocusEnable() {
+        return getBoolean("setting_use_take_autofocus", false);
     }
 
     /**
-     * "タップ時にAFを行う"が有効かどうかを調べる
-     * @param defValue デフォルト値
-     * @return 有効ならばtrue 無効ならばfalse 未設定ならばデフォルト値
+     * "タップ時にAFを行う"が有効かどうかを取得する
+     * @return 有効ならばtrue 無効または未設定ならばfalse
      */
-    public boolean isTapAutoFocusEnable(boolean defValue) {
-        return getBoolean("setting_use_tap_autofocus", defValue);
+    public boolean isTapAutoFocusEnable() {
+        return getBoolean("setting_use_tap_autofocus", false);
     }
 
     /**

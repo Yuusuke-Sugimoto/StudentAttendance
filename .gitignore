@@ -1,5 +1,6 @@
-/bin/*
-/gen/*
+bin
+gen
 .project
+.classpath
 
 .DS_Store

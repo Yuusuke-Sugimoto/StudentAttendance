@@ -628,12 +628,12 @@ public class DisasterModeActivity extends Activity {
     public void onResume() {
         super.onResume();
 
-        if (mPreferenceUtil.isDisasterModeEnabled(false)) {
+        if (mPreferenceUtil.isDisasterModeEnabled()) {
             if (mNfcAdapter != null) {
                 mNfcAdapter.enableForegroundDispatch(DisasterModeActivity.this, mPendingIntent, filters, techs);
             }
 
-            if (mPreferenceUtil.isLocationEnabled(false)) {
+            if (mPreferenceUtil.isLocationEnabled()) {
                 /**
                  * GPSが選択されていてGPSが無効になっている場合、設定画面を表示するか確認する
                  * 参考:[Android] GPSが有効か確認し、必要であればGPS設定画面を表示する。 | 株式会社ノベラック スタッフBlog
@@ -668,11 +668,11 @@ public class DisasterModeActivity extends Activity {
                 isReading = false;
             }
 
-            if (mPreferenceUtil.isAutoSaveEnabled(false)) {
+            if (mPreferenceUtil.isAutoSaveEnabled()) {
                 mHandler.postDelayed(autoSaveTask, mPreferenceUtil.getAutoSaveInterval(3) * 60000);
             }
 
-            if (mPreferenceUtil.isSendServerEnabled(false)) {
+            if (mPreferenceUtil.isSendServerEnabled()) {
                 sendPauseButton.setEnabled(true);
                 if (!isSending) {
                     sendPauseButton.setText(R.string.disaster_send_resume_label);
@@ -1727,12 +1727,12 @@ public class DisasterModeActivity extends Activity {
     private void saveCsvFileWithOverwrite(File csvFile, String encode) {
         if (mAttendanceSheet.size() != 0) {
             try {
-                if (!mPreferenceUtil.isLocationEnabled(false)) {
+                if (!mPreferenceUtil.isLocationEnabled()) {
                     mAttendanceSheet.saveCsvFile(csvFile, encode);
                 }
                 else {
-                    mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(false), mPreferenceUtil.isLongitudeEnabled(false),
-                                                 mPreferenceUtil.isAccuracyEnabled(false));
+                    mAttendanceSheet.saveCsvFile(csvFile, encode, mPreferenceUtil.isLatitudeEnabled(), mPreferenceUtil.isLongitudeEnabled(),
+                                                 mPreferenceUtil.isAccuracyEnabled());
                 }
                 isSaved = true;
                 Toast.makeText(DisasterModeActivity.this, csvFile.getName() + getString(R.string.notice_csv_file_saved), Toast.LENGTH_SHORT).show();
@@ -1867,7 +1867,7 @@ public class DisasterModeActivity extends Activity {
         mAttendanceListAdapter.add(inAttendance);
         textViewForCount.setText(String.valueOf(mAttendanceSheet.getNumOfConfirmedStudents()));
 
-        if (mPreferenceUtil.isSendServerEnabled(false)) {
+        if (mPreferenceUtil.isSendServerEnabled()) {
             attendanceQueue.enqueue(inAttendance);
         }
     }

@@ -388,16 +388,16 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
 
         PreferenceScreen locationFormatPref = (PreferenceScreen)findPreference("setting_location_format");
         StringBuilder locationFormatSummary = new StringBuilder();
-        if (mPreferenceUtil.isLatitudeEnabled(false)) {
+        if (mPreferenceUtil.isLatitudeEnabled()) {
             locationFormatSummary.append(getString(R.string.setting_location_format_latitude_title));
         }
-        if (mPreferenceUtil.isLongitudeEnabled(false)) {
+        if (mPreferenceUtil.isLongitudeEnabled()) {
             if (locationFormatSummary.length() != 0) {
                 locationFormatSummary.append(",");
             }
             locationFormatSummary.append(getString(R.string.setting_location_format_longitude_title));
         }
-        if (mPreferenceUtil.isAccuracyEnabled(false)) {
+        if (mPreferenceUtil.isAccuracyEnabled()) {
             if (locationFormatSummary.length() != 0) {
                 locationFormatSummary.append(",");
             }
