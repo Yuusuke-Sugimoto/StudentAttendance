@@ -10,11 +10,16 @@
     <string name="attendance_read_start_label">読み取り開始</string>
     <string name="attendance_read_finish_label">読み取り終了</string>
 
-    <string name="listmaker_title">リスト作成画面</string>
-
     <string name="disaster_title">災害モード</string>
     <string name="disaster_send_resume_label">送信再開</string>
     <string name="disaster_send_pause_label">送信停止</string>
+
+    <string name="listmaker_title">リスト作成画面</string>
+
+    <string name="register_title">学生登録画面</string>
+    <string name="register_nfc_id">UID:</string>
+    <string name="register_registration_info">登録情報:</string>
+    <string name="register_not_registered">登録なし</string>
 
     <string name="camera_title">カメラ</string>
     <string name="camera_capture_label">撮影</string>
@@ -116,7 +121,7 @@
     <string name="menu_create_directory">新規フォルダを作成する</string>
     <string name="menu_add_student">学生データを追加する</string>
     <string name="menu_add_attendance">出席データを追加する</string>
-    <string name="menu_refresh">リストを再読み込み</string>
+    <string name="menu_refresh">マスタを再読み込み</string>
     <string name="menu_read_from_csv_file">追加読み込み</string>
 
     <string name="dialog_ask">確認</string>
@@ -148,6 +153,8 @@
     <string name="dialog_remove_nfc_id_message">のNFCタグを削除しますか?</string>
     <string name="dialog_remove_student_title">学生データの削除</string>
     <string name="dialog_remove_student_message">のデータを削除しますか?</string>
+    <string name="dialog_remove_read_nfc_id_title">登録の解除</string>
+    <string name="dialog_remove_read_nfc_id_message">このUIDの登録を解除しますか?</string>
     <string name="dialog_edit_class_name_title">所属名の変更</string>
     <string name="dialog_edit_subject_title">科目名の編集</string>
     <string name="dialog_edit_subject_hint">科目名を入力</string>
@@ -176,12 +183,15 @@
     <string name="dialog_register_id_menu_title">NFCタグの登録</string>
     <string name="dialog_register_id_menu_barcode">バーコードを読み取る</string>
     <string name="dialog_reading_barcode">登録する学生のバーコードを読み取ってください。\n(バックボタンで中止)</string>
-    <string name="dialog_refreshing_master_file">学生マスタを読み込んでいます…</string>
+    <string name="dialog_refreshing_master_file_title">学生マスタの再読み込み</string>
 
+    <string name="notice_student_master_opening">を読み込み中…</string>
+    <string name="notice_refresh_finish">読み込み完了</string>
     <string name="notice_location_fetched">現在地を取得しました</string>
     <string name="notice_add_location_disabled">\"位置情報を付加する\"は無効になりました</string>
     <string name="notice_student_removed">のデータを削除しました</string>
-    <string name="notice_nfc_tag_removed">のNFCタグを削除しました</string>
+    <string name="notice_nfc_id_removed">のNFCタグを削除しました</string>
+    <string name="notice_read_nfc_id_removed">登録を解除しました</string>
     <string name="notice_new_sheet_created">新規シートを作成しました</string>
     <string name="notice_csv_file_opened">を開きました</string>
     <string name="notice_csv_file_saved">に保存しました</string>
@@ -197,7 +207,8 @@
     <string name="error_make_media_directory_failed">メディアフォルダの作成に失敗しました</string>
     <string name="error_student_already_readed">既に出席確認済みの学生です</string>
     <string name="error_nfc_id_already_registered">既に他の学生に登録されているNFCタグです</string>
-    <string name="error_opening_failed">からの読み込みに失敗しました</string>
+    <string name="error_nfc_id_not_read">NFCタグが読み取られていません</string>
+    <string name="error_opening_failed">の読み込みに失敗しました</string>
     <string name="error_unsupported_list_file">非対応フォーマットのリストです</string>
     <string name="error_saving_failed">への保存に失敗しました</string>
     <string name="error_saving_data_null">保存するデータがありません</string>
@@ -205,6 +216,7 @@
     <string name="error_master_file_not_found">マスタファイルが見つかりません</string>
     <string name="error_student_not_found">対応する学生データが見つかりません</string>
     <string name="error_id_register_failed">NFCタグの登録に失敗しました</string>
+    <string name="error_id_remove_failed">NFCタグの削除に失敗しました</string>
     <string name="error_file_already_exists">既に同名のファイルが存在します。</string>
     <string name="error_file_create_failed">ファイルの作成に失敗しました。</string>
     <string name="error_illegal_file_name">ファイル名に使用できない文字が含まれています。</string>

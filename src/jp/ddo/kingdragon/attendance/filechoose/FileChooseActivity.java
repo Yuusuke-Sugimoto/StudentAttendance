@@ -33,14 +33,14 @@ import java.util.Stack;
 import jp.ddo.kingdragon.attendance.R;
 
 /**
- * ファイルの選択を行うアクティビティ<br />
- * [パラメータ]<br />
- * INIT_DIR_PATH:初期ディレクトリ[String]<br />
- * FILTER:一覧に表示するファイル名の正規表現[String]<br />
- * EXTENSION:一覧に表示する拡張子の正規表現[String]<br />
- * DIR_MODE:選択対象をディレクトリにするかどうか[boolean]<br />
- * [戻り値]<br />
- * FILE_NAME:ファイル名[String]<br />
+ * ファイルの選択を行うアクティビティ<br>
+ * [パラメータ]<br>
+ * INIT_DIR_PATH:初期ディレクトリ[String]<br>
+ * FILTER:一覧に表示するファイル名の正規表現[String]<br>
+ * EXTENSION:一覧に表示する拡張子の正規表現[String]<br>
+ * DIR_MODE:選択対象をディレクトリにするかどうか[boolean]<br>
+ * [戻り値]<br>
+ * FILE_NAME:ファイル名[String]<br>
  * FILE_PATH:ファイルの絶対パス[String]
  * @author 杉本祐介
  */

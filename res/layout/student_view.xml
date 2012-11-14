@@ -3,7 +3,6 @@
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:orientation="horizontal">
-    <include layout="@layout/vertical_divider" />
     <TextView android:id="@+id/student_no"
               android:layout_width="0dip"
               android:layout_height="wrap_content"

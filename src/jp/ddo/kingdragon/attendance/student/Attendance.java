@@ -167,7 +167,7 @@ public class Attendance implements Serializable {
     }
 
     /**
-     * 出席種別を変更する<br />
+     * 出席種別を変更する<br>
      * {@link #setStatus(int, AttendanceLocation)}の第2引数がnullのものに同じ。
      * @param status 出席種別
      */
@@ -354,7 +354,7 @@ public class Attendance implements Serializable {
     }
 
     /**
-     * 出席データの内容を配列で取得する<br />
+     * 出席データの内容を配列で取得する<br>
      * {@link #getAttendanceData(boolean, boolean, boolean)}の全引数がfalseのものに同じ。
      * @return 出席データの内容を配列に格納したもの
      */
@@ -363,7 +363,7 @@ public class Attendance implements Serializable {
     }
 
     /**
-     * 出席データの内容を配列で取得する<br />
+     * 出席データの内容を配列で取得する<br>
      * 位置情報を付加する。
      * @param isLatitudeEnabled 緯度を付加するかどうか
      * @param isLongitudeEnabled 経度を付加するかどうか

@@ -33,7 +33,7 @@ public class StudentCounter implements Serializable {
 
     // コンストラクタ
     /**
-     * 学生数を指定してインスタンスを生成する<br />
+     * 学生数を指定してインスタンスを生成する<br>
      * {@link #StudentCounter(int, int, int, int)}の第2引数以降が0のものに同じ。
      * @param numOfStudents 学生数
      */

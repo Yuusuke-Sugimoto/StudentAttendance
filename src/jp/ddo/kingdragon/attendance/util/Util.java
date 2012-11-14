@@ -12,8 +12,8 @@ public class Util {
     private Util() {}
 
     /**
-     * バイト配列を16進数表現の文字列に変換する<br />
-     * 参考:16進数文字列(String)⇔バイト配列(byte[]) - lambda {|diary| lambda { diary.succ! } }.call(hatena)<br />
+     * バイト配列を16進数表現の文字列に変換する<br>
+     * 参考:16進数文字列(String)⇔バイト配列(byte[]) - lambda {|diary| lambda { diary.succ! } }.call(hatena)<br>
      *      http://d.hatena.ne.jp/winebarrel/20041012/p1
      * @param bytes バイト配列
      * @return 16進数表現の文字列
@@ -50,7 +50,7 @@ public class Util {
     }
 
     /**
-     * 画像を回転させる<br />
+     * 画像を回転させる<br>
      * 画像のサイズが大きければ縮小も行う
      * @param inFile 元となる画像ファイル
      * @return 回転させた画像のBitmap

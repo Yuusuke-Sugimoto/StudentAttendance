@@ -178,7 +178,7 @@ public class Student implements Serializable {
     }
 
     /**
-     * NFCタグのIDを追加する<br />
+     * NFCタグのIDを追加する<br>
      * 既に同じタグが追加されている場合は追加しない。
      * @param id 追加するID
      */

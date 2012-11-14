@@ -4,8 +4,20 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical">
     <ImageView android:layout_width="match_parent"
-               android:layout_height="match_parent"
+               android:layout_height="0dip"
+               android:layout_weight="1"
                android:src="@drawable/splash"
                android:scaleType="centerInside"
                android:contentDescription="@string/app_name" />
+    <ProgressBar android:id="@+id/progress_bar"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:max="100"
+                 android:progress="0"
+                 style="?android:attr/progressBarStyleHorizontal" />
+    <TextView android:id="@+id/progress_text"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:singleLine="true"
+              android:ellipsize="end" />
 </LinearLayout>

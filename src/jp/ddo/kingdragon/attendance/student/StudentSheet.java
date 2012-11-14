@@ -72,7 +72,8 @@ public class StudentSheet implements Serializable {
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(csvFile), encode));
         CSVParser parser = new CSVParser();
         boolean isClassNameRecord = false;
-        boolean isStudentRecord = false;
+        boolean isStudentRecord   = false;
+        boolean isClassNameRecordExisted = false;
         int studentNoIndex = -1;
         int studentNameIndex = -1;
         int studentRubyIndex = -1;
@@ -125,6 +126,7 @@ public class StudentSheet implements Serializable {
 
             if (values[0].equals("所属")) {
                 isClassNameRecord = true;
+                isClassNameRecordExisted = true;
             }
             else if (values[0].equals("学籍番号")) {
                 isStudentRecord = true;
@@ -143,6 +145,10 @@ public class StudentSheet implements Serializable {
             }
         }
         br.close();
+
+        if (!isClassNameRecordExisted || !isStudentRecord) {
+            throw new IOException("StudentSheet : " + csvFile.getAbsolutePath() + "は非対応フォーマットのリストです。");
+        }
     }
     /**
      * 引数で渡されたシートのコピーを生成する
@@ -180,7 +186,7 @@ public class StudentSheet implements Serializable {
     }
 
     /**
-     * 学生データを追加する<br />
+     * 学生データを追加する<br>
      * 既に追加されている場合は追加しない。
      * @param inStudent 学生データ
      */
@@ -196,7 +202,7 @@ public class StudentSheet implements Serializable {
     }
 
     /**
-     * NFCタグを登録する<br />
+     * NFCタグを登録する<br>
      * 既に登録されている場合は追加しない。
      * @param nfcId NFCタグ
      * @param inStudent 学生データ

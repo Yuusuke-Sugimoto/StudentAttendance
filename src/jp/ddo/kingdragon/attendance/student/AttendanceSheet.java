@@ -410,7 +410,7 @@ public class AttendanceSheet implements Serializable {
     }
 
     /**
-     * 出席データをCSV形式で保存する<br />
+     * 出席データをCSV形式で保存する<br>
      * {@link #saveCsvFile(File, String, boolean, boolean, boolean)}の第3引数以降がfalseのものに同じ。
      * @param csvFile 保存先のインスタンス
      * @param encode 書き込む際に使用する文字コード
@@ -423,7 +423,7 @@ public class AttendanceSheet implements Serializable {
     }
 
     /**
-     * 出席データをCSV形式で保存する<br />
+     * 出席データをCSV形式で保存する<br>
      * 位置情報を付加する。
      * @param csvFile 保存先のインスタンス
      * @param encode 書き込む際に使用する文字コード

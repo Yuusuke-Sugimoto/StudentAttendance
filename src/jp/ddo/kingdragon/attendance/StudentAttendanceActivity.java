@@ -38,6 +38,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -95,6 +96,11 @@ public class StudentAttendanceActivity extends Activity {
 
     // 変数の宣言
     /**
+     * アプリケーションクラス
+     */
+    private CustomApplication application;
+
+    /**
      * 他スレッドからのUIの更新に使用
      */
     private Handler mHandler;
@@ -116,9 +122,17 @@ public class StudentAttendanceActivity extends Activity {
      */
     private boolean isSaved;
     /**
+     * 保存中かどうか
+     */
+    private boolean isSaving;
+    /**
      * 現在地を取得中かどうか
      */
     private boolean isFetchingLocation;
+    /**
+     * 再読み込み中かどうか
+     */
+    private boolean isRefreshing;
 
     /**
      * ベースフォルダ
@@ -154,13 +168,13 @@ public class StudentAttendanceActivity extends Activity {
      */
     private String readNfcId;
     /**
-     * 現在編集しているシート
-     */
-    private AttendanceSheet mAttendanceSheet;
-    /**
      * 現在扱っている出席データ
      */
     private Attendance currentAttendance;
+    /**
+     * 現在編集しているシート
+     */
+    private AttendanceSheet mAttendanceSheet;
     /**
      * リストから追加する際に選択されたシート
      */
@@ -234,6 +248,14 @@ public class StudentAttendanceActivity extends Activity {
      * 集計表示用のTableLayout
      */
     private TableLayout tableLayoutForTotalization;
+    /**
+     * 学生リスト読み込み状況表示用のProgressDialog
+     */
+    private ProgressDialog progressDialogForRefresh;
+    /**
+     * 前回表示時のprogressDialogForRefreshのMaxの値
+     */
+    private int prevMax;
 
     /**
      * 設定内容の読み取り/変更に使用
@@ -278,6 +300,8 @@ public class StudentAttendanceActivity extends Activity {
         setTitle(R.string.attendance_title);
         setContentView(R.layout.student_attendance);
 
+        application = (CustomApplication)getApplication();
+
         mHandler = new Handler();
         autoSaveTask = new Runnable() {
             @Override
@@ -292,7 +316,9 @@ public class StudentAttendanceActivity extends Activity {
         isReading = false;
         isRegistering = false;
         isSaved = true;
+        isSaving = false;
         isFetchingLocation = false;
+        isRefreshing = false;
 
         mPreferenceUtil = new PreferenceUtil(StudentAttendanceActivity.this);
 
@@ -318,15 +344,6 @@ public class StudentAttendanceActivity extends Activity {
         }
 
         inputBuffer = new StringBuilder();
-        try {
-            master = new StudentMaster(masterDir, StudentAttendanceActivity.CHARACTER_CODE);
-        }
-        catch (IOException e) {
-            Toast.makeText(StudentAttendanceActivity.this, R.string.error_master_file_open_failed, Toast.LENGTH_SHORT).show();
-            Log.e("onCreate", e.getMessage(), e);
-
-            finish();
-        }
 
         // アクティビティ再生成前のデータがあれば復元する
         int attendanceKind = -1;
@@ -334,16 +351,19 @@ public class StudentAttendanceActivity extends Activity {
             isReading = savedInstanceState.getBoolean("IsReading");
             isRegistering = savedInstanceState.getBoolean("IsRegistering");
             isSaved = savedInstanceState.getBoolean("IsSaved");
+            isSaving = savedInstanceState.getBoolean("IsSaving");
             isFetchingLocation = savedInstanceState.getBoolean("IsFetchingLocation");
+            isRefreshing = savedInstanceState.getBoolean("IsRefreshing");
             destFile = (File)savedInstanceState.getSerializable("DestFile");
             readStudentNo = savedInstanceState.getString("ReadStudentNo");
             readNfcId = savedInstanceState.getString("ReadNfcId");
             attendanceKind = savedInstanceState.getInt("AttendanceKind");
             currentAttendance = (Attendance)savedInstanceState.getSerializable("CurrentAttendance");
-            selectedSheet = (StudentSheet)savedInstanceState.getSerializable("SelectedSheet");
             mAttendanceSheet = (AttendanceSheet)savedInstanceState.getSerializable("AttendanceSheet");
+            selectedSheet = (StudentSheet)savedInstanceState.getSerializable("SelectedSheet");
             mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0, mAttendanceSheet.getAttendanceList());
             mAttendanceLocation = (AttendanceLocation)savedInstanceState.getSerializable("AttendanceLocation");
+            prevMax = savedInstanceState.getInt("PrevMax", -1);
         }
         else {
             readStudentNo = null;
@@ -353,6 +373,7 @@ public class StudentAttendanceActivity extends Activity {
             mAttendanceSheet = new AttendanceSheet();
             mAttendanceListAdapter = new AttendanceListAdapter(StudentAttendanceActivity.this, 0);
             mAttendanceLocation = null;
+            prevMax = -1;
         }
 
         // 設定情報にデフォルト値をセットする
@@ -485,6 +506,80 @@ public class StudentAttendanceActivity extends Activity {
         super.onResume();
 
         if (!mPreferenceUtil.isDisasterModeEnabled()) {
+            master = application.getStudentMaster();
+            if (master == null) {
+                Toast.makeText(StudentAttendanceActivity.this, R.string.error_master_file_open_failed, Toast.LENGTH_SHORT).show();
+
+                finish();
+            }
+            else {
+                master.setOnRefreshListener(new StudentMaster.OnRefreshListener() {
+                    @Override
+                    public void onRefreshBegin(final int num) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                isRefreshing = true;
+                                showDialog(StudentAttendanceActivity.DIALOG_REFRESHING_MASTER_FILE);
+                                progressDialogForRefresh.setMax(num);
+                                progressDialogForRefresh.setProgress(0);
+                                progressDialogForRefresh.setMessage("");
+                                prevMax = num;
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onOpenBegin(final String fileName) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialogForRefresh.setMessage(fileName + getString(R.string.notice_student_master_opening));
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onOpenFinish(String fileName) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialogForRefresh.incrementProgressBy(1);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onRefreshFinish() {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialogForRefresh.setProgress(progressDialogForRefresh.getMax());
+                                progressDialogForRefresh.setMessage(getString(R.string.notice_refresh_finish));
+
+                                try {
+                                    dismissDialog(StudentAttendanceActivity.DIALOG_REFRESHING_MASTER_FILE);
+                                }
+                                catch (IllegalArgumentException e) {}
+                                isRefreshing = false;
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(final String fileName, final IOException e) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialogForRefresh.incrementProgressBy(1);
+                                Toast.makeText(StudentAttendanceActivity.this, fileName + getString(R.string.error_opening_failed), Toast.LENGTH_SHORT).show();
+                                Log.e("onCreate", e.getMessage(), e);
+                            }
+                        });
+                    }
+                });
+            }
+
             if (mNfcAdapter != null) {
                 mNfcAdapter.enableForegroundDispatch(StudentAttendanceActivity.this, mPendingIntent, filters, techs);
             }
@@ -935,12 +1030,12 @@ public class StudentAttendanceActivity extends Activity {
                     public void onClick(DialogInterface dialog, int which) {
                         String studentNo = editTextForStudentNoForSearch.getText().toString().toUpperCase();
                         if (studentNo.length() != 0) {
-                            boolean beforeReadingFlag = isReading;
+                            boolean prevReading = isReading;
                             if (!isReading) {
                                 isReading = true;
                             }
                             onStudentNoReaded(studentNo);
-                            isReading = beforeReadingFlag;
+                            isReading = prevReading;
                         }
                     }
                 });
@@ -1097,7 +1192,7 @@ public class StudentAttendanceActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (readNfcId != null) {
-                            registerNfcId(studentNos[which], readNfcId);
+                            addNfcId(studentNos[which], readNfcId);
                         }
                     }
                 });
@@ -1125,7 +1220,7 @@ public class StudentAttendanceActivity extends Activity {
                     public void onClick(DialogInterface dialog, int which) {
                         if (readNfcId != null) {
                             String studentNo = editTextForStudentNoForRegister.getText().toString().toUpperCase();
-                            registerNfcId(studentNo, readNfcId);
+                            addNfcId(studentNo, readNfcId);
                         }
                     }
                 });
@@ -1262,10 +1357,15 @@ public class StudentAttendanceActivity extends Activity {
                 break;
             }
             case StudentAttendanceActivity.DIALOG_REFRESHING_MASTER_FILE: {
-                ProgressDialog mProgressDialog = new ProgressDialog(StudentAttendanceActivity.this);
-                mProgressDialog.setMessage(getString(R.string.dialog_refreshing_master_file));
-                mProgressDialog.setCancelable(false);
-                retDialog = mProgressDialog;
+                progressDialogForRefresh = new ProgressDialog(StudentAttendanceActivity.this);
+                progressDialogForRefresh.setTitle(getString(R.string.dialog_refreshing_master_file_title));
+                progressDialogForRefresh.setMessage("");
+                if (prevMax != -1) {
+                    progressDialogForRefresh.setMax(prevMax);
+                }
+                progressDialogForRefresh.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                progressDialogForRefresh.setCancelable(false);
+                retDialog = progressDialogForRefresh;
 
                 break;
             }
@@ -1418,7 +1518,7 @@ public class StudentAttendanceActivity extends Activity {
     @Override
     public void onNewIntent(Intent intent) {
         String action = intent.getAction();
-        if (action.equals(NfcAdapter.ACTION_TAG_DISCOVERED)) {
+        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
             // NFCタグの読み取りで発生したインテントである場合
             onNfcTagReaded(intent);
         }
@@ -1429,7 +1529,9 @@ public class StudentAttendanceActivity extends Activity {
         outState.putBoolean("IsReading", isReading);
         outState.putBoolean("IsRegistering", isRegistering);
         outState.putBoolean("IsSaved", isSaved);
+        outState.putBoolean("IsSaving", isSaving);
         outState.putBoolean("IsFetchingLocation", isFetchingLocation);
+        outState.putBoolean("IsRefreshing", isRefreshing);
         outState.putSerializable("DestFile", destFile);
         outState.putString("ReadStudentNo", readStudentNo);
         outState.putString("ReadNfcId", readNfcId);
@@ -1438,6 +1540,7 @@ public class StudentAttendanceActivity extends Activity {
         outState.putSerializable("SelectedSheet", selectedSheet);
         outState.putSerializable("AttendanceSheet", mAttendanceSheet);
         outState.putSerializable("AttendanceLocation", mAttendanceLocation);
+        outState.putInt("PrevMax", prevMax);
     }
 
     /**
@@ -1489,7 +1592,7 @@ public class StudentAttendanceActivity extends Activity {
     }
 
     /**
-     * 出席データをCSV形式で保存する<br />
+     * 出席データをCSV形式で保存する<br>
      * 同名のファイルが存在する場合は確認のダイアログを表示する。
      * @param csvFile 保存先のインスタンス
      * @param encode 書き込む際に使用する文字コード
@@ -1504,7 +1607,7 @@ public class StudentAttendanceActivity extends Activity {
     }
 
     /**
-     * 出席データをCSV形式で保存する<br />
+     * 出席データをCSV形式で保存する<br>
      * 同名のファイルが存在する場合は上書き保存する。
      * @param csvFile 保存先のインスタンス
      * @param encode 書き込む際に使用する文字コード
@@ -1512,6 +1615,7 @@ public class StudentAttendanceActivity extends Activity {
     private void saveCsvFileWithOverwrite(File csvFile, String encode) {
         if (mAttendanceSheet.size() != 0) {
             try {
+                isSaving = true;
                 if (!mPreferenceUtil.isLocationEnabled()) {
                     mAttendanceSheet.saveCsvFile(csvFile, encode);
                 }
@@ -1525,6 +1629,9 @@ public class StudentAttendanceActivity extends Activity {
             catch (IOException e) {
                 Toast.makeText(StudentAttendanceActivity.this, csvFile.getName() + getString(R.string.error_saving_failed), Toast.LENGTH_SHORT).show();
                 Log.e("saveCsvFileWithOverwrite", e.getMessage(), e);
+            }
+            finally {
+                isSaving = false;
             }
         }
         else {
@@ -1554,7 +1661,7 @@ public class StudentAttendanceActivity extends Activity {
     private void onStudentNoReaded(String studentNo) {
         if (!isRegistering) {
             // 通常時
-            if (isReading) {
+            if (isReading && !isSaving && !isRefreshing) {
                 if (mAttendanceSheet.hasStudentNo(studentNo)) {
                     // 学籍番号に対応するデータが存在する場合はその行を選択する
                     currentAttendance = mAttendanceSheet.getByStudentNo(studentNo);
@@ -1581,7 +1688,7 @@ public class StudentAttendanceActivity extends Activity {
         }
         else {
             // NFCタグ登録時
-            registerNfcId(studentNo, readNfcId);
+            addNfcId(studentNo, readNfcId);
             isRegistering = false;
             try {
                 dismissDialog(StudentAttendanceActivity.DIALOG_READING_BARCODE);
@@ -1600,7 +1707,7 @@ public class StudentAttendanceActivity extends Activity {
             rawId.append("0");
         }
         String id = rawId.toString();
-        if (isReading) {
+        if (isReading && !isSaving && !isRefreshing) {
             Student mStudent = master.getStudentByNfcId(id);
             if (mStudent != null) {
                 int position;
@@ -1660,13 +1767,13 @@ public class StudentAttendanceActivity extends Activity {
     }
 
     /**
-     * 学生データにNFCタグを登録して出席データを追加する
+     * 学生データにNFCタグを追加して出席データを追加する
      * @param studentNo 学籍番号
      * @param id NFCタグ
      */
-    private void registerNfcId(String studentNo, String id) {
+    private void addNfcId(String studentNo, String id) {
         try {
-            Student mStudent = master.registerNfcId(studentNo, id);
+            Student mStudent = master.addNfcId(studentNo, id);
             if (mStudent != null) {
                 Toast.makeText(StudentAttendanceActivity.this, R.string.notice_id_registered, Toast.LENGTH_SHORT).show();
 
@@ -1693,8 +1800,12 @@ public class StudentAttendanceActivity extends Activity {
 
                 refreshStudentMaster();
             }
+            else {
+                Toast.makeText(StudentAttendanceActivity.this, R.string.error_student_not_found, Toast.LENGTH_SHORT).show();
+            }
         }
         catch (IOException e) {
+            Toast.makeText(StudentAttendanceActivity.this, R.string.error_id_register_failed, Toast.LENGTH_SHORT).show();
             Log.e("registerNfcId", e.getMessage(), e);
         }
     }
@@ -1703,29 +1814,18 @@ public class StudentAttendanceActivity extends Activity {
      * 学生マスタを読み込み直す
      */
     private void refreshStudentMaster() {
-        showDialog(StudentAttendanceActivity.DIALOG_REFRESHING_MASTER_FILE);
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     master.refresh();
+                    application.setStudentMaster(master);
                 }
-                catch (IOException e) {
+                catch (UnsupportedEncodingException e) {
                     Toast.makeText(StudentAttendanceActivity.this, R.string.error_master_file_open_failed, Toast.LENGTH_SHORT).show();
                     Log.e("refreshStudentMaster", e.getMessage(), e);
 
                     finish();
-                }
-                finally {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                dismissDialog(StudentAttendanceActivity.DIALOG_REFRESHING_MASTER_FILE);
-                            }
-                            catch (IllegalArgumentException e) {}
-                        }
-                    });
                 }
             }
         }).start();
