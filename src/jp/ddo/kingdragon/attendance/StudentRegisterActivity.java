@@ -22,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -154,6 +155,10 @@ public class StudentRegisterActivity extends Activity {
      * 表示する所属を選択するスピナー
      */
     private Spinner classSpinner;
+    /**
+     * ひょうじするしょぞくをせんたくするあだぷt
+     */
+    private ArrayAdapter<String> classSpinnerAdapter;
     /**
      * 所属用のEditText
      */
@@ -323,7 +328,12 @@ public class StudentRegisterActivity extends Activity {
             readStudentNo = null;
             currentStudent = new Student();
             selectedSheet = null;
-            mStudentSheet = new StudentSheet();
+            if (master.size() != 0) {
+                mStudentSheet = master.getStudentSheet(0);
+            }
+            else {
+                mStudentSheet = new StudentSheet();
+            }
             mStudentListAdapter = new StudentListAdapter(StudentRegisterActivity.this, 0);
             prevMax = -1;
         }
@@ -334,7 +344,24 @@ public class StudentRegisterActivity extends Activity {
         textViewForNfcId = (TextView)findViewById(R.id.nfc_id);
         textViewForRegistrationInfo = (TextView)findViewById(R.id.registration_info);
         classSpinner = (Spinner)findViewById(R.id.class_spinner);
+        classSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                mStudentSheet = master.getStudentSheet(position);
+                mStudentListAdapter = new StudentListAdapter(StudentRegisterActivity.this, 0, mStudentSheet.getStudentList());
+                studentListView.setAdapter(mStudentListAdapter);
+                
+                int mPosition = mStudentListAdapter.getPosition(currentStudent);
+                if (mPosition != -1) {
+                    studentListView.performItemClick(studentListView, mPosition, studentListView.getItemIdAtPosition(mPosition));
+                    studentListView.setSelection(mPosition);
+                }
+            }
 
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+        
         /**
          * ListViewのレイアウトを変更する
          * 参考:リストビューをカスタマイズする | Tech Booster
@@ -361,11 +388,6 @@ public class StudentRegisterActivity extends Activity {
                 return true;
             }
         });
-        int position = mStudentListAdapter.getPosition(currentStudent);
-        if (position != -1) {
-            studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
-            studentListView.setSelection(position);
-        }
 
         /**
          * NFCタグの情報を読み取る
@@ -397,6 +419,13 @@ public class StudentRegisterActivity extends Activity {
         if (mNfcAdapter != null) {
             mNfcAdapter.enableForegroundDispatch(StudentRegisterActivity.this, mPendingIntent, filters, techs);
         }
+        
+        classSpinnerAdapter = new ArrayAdapter<String>(StudentRegisterActivity.this, android.R.layout.simple_spinner_item,
+                                                       master.getClassNames());
+        classSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        classSpinner.setAdapter(classSpinnerAdapter);
+        int index = master.getIndexByClassName(mStudentSheet.getClassName());
+        classSpinner.setSelection(index);
     }
 
     @Override

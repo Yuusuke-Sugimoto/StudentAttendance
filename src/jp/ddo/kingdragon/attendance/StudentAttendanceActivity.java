@@ -1315,7 +1315,7 @@ public class StudentAttendanceActivity extends Activity {
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        Intent mIntent = new Intent(StudentAttendanceActivity.this, StudentListMakerActivity.class);
+                        Intent mIntent = new Intent(StudentAttendanceActivity.this, StudentRegisterActivity.class);
                         startActivity(mIntent);
                     }
                 });
