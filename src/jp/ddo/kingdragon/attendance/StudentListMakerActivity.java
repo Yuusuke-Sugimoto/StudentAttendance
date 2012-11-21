@@ -701,12 +701,12 @@ public class StudentListMakerActivity extends Activity {
                 builder.setTitle(R.string.dialog_csv_file_list_title);
                 String[] classNames = new String[master.size()];
                 for (int i = 0; i < master.size(); i++) {
-                    classNames[i] = master.getStudentSheet(i).getClassName();
+                    classNames[i] = master.getStudentSheetByIndex(i).getClassName();
                 }
                 builder.setItems(classNames, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        selectedSheet = master.getStudentSheet(which);
+                        selectedSheet = master.getStudentSheetByIndex(which);
                         showDialog(StudentListMakerActivity.DIALOG_STUDENT_LIST);
                     }
                 });

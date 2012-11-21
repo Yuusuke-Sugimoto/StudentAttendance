@@ -17,16 +17,6 @@
                   android:hint="@string/dialog_student_no_hint" />
         <TextView android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:text="@string/dialog_class_name_label" />
-        <EditText android:id="@+id/dialog_class_name"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:inputType="textCapCharacters"
-                  android:digits="@string/alphabet_and_number"
-                  android:maxLines="1"
-                  android:hint="@string/dialog_class_name_hint" />
-        <TextView android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
                   android:text="@string/dialog_student_name_label" />
         <EditText android:id="@+id/dialog_student_name"
                   android:layout_width="match_parent"

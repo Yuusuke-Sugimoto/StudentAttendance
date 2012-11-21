@@ -75,8 +75,17 @@ public class StudentMaster {
      * @param index 添字
      * @return 指定された添字のリストのコピー
      */
-    public StudentSheet getStudentSheet(int index) {
+    public StudentSheet getStudentSheetByIndex(int index) {
         return new StudentSheet(studentSheets.get(index));
+    }
+
+    /**
+     * 指定された所属のリストを取得する
+     * @param className 所属名
+     * @return 指定された所属のリストのコピー
+     */
+    public StudentSheet getStudentSheetByClassName(String className) {
+        return getStudentSheetByIndex(getIndexByClassName(className));
     }
 
     /**

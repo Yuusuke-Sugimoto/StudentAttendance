@@ -295,6 +295,18 @@ public class StudentRegisterActivity extends Activity {
 
         textViewForNfcId = (TextView)findViewById(R.id.nfc_id);
         textViewForRegistrationInfo = (TextView)findViewById(R.id.registration_info);
+        textViewForRegistrationInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (readNfcId != null) {
+                    Student mStudent = getStudentByNfcId(readNfcId);
+                    if (mStudent != null) {
+                        currentStudent = mStudent;
+                        classSpinner.setSelection(master.getIndexByClassName(currentStudent.getClassName()));
+                    }
+                }
+            }
+        });
 
         classSpinner = (Spinner)findViewById(R.id.class_spinner);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(StudentRegisterActivity.this, android.R.layout.simple_spinner_item,
@@ -309,7 +321,7 @@ public class StudentRegisterActivity extends Activity {
                     updatedSheets.put(originClassName, mStudentSheet);
                 }
 
-                StudentSheet sheet = master.getStudentSheet(position);
+                StudentSheet sheet = master.getStudentSheetByIndex(position);
                 if (updatedSheets.containsKey(sheet.getClassName())) {
                     // 一時保存したリストがある場合
                     mStudentSheet = updatedSheets.get(sheet.getClassName());
@@ -401,7 +413,7 @@ public class StudentRegisterActivity extends Activity {
 
         if (readNfcId != null) {
             textViewForNfcId.setText(readNfcId);
-            Student mStudent = master.getStudentByNfcId(readNfcId);
+            Student mStudent = getStudentByNfcId(readNfcId);
             if (mStudent != null) {
                 textViewForRegistrationInfo.setText(mStudent.getClassName() + " " + mStudent.getStudentNo() + " " + mStudent.getStudentName());
             }
@@ -444,7 +456,7 @@ public class StudentRegisterActivity extends Activity {
 
                 break;
             }
-            case R.id.menu_add_student: {
+            case R.id.menu_operation: {
                 showDialog(StudentRegisterActivity.DIALOG_OPERATION_MENU);
 
                 break;
@@ -760,7 +772,7 @@ public class StudentRegisterActivity extends Activity {
                 builder.setTitle(R.string.dialog_input_student_info_title);
 
                 LayoutInflater inflater = LayoutInflater.from(StudentRegisterActivity.this);
-                View mView = inflater.inflate(R.layout.dialog_input_student_info, null);
+                View mView = inflater.inflate(R.layout.dialog_input_student_info_for_register, null);
                 editTextForStudentNoForManual = (EditText)mView.findViewById(R.id.dialog_student_no);
                 editTextForStudentName        = (EditText)mView.findViewById(R.id.dialog_student_name);
                 editTextForStudentRuby        = (EditText)mView.findViewById(R.id.dialog_student_ruby);
@@ -773,21 +785,20 @@ public class StudentRegisterActivity extends Activity {
                         String studentName = editTextForStudentName.getEditableText().toString();
                         String studentRuby = editTextForStudentRuby.getEditableText().toString();
 
-                        int position;
-                        if (!mStudentSheet.hasStudentNo(studentNo)) {
+                        Student mStudent = master.getStudentByStudentNo(studentNo);
+                        if (mStudent == null) {
                             currentStudent = new Student(studentNo, mStudentSheet.getClassName(),
                                                          studentName, studentRuby, (String[])null);
                             addStudent(currentStudent);
-                            position = mStudentListAdapter.getCount() - 1;
+                            int position = mStudentListAdapter.getCount() - 1;
                             isStudentMasterSaved = false;
                             isSheetSaved = false;
+                            studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
+                            studentListView.setSelection(position);
                         }
                         else {
-                            currentStudent = mStudentSheet.getByStudentNo(studentNo);
-                            position = mStudentListAdapter.getPosition(currentStudent);
+                            onStudentNoRead(mStudent.getStudentNo());
                         }
-                        studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
-                        studentListView.setSelection(position);
                     }
                 });
                 builder.setNegativeButton(android.R.string.cancel, null);
@@ -1060,7 +1071,7 @@ public class StudentRegisterActivity extends Activity {
                 studentListView.setSelection(position);
             }
             else {
-                Student mStudent = master.getStudentByStudentNo(studentNo);
+                Student mStudent = getStudentByStudentNo(studentNo);
                 if (mStudent != null) {
                     currentStudent = mStudent;
                     classSpinner.setSelection(master.getIndexByClassName(currentStudent.getClassName()));
@@ -1089,6 +1100,27 @@ public class StudentRegisterActivity extends Activity {
                 rawId.append("0");
             }
             readNfcId = rawId.toString();
+            if (currentStudent.getStudentNo().length() != 0) {
+                Student mStudent = getStudentByNfcId(readNfcId);
+                if (mStudent == null) {
+                    currentStudent.addNfcId(readNfcId);
+                    mStudentSheet.addNfcId(readNfcId, currentStudent);
+                    studentListView.invalidateViews();
+                    isStudentMasterSaved = false;
+                    isSheetSaved = false;
+                }
+                else {
+                    if (mStudent.equals(currentStudent)) {
+                        // 登録されているNFCタグであれば削除
+                        currentStudent.removeNfcId(readNfcId);
+                        mStudentSheet.removeNfcId(readNfcId);
+                        studentListView.invalidateViews();
+                    }
+                    else {
+                        Toast.makeText(StudentRegisterActivity.this, R.string.error_nfc_id_already_registered, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
         }
     }
 
@@ -1099,6 +1131,64 @@ public class StudentRegisterActivity extends Activity {
     private void addStudent(Student inStudent) {
         mStudentSheet.add(inStudent);
         mStudentListAdapter.add(inStudent);
+    }
+
+    /**
+     * 指定された学籍番号を持つ学生データを取得する<br>
+     * 編集中のリストがある場合はそれを参照する。
+     * @param studentNo 学籍番号
+     * @return 学生データ 該当するデータがなければnull
+     */
+    private Student getStudentByStudentNo(String studentNo) {
+        Student retStudent = null;
+
+        for (int i = 0; retStudent == null && i < master.size(); i++) {
+            String className = master.getStudentSheetByIndex(i).getClassName();
+            StudentSheet sheet;
+            if (className.equals(originClassName)) {
+                sheet = mStudentSheet;
+            }
+            else {
+                if (updatedSheets.containsKey(className)) {
+                    sheet = updatedSheets.get(className);
+                }
+                else {
+                    sheet = master.getStudentSheetByClassName(className);
+                }
+            }
+            retStudent = sheet.getByStudentNo(studentNo);
+        }
+
+        return retStudent;
+    }
+
+    /**
+     * 指定されたNFCタグを持つ学生データを取得する<br>
+     * 編集中のリストがある場合はそれを参照する。
+     * @param id NFCタグのID
+     * @return 学生データ 該当するデータがなければnull
+     */
+    private Student getStudentByNfcId(String id) {
+        Student retStudent = null;
+
+        for (int i = 0; retStudent == null && i < master.size(); i++) {
+            String className = master.getStudentSheetByIndex(i).getClassName();
+            StudentSheet sheet;
+            if (className.equals(originClassName)) {
+                sheet = mStudentSheet;
+            }
+            else {
+                if (updatedSheets.containsKey(className)) {
+                    sheet = updatedSheets.get(className);
+                }
+                else {
+                    sheet = master.getStudentSheetByClassName(className);
+                }
+            }
+            retStudent = sheet.getByNfcId(id);
+        }
+
+        return retStudent;
     }
 
     /** 学生マスタを読み込み直す */

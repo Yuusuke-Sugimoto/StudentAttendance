@@ -86,7 +86,7 @@ public class StudentAttendanceActivity extends Activity {
     private static final int DIALOG_READING_BARCODE               = 17;
     private static final int DIALOG_ASK_OVERWRITE                 = 18;
     private static final int DIALOG_FETCHING_LOCATION             = 19;
-    private static final int DIALOG_ASK_OPEN_LIST_MAKER           = 20;
+    private static final int DIALOG_ASK_OPEN_REGISTER             = 20;
     private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE       = 21;
     private static final int DIALOG_REFRESHING_MASTER_FILE        = 22;
     /** 使用する文字コード */
@@ -613,8 +613,8 @@ public class StudentAttendanceActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menu_make_list: {
-                showDialog(StudentAttendanceActivity.DIALOG_ASK_OPEN_LIST_MAKER);
+            case R.id.menu_open_register: {
+                showDialog(StudentAttendanceActivity.DIALOG_ASK_OPEN_REGISTER);
 
                 break;
             }
@@ -868,7 +868,7 @@ public class StudentAttendanceActivity extends Activity {
                 builder.setItems(classNames, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        selectedSheet = master.getStudentSheet(which);
+                        selectedSheet = master.getStudentSheetByIndex(which);
                         showDialog(StudentAttendanceActivity.DIALOG_STUDENT_LIST);
                     }
                 });
@@ -1074,7 +1074,7 @@ public class StudentAttendanceActivity extends Activity {
                 builder.setItems(classNames, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        selectedSheet = master.getStudentSheet(which);
+                        selectedSheet = master.getStudentSheetByIndex(which);
                         showDialog(StudentAttendanceActivity.DIALOG_STUDENT_LIST_R);
                     }
                 });
@@ -1219,11 +1219,11 @@ public class StudentAttendanceActivity extends Activity {
 
                 break;
             }
-            case StudentAttendanceActivity.DIALOG_ASK_OPEN_LIST_MAKER: {
+            case StudentAttendanceActivity.DIALOG_ASK_OPEN_REGISTER: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(StudentAttendanceActivity.this);
                 builder.setIcon(android.R.drawable.ic_dialog_alert);
                 builder.setTitle(R.string.dialog_ask);
-                builder.setMessage(R.string.dialog_ask_open_list_maker);
+                builder.setMessage(R.string.dialog_ask_open_register);
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

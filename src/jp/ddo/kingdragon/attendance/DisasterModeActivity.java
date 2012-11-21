@@ -98,7 +98,7 @@ public class DisasterModeActivity extends Activity {
     private static final int DIALOG_READING_BARCODE         = 15;
     private static final int DIALOG_ASK_OVERWRITE           = 16;
     private static final int DIALOG_FETCHING_LOCATION       = 17;
-    private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 18;
+    private static final int DIALOG_ASK_OPEN_REGISTER       = 18;
     private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 19;
     private static final int DIALOG_REFRESHING_MASTER_FILE  = 20;
     /** CSVファイルへの保存に使用する文字コード */
@@ -817,8 +817,8 @@ public class DisasterModeActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menu_make_list: {
-                showDialog(DisasterModeActivity.DIALOG_ASK_OPEN_LIST_MAKER);
+            case R.id.menu_open_register: {
+                showDialog(DisasterModeActivity.DIALOG_ASK_OPEN_REGISTER);
 
                 break;
             }
@@ -1031,7 +1031,7 @@ public class DisasterModeActivity extends Activity {
                 builder.setItems(classNames, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        selectedSheet = master.getStudentSheet(which);
+                        selectedSheet = master.getStudentSheetByIndex(which);
                         showDialog(DisasterModeActivity.DIALOG_STUDENT_LIST);
                     }
                 });
@@ -1237,7 +1237,7 @@ public class DisasterModeActivity extends Activity {
                 builder.setItems(classNames, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        selectedSheet = master.getStudentSheet(which);
+                        selectedSheet = master.getStudentSheetByIndex(which);
                         showDialog(DisasterModeActivity.DIALOG_STUDENT_LIST_R);
                     }
                 });
@@ -1382,15 +1382,15 @@ public class DisasterModeActivity extends Activity {
 
                 break;
             }
-            case DisasterModeActivity.DIALOG_ASK_OPEN_LIST_MAKER: {
+            case DisasterModeActivity.DIALOG_ASK_OPEN_REGISTER: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(DisasterModeActivity.this);
                 builder.setIcon(android.R.drawable.ic_dialog_alert);
                 builder.setTitle(R.string.dialog_ask);
-                builder.setMessage(R.string.dialog_ask_open_list_maker);
+                builder.setMessage(R.string.dialog_ask_open_register);
                 builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        Intent mIntent = new Intent(DisasterModeActivity.this, StudentListMakerActivity.class);
+                        Intent mIntent = new Intent(DisasterModeActivity.this, StudentRegisterActivity.class);
                         startActivity(mIntent);
                     }
                 });
