@@ -16,9 +16,7 @@ import jp.ddo.kingdragon.attendance.R;
  */
 public class Attendance implements Serializable {
     // 定数の宣言
-    /**
-     * シリアルバージョンUID
-     */
+    /** シリアルバージョンUID */
     private static final long serialVersionUID = 6607703008569368040L;
     // 出席種別
     public static final int ATTENDANCE  = 0;
@@ -30,46 +28,26 @@ public class Attendance implements Serializable {
     public static final String MOVIE_PATH = "MoviePath";
 
     // 変数の宣言
-    /**
-     * 学生データ
-     */
+    /** 学生データ */
     private final Student mStudent;
-    /**
-     * 出席番号
-     */
+    /** 出席番号 */
     private int attendanceNo;
-    /**
-     * 出席種別
-     */
+    /** 出席種別 */
     private int status;
-    /**
-     * 更新した日時
-     */
+    /** 更新した日時 */
     private long timeStamp;
-    /**
-     * 座標
-     */
+    /** 座標 */
     private AttendanceLocation mAttendanceLocation;
-    /**
-     * その他情報
-     */
+    /** その他情報 */
     private HashMap<String, String> extras;
-    /**
-     * この出席データを管理している親シート
-     */
+    /** この出席データを管理している親シート */
     private AttendanceSheet parentSheet;
 
-    /**
-     * "出席"の文字列表現
-     */
+    /** "出席"の文字列表現 */
     private String attendanceString;
-    /**
-     * "遅刻"の文字列表現
-     */
+    /** "遅刻"の文字列表現 */
     private String latenessString;
-    /**
-     * "早退"の文字列表現
-     */
+    /** "早退"の文字列表現 */
     private String leaveEarlyString;
 
     // コンストラクタ

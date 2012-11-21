@@ -8,23 +8,15 @@ import java.io.Serializable;
  */
 public class AttendanceLocation implements Serializable {
     // 定数の宣言
-    /**
-     * シリアルバージョンUID
-     */
+    /** シリアルバージョンUID */
     private static final long serialVersionUID = -5939174616940873761L;
 
     // 変数の宣言
-    /**
-     * 緯度
-     */
+    /** 緯度 */
     private final double latitude;
-    /**
-     * 経度
-     */
+    /** 経度 */
     private final double longitude;
-    /**
-     * 精度
-     */
+    /** 精度 */
     private final float accuracy;
 
     // コンストラクタ

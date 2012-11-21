@@ -22,41 +22,25 @@ import jp.ddo.kingdragon.attendance.student.Attendance;
  */
 public class SendAttendanceQueue implements Serializable {
     // 定数の宣言
-    /**
-     * シリアルバージョンUID
-     */
+    /** シリアルバージョンUID */
     private static final long serialVersionUID = 6767596055879392050L;
 
     // 変数の宣言
-    /**
-     * 一時停止中かどうか
-     */
+    /** 一時停止中かどうか */
     private boolean isPaused;
-    /**
-     * 送信中かどうか
-     */
+    /** 送信中かどうか */
     private boolean isSending;
 
-    /**
-     * 送信先のアドレス
-     */
+    /** 送信先のアドレス */
     private String serverAddress;
-    /**
-     * 文字コード
-     */
+    /** 文字コード */
     private String characterCode;
-    /**
-     * 何ミリ秒でタイムアウトにするか
-     */
+    /** 何ミリ秒でタイムアウトにするか */
     private int timeout;
-    /**
-     * 送信中の出席データ
-     */
+    /** 送信中の出席データ */
     private Attendance sendingAttendance;
 
-    /**
-     * 送信待ちの出席データのキュー
-     */
+    /** 送信待ちの出席データのキュー */
     private LinkedList<Attendance> queue;
 
     // コンストラクタ
@@ -92,22 +76,16 @@ public class SendAttendanceQueue implements Serializable {
         return sendingAttendance;
     }
 
-    /**
-     * 待機中の出席データを削除する
-     */
+    /** 待機中の出席データを削除する */
     public void removeWaitingAttendances() {
         queue.clear();
     }
 
-    /**
-     * 送信を一時停止する
-     */
+    /** 送信を一時停止する */
     public void pause() {
         isPaused = true;
     }
-    /**
-     * 送信を再開する
-     */
+    /** 送信を再開する */
     public void resume() {
         isPaused = false;
         execute();
@@ -124,9 +102,7 @@ public class SendAttendanceQueue implements Serializable {
         }
     }
 
-    /**
-     * 出席データを送信する
-     */
+    /** 出席データを送信する */
     private void execute() {
         sendingAttendance = queue.poll();
         if (sendingAttendance != null) {
@@ -138,9 +114,7 @@ public class SendAttendanceQueue implements Serializable {
         }
     }
 
-    /**
-     * 出席データを送信する処理
-     */
+    /** 出席データを送信する処理 */
     private void sendAttendance(final Attendance inAttendance) {
         new Thread(new Runnable() {
             @Override

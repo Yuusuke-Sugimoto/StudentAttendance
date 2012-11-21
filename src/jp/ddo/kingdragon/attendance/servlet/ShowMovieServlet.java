@@ -14,9 +14,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class ShowMovieServlet extends HttpServlet {
     // 定数の宣言
-    /**
-     * シリアルバージョンUID
-     */
+    /** シリアルバージョンUID */
     private static final long serialVersionUID = 3532519062726411993L;
 
     @Override

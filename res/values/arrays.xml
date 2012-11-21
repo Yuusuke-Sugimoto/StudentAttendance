@@ -73,6 +73,11 @@
         <item>@string/dialog_disaster_menu_capture_movie</item>
     </string-array>
 
+    <string-array name="dialog_operation_menu">
+        <item>@string/dialog_operation_menu_search</item>
+        <item>@string/dialog_operation_menu_add</item>
+    </string-array>
+
     <string-array name="dialog_add_attendance_menu">
         <item>@string/dialog_add_attendance_menu_list</item>
         <item>@string/dialog_add_attendance_menu_search</item>

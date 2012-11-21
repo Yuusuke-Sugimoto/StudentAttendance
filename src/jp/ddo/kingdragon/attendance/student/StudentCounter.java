@@ -8,27 +8,17 @@ import java.io.Serializable;
  */
 public class StudentCounter implements Serializable {
     // 定数の宣言
-    /**
-     * シリアルバージョンUID
-     */
+    /** シリアルバージョンUID */
     private static final long serialVersionUID = 7273000972747048791L;
 
     // 変数の宣言
-    /**
-     * 学生数
-     */
+    /** 学生数 */
     private int numOfStudents;
-    /**
-     * 出席者数
-     */
+    /** 出席者数 */
     private int numOfAttendance;
-    /**
-     * 遅刻者数
-     */
+    /** 遅刻者数 */
     private int numOfLateness;
-    /**
-     * 早退者数
-     */
+    /** 早退者数 */
     private int numOfLeaveEarly;
 
     // コンストラクタ
@@ -55,9 +45,7 @@ public class StudentCounter implements Serializable {
     }
 
     // アクセッサ
-    /**
-     * 学生数をインクリメントする
-     */
+    /** 学生数をインクリメントする */
     protected void incNumOfStudents() {
         numOfStudents++;
     }
@@ -77,15 +65,11 @@ public class StudentCounter implements Serializable {
         return numOfAttendance + numOfLateness + numOfLeaveEarly;
     }
 
-    /**
-     * 出席者数をインクリメントする
-     */
+    /** 出席者数をインクリメントする */
     protected void incNumOfAttendance() {
         numOfAttendance++;
     }
-    /**
-     * 出席者数をデクリメントする
-     */
+    /** 出席者数をデクリメントする */
     protected void decNumOfAttendance() {
         numOfAttendance--;
     }
@@ -97,15 +81,11 @@ public class StudentCounter implements Serializable {
         return numOfAttendance;
     }
 
-    /**
-     * 遅刻者数をインクリメントする
-     */
+    /** 遅刻者数をインクリメントする */
     protected void incNumOfLateness() {
         numOfLateness++;
     }
-    /**
-     * 遅刻者数をデクリメントする
-     */
+    /** 遅刻者数をデクリメントする */
     protected void decNumOfLateness() {
         numOfLateness--;
     }
@@ -117,15 +97,11 @@ public class StudentCounter implements Serializable {
         return numOfLateness;
     }
 
-    /**
-     * 早退者数をインクリメントする
-     */
+    /** 早退者数をインクリメントする */
     protected void incNumOfLeaveEarly() {
         numOfLeaveEarly++;
     }
-    /**
-     * 早退者数をデクリメントする
-     */
+    /** 早退者数をデクリメントする */
     protected void decNumOfLeaveEarly() {
         numOfLeaveEarly--;
     }

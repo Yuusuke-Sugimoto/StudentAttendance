@@ -22,40 +22,28 @@ import au.com.bytecode.opencsv.CSVWriter;
  */
 public class StudentSheet implements Serializable {
     // 定数の宣言
-    /**
-     * シリアルバージョンUID
-     */
+    /** シリアルバージョンUID */
     private static final long serialVersionUID = -2244045392695564663L;
 
     // 変数の宣言
-    /**
-     * 所属
-     */
+    /** 所属 */
     private String className;
-    /**
-     * 元のファイル
-     */
+    /** 元のファイル */
     private File baseFile;
 
     // コレクションの宣言
-    /**
-     * 現在管理している学生データを学籍番号をキーとして格納したリスト
-     */
-    private LinkedHashMap<String, Student> studentsStudentNo;
-    /**
-     * 現在管理している学生データをNFCタグをキーとして格納したリスト
-     */
-    private LinkedHashMap<String, Student> studentsNfcId;
+    /** 現在管理している学生データを学籍番号をキーとして格納したリスト */
+    private LinkedHashMap<String, Student> studentsByStudentNo;
+    /** 現在管理している学生データをNFCタグをキーとして格納したリスト */
+    private LinkedHashMap<String, Student> studentsByNfcId;
 
     // コンストラクタ
-    /**
-     * 空のシートを生成する
-     */
+    /** 空のシートを生成する */
     public StudentSheet() {
         className = "";
         baseFile = null;
-        studentsStudentNo = new LinkedHashMap<String, Student>();
-        studentsNfcId = new LinkedHashMap<String, Student>();
+        studentsByStudentNo = new LinkedHashMap<String, Student>();
+        studentsByNfcId = new LinkedHashMap<String, Student>();
     }
     /**
      * CSVファイルからシートを生成する
@@ -118,9 +106,9 @@ public class StudentSheet implements Serializable {
                     nfcIds = new String[0];
                 }
                 Student mStudent = new Student(values[studentNoIndex], className, values[studentNameIndex], values[studentRubyIndex], nfcIds);
-                studentsStudentNo.put(values[studentNoIndex], mStudent);
+                studentsByStudentNo.put(values[studentNoIndex], mStudent);
                 for (String nfcId : nfcIds) {
-                    studentsNfcId.put(nfcId, mStudent);
+                    studentsByNfcId.put(nfcId, mStudent);
                 }
             }
 
@@ -151,14 +139,20 @@ public class StudentSheet implements Serializable {
         }
     }
     /**
-     * 引数で渡されたシートのコピーを生成する
+     * コピーコンストラクタ
      * @param inStudent コピーするシート
      */
     public StudentSheet(StudentSheet inStudentSheet) {
         className = inStudentSheet.className;
         baseFile = inStudentSheet.baseFile;
-        studentsStudentNo = new LinkedHashMap<String, Student>(inStudentSheet.studentsStudentNo);
-        studentsNfcId = new LinkedHashMap<String, Student>(inStudentSheet.studentsNfcId);
+        studentsByStudentNo = new LinkedHashMap<String, Student>();
+        for (String studentNo : inStudentSheet.studentsByStudentNo.keySet()) {
+            studentsByStudentNo.put(studentNo, new Student(inStudentSheet.studentsByStudentNo.get(studentNo)));
+        }
+        studentsByNfcId = new LinkedHashMap<String, Student>();
+        for (String nfcId : inStudentSheet.studentsByNfcId.keySet()) {
+            studentsByNfcId.put(nfcId, new Student(inStudentSheet.studentsByNfcId.get(nfcId)));
+        }
     }
 
     // アクセッサ
@@ -191,11 +185,11 @@ public class StudentSheet implements Serializable {
      * @param inStudent 学生データ
      */
     public void add(Student inStudent) {
-        if (!studentsStudentNo.containsKey(inStudent.getStudentNo())) {
-            studentsStudentNo.put(inStudent.getStudentNo(), inStudent);
+        if (!studentsByStudentNo.containsKey(inStudent.getStudentNo())) {
+            studentsByStudentNo.put(inStudent.getStudentNo(), inStudent);
             if (inStudent.getNumOfNfcId() != 0) {
                 for (String nfcId : inStudent.getNfcIds()) {
-                    studentsNfcId.put(nfcId, inStudent);
+                    studentsByNfcId.put(nfcId, inStudent);
                 }
             }
         }
@@ -208,8 +202,8 @@ public class StudentSheet implements Serializable {
      * @param inStudent 学生データ
      */
     public void addNfcId(String nfcId, Student inStudent) {
-        if (!studentsNfcId.containsKey(nfcId)) {
-            studentsNfcId.put(nfcId, inStudent);
+        if (!studentsByNfcId.containsKey(nfcId)) {
+            studentsByNfcId.put(nfcId, inStudent);
         }
     }
 
@@ -218,9 +212,9 @@ public class StudentSheet implements Serializable {
      * @param inStudent 学生データ
      */
     public void remove(Student inStudent) {
-        studentsStudentNo.remove(inStudent.getStudentNo());
+        studentsByStudentNo.remove(inStudent.getStudentNo());
         for (String nfcId : inStudent.getNfcIds()) {
-            studentsNfcId.remove(nfcId);
+            studentsByNfcId.remove(nfcId);
         }
     }
 
@@ -229,25 +223,25 @@ public class StudentSheet implements Serializable {
      * @param nfcId NFCタグ
      */
     public void removeNfcId(String nfcId) {
-        studentsNfcId.remove(nfcId);
+        studentsByNfcId.remove(nfcId);
     }
 
     /**
      * 引数で渡された学籍番号を持つ学生データを取得する
      * @param studentNo 学籍番号
-     * @return 学生データ
+     * @return 学生データ 該当するデータがなければnull
      */
     public Student getByStudentNo(String studentNo) {
-        return studentsStudentNo.get(studentNo);
+        return studentsByStudentNo.get(studentNo);
     }
 
     /**
      * 引数で渡されたNFCタグを持つ学生データを取得する
      * @param id NFCタグのID
-     * @return 学生データ
+     * @return 学生データ 該当するデータがなければnull
      */
     public Student getByNfcId(String id) {
-        return studentsNfcId.get(id);
+        return studentsByNfcId.get(id);
     }
 
     /**
@@ -255,7 +249,7 @@ public class StudentSheet implements Serializable {
      * @return 現在の学生データの数
      */
     public int size() {
-        return studentsStudentNo.size();
+        return studentsByStudentNo.size();
     }
 
     /**
@@ -264,7 +258,7 @@ public class StudentSheet implements Serializable {
      * @return 存在するならばtrue 存在しなければfalse
      */
     public boolean hasStudentNo(String studentNo) {
-        return studentsStudentNo.containsKey(studentNo);
+        return studentsByStudentNo.containsKey(studentNo);
     }
 
     /**
@@ -273,7 +267,7 @@ public class StudentSheet implements Serializable {
      * @return 存在するならばtrue 存在しなければfalse
      */
     public boolean hasNfcId(String id) {
-        return studentsNfcId.containsKey(id);
+        return studentsByNfcId.containsKey(id);
     }
 
     /**
@@ -281,7 +275,7 @@ public class StudentSheet implements Serializable {
      * @return 学生データの表示用のリスト
      */
     public ArrayList<Student> getStudentList() {
-        return new ArrayList<Student>(studentsStudentNo.values());
+        return new ArrayList<Student>(studentsByStudentNo.values());
     }
 
     /**
@@ -298,8 +292,8 @@ public class StudentSheet implements Serializable {
         writer.writeNext(new String[] {"所属"});
         writer.writeNext(new String[] {className});
         writer.writeNext(new String[] {"学籍番号", "氏名", "カナ", "UID"});
-        for (String key : studentsStudentNo.keySet()) {
-            writer.writeNext(studentsStudentNo.get(key).getStudentData());
+        for (String key : studentsByStudentNo.keySet()) {
+            writer.writeNext(studentsByStudentNo.get(key).getStudentData());
         }
         writer.flush();
         writer.close();

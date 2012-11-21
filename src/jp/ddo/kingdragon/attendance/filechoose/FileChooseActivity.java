@@ -66,56 +66,32 @@ public class FileChooseActivity extends Activity {
     private static final int DIALOG_DIRECTORY_NAME_IS_NULL  = 8;
 
     // 変数の宣言
-    /**
-     * 選択対象がディレクトリかどうか
-     */
+    /** 選択対象がディレクトリかどうか */
     private boolean isDirModeEnabled;
-    /**
-     * 隠しファイルを表示するかどうか
-     */
+    /** 隠しファイルを表示するかどうか */
     private boolean isShowingInvisibleFile;
 
-    /**
-     * 現在のディレクトリ
-     */
+    /** 現在のディレクトリ */
     private File currentDir;
-    /**
-     * 一覧に表示するファイル名の正規表現
-     */
+    /** 一覧に表示するファイル名の正規表現 */
     private String filter;
-    /**
-     * 一覧に表示する拡張子の正規表現
-     */
+    /** 一覧に表示する拡張子の正規表現 */
     private String extension;
-    /**
-     * ファイルの一覧を表示するビュー
-     */
+    /** ファイルの一覧を表示するビュー */
     private ListView fileListView;
-    /**
-     * ファイルの一覧を表示するアダプタ
-     */
+    /** ファイルの一覧を表示するアダプタ */
     private FileListAdapter mFileListAdapter;
-    /**
-     * 新規ファイル作成ダイアログに適用するレイアウト
-     */
+    /** 新規ファイル作成ダイアログに適用するレイアウト */
     private LinearLayout layoutForCreateFile;
-    /**
-     * ファイル名用のEditText
-     */
+    /** ファイル名用のEditText */
     private EditText editTextForFileName;
-    /**
-     * 拡張子用のTextView
-     */
+    /** 拡張子用のTextView */
     private TextView textViewForExtension;
-    /**
-     * フォルダ名用のEditText
-     */
+    /** フォルダ名用のEditText */
     private EditText editTextForDirectoryName;
 
     // コレクションの宣言
-    /**
-     * 辿った履歴を格納するスタック
-     */
+    /** 辿った履歴を格納するスタック */
     private Stack<File> history;
 
     @Override

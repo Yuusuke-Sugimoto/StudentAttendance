@@ -11,19 +11,15 @@ import android.preference.PreferenceCategory;
 import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
 
 /**
- * 設定画面
+ * カメラ設定画面
  * @author 杉本祐介
  */
 public class CameraSettingActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
     // 変数の宣言
-    /**
-     * 他スレッドからのUIの更新に使用
-     */
+    /** 他スレッドからのUIの更新に使用 */
     private Handler mHandler;
 
-    /**
-     * 設定内容の読み取り/変更に使用
-     */
+    /** 設定内容の読み取り/変更に使用 */
     private PreferenceUtil mPreferenceUtil;
 
     @Override
@@ -85,9 +81,7 @@ public class CameraSettingActivity extends PreferenceActivity implements OnShare
         updateUi();
     }
 
-    /**
-     * 各項目の表示を更新する
-     */
+    /** 各項目の表示を更新する */
     private void updateUi() {
         ListPreference rotationPref = (ListPreference)findPreference("setting_rotation");
         rotationPref.setSummary(rotationPref.getEntry());

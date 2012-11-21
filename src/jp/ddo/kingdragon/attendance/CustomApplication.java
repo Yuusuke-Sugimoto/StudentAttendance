@@ -10,9 +10,7 @@ import jp.ddo.kingdragon.attendance.student.StudentMaster;
  */
 public class CustomApplication extends Application {
     // 変数の宣言
-    /**
-     * 学生マスタ
-     */
+    /** 学生マスタ */
     private StudentMaster master;
 
     @Override

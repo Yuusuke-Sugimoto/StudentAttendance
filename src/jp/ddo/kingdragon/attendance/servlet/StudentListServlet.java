@@ -23,9 +23,7 @@ import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
  */
 public class StudentListServlet extends HttpServlet {
     // 定数の宣言
-    /**
-     * シリアルバージョンUID
-     */
+    /** シリアルバージョンUID */
     private static final long serialVersionUID = 823662399690987801L;
 
     @Override

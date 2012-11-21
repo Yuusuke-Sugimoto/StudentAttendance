@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MAMSA</string>
-    <string name="attendance">出席</string>
-    <string name="lateness">遅刻</string>
-    <string name="leave_early">早退</string>
-    <string name="absence">欠席</string>
 
     <string name="attendance_title">出席管理画面</string>
     <string name="attendance_read_start_label">読み取り開始</string>
@@ -17,6 +13,7 @@
     <string name="listmaker_title">リスト作成画面</string>
 
     <string name="register_title">学生登録画面</string>
+    <string name="register_read_nfc_info">読み取ったNFCタグの情報</string>
     <string name="register_nfc_id">UID:</string>
     <string name="register_registration_info">登録情報:</string>
     <string name="register_not_registered">登録なし</string>
@@ -57,7 +54,7 @@
     <string name="setting_change_attendance_name_title">出席データの保存名</string>
     <string name="setting_change_attendance_name_message">以下の変数が利用可能です。\n%S : 科目名, %t : 授業時間\n%y : 年, %M : 月, %d : 日\n%h : 時, %m : 分, %s : 秒\n拡張子は自動で付加されます。</string>
     <string name="setting_auto_save_title">データを自動保存する</string>
-    <string name="setting_auto_save_summary">指定された時間毎に出席データを自動的に保存します。</string>
+    <string name="setting_auto_save_summary">指定された時間毎に出席データを自動的に保存します。この機能を使用する場合、画面の自動回転はオフにしてください。</string>
     <string name="setting_auto_save_interval_title">自動保存の間隔</string>
     <string name="setting_disaster_title">災害設定</string>
     <string name="setting_disaster_mode_title">災害モードを有効にする</string>
@@ -113,6 +110,7 @@
     <string name="menu_open">CSVファイルを開く</string>
     <string name="menu_save">CSVファイルに保存する</string>
     <string name="menu_new_sheet">新規シート</string>
+    <string name="menu_add_class">所属を追加する</string>
     <string name="menu_edit_class_name">所属名を変更する</string>
     <string name="menu_edit_info">講義情報を編集する</string>
     <string name="menu_show_invisible_file">隠しファイルを表示する</string>
@@ -123,6 +121,7 @@
     <string name="menu_add_attendance">出席データを追加する</string>
     <string name="menu_refresh">マスタを再読み込み</string>
     <string name="menu_read_from_csv_file">追加読み込み</string>
+    <string name="menu_operation">操作</string>
 
     <string name="dialog_ask">確認</string>
     <string name="dialog_ask_exit_without_saving">保存せずに終了してもよろしいですか?</string>
@@ -139,16 +138,14 @@
     <string name="dialog_student_menu_nfc_id_remove">NFCタグを削除</string>
     <string name="dialog_student_menu_remove">削除</string>
     <string name="dialog_edit_student_title">学生データの編集</string>
-    <string name="dialog_edit_student_num_label">連番:</string>
-    <string name="dialog_edit_student_num_hint">連番を入力</string>
-    <string name="dialog_edit_student_no_label">学籍番号:</string>
-    <string name="dialog_edit_student_no_hint">学籍番号を入力</string>
-    <string name="dialog_edit_class_name_label">所属:</string>
-    <string name="dialog_edit_class_name_hint">所属名を入力</string>
-    <string name="dialog_edit_student_name_label">氏名:</string>
-    <string name="dialog_edit_student_name_hint">氏名を入力</string>
-    <string name="dialog_edit_student_ruby_label">カナ:</string>
-    <string name="dialog_edit_student_ruby_hint">カナを入力</string>
+    <string name="dialog_student_no_label">学籍番号:</string>
+    <string name="dialog_student_no_hint">学籍番号を入力</string>
+    <string name="dialog_class_name_label">所属:</string>
+    <string name="dialog_class_name_hint">所属名を入力</string>
+    <string name="dialog_student_name_label">氏名:</string>
+    <string name="dialog_student_name_hint">氏名を入力</string>
+    <string name="dialog_student_ruby_label">カナ:</string>
+    <string name="dialog_student_ruby_hint">カナを入力</string>
     <string name="dialog_remove_nfc_id_title">NFCタグの削除</string>
     <string name="dialog_remove_nfc_id_message">のNFCタグを削除しますか?</string>
     <string name="dialog_remove_student_title">学生データの削除</string>
@@ -157,9 +154,9 @@
     <string name="dialog_remove_read_nfc_id_message">このUIDの登録を解除しますか?</string>
     <string name="dialog_edit_class_name_title">所属名の変更</string>
     <string name="dialog_edit_subject_title">科目名の編集</string>
-    <string name="dialog_edit_subject_hint">科目名を入力</string>
+    <string name="dialog_subject_hint">科目名を入力</string>
     <string name="dialog_edit_time_title">授業時間の編集</string>
-    <string name="dialog_edit_time_hint">授業時間を入力</string>
+    <string name="dialog_time_hint">授業時間を入力</string>
     <string name="dialog_totalization_title">確認状況</string>
     <string name="dialog_totalization_class_label">所属</string>
     <string name="dialog_totalization_total_label">合計</string>
@@ -183,7 +180,14 @@
     <string name="dialog_register_id_menu_title">NFCタグの登録</string>
     <string name="dialog_register_id_menu_barcode">バーコードを読み取る</string>
     <string name="dialog_reading_barcode">登録する学生のバーコードを読み取ってください。\n(バックボタンで中止)</string>
+    <string name="dialog_ask_overwrite_student_master">学生マスタを上書きしてもよろしいですか?</string>
     <string name="dialog_refreshing_master_file_title">学生マスタの再読み込み</string>
+    <string name="dialog_add_class_title">所属の追加</string>
+    <string name="dialog_file_name_label">ファイル名:</string>
+    <string name="dialog_file_name_hint">ファイル名を入力</string>
+    <string name="dialog_operation_menu_title">操作</string>
+    <string name="dialog_operation_menu_search">学生番号で検索する</string>
+    <string name="dialog_operation_menu_add">学生を追加する</string>
 
     <string name="notice_student_master_opening">を読み込み中…</string>
     <string name="notice_refresh_finish">読み込み完了</string>
@@ -197,6 +201,7 @@
     <string name="notice_csv_file_saved">に保存しました</string>
     <string name="notice_file_created">を作成しました</string>
     <string name="notice_id_registered">NFCタグを登録しました</string>
+    <string name="notice_student_master_saved">学生マスタを保存しました</string>
 
     <string name="error">エラー</string>
     <string name="error_make_master_directory_failed">マスタフォルダの作成に失敗しました</string>
@@ -205,7 +210,8 @@
     <string name="error_make_web_directory_failed">Webフォルダの作成に失敗しました</string>
     <string name="error_make_servlet_directory_failed">サーブレットフォルダの作成に失敗しました</string>
     <string name="error_make_media_directory_failed">メディアフォルダの作成に失敗しました</string>
-    <string name="error_student_already_readed">既に出席確認済みの学生です</string>
+    <string name="error_nfc_read_failed">NFCタグの読み取りに失敗しました</string>
+    <string name="error_student_already_read">既に出席確認済みの学生です</string>
     <string name="error_nfc_id_already_registered">既に他の学生に登録されているNFCタグです</string>
     <string name="error_nfc_id_not_read">NFCタグが読み取られていません</string>
     <string name="error_opening_failed">の読み込みに失敗しました</string>
@@ -217,6 +223,7 @@
     <string name="error_student_not_found">対応する学生データが見つかりません</string>
     <string name="error_id_register_failed">NFCタグの登録に失敗しました</string>
     <string name="error_id_remove_failed">NFCタグの削除に失敗しました</string>
+    <string name="error_class_already_exists">既に同名の所属が存在します。</string>
     <string name="error_file_already_exists">既に同名のファイルが存在します。</string>
     <string name="error_file_create_failed">ファイルの作成に失敗しました。</string>
     <string name="error_illegal_file_name">ファイル名に使用できない文字が含まれています。</string>
@@ -230,6 +237,11 @@
     <string name="error_launch_camera_failed">カメラの起動に失敗しました</string>
     <string name="error_set_preview_failed">プレビュー画面の設定に失敗しました</string>
 
+    <string name="attendance">出席</string>
+    <string name="lateness">遅刻</string>
+    <string name="leave_early">早退</string>
+    <string name="absence">欠席</string>
+    <string name="extension_csv">.csv</string>
     <string name="alphabet_and_number">0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</string>
     <string name="character_for_password">0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_</string>
     <string name="zero">0</string>

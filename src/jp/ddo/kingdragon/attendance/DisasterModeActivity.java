@@ -101,23 +101,15 @@ public class DisasterModeActivity extends Activity {
     private static final int DIALOG_ASK_OPEN_LIST_MAKER     = 18;
     private static final int DIALOG_ASK_OPEN_GPS_PREFERENCE = 19;
     private static final int DIALOG_REFRESHING_MASTER_FILE  = 20;
-    /**
-     * CSVファイルへの保存に使用する文字コード
-     */
+    /** CSVファイルへの保存に使用する文字コード */
     private static final String CHARACTER_CODE = "Shift_JIS";
-    /**
-     * サーバへの送信に使用する文字コード
-     */
+    /** サーバへの送信に使用する文字コード */
     private static final String CHARACTER_CODE_FOR_SEND = "Shift_JIS";
-    /**
-     * ポート番号
-     */
+    /** ポート番号 */
     private static final int PORT_NUMBER = 8080;
 
     // 変数の宣言
-    /**
-     * 現在編集しているシート
-     */
+    /** 現在編集しているシート */
     private static AttendanceSheet mAttendanceSheet;
     /**
      * サーブレットに渡すコンテキスト<br>
@@ -125,217 +117,119 @@ public class DisasterModeActivity extends Activity {
      */
     private static Context applicationContextForServlet;
 
-    /**
-     * アプリケーションクラス
-     */
+    /** アプリケーションクラス */
     private CustomApplication application;
 
-    /**
-     * 他スレッドからのUIの更新に使用
-     */
+    /** 他スレッドからのUIの更新に使用 */
     private Handler mHandler;
-    /**
-     * 自動保存タスク
-     */
+    /** 自動保存タスク */
     private Runnable autoSaveTask;
 
-    /**
-     * 読み取り中かどうか
-     */
+    /** 読み取り中かどうか */
     private boolean isReading;
-    /**
-     * 送信中かどうか
-     */
+    /** 送信中かどうか */
     private boolean isSending;
-    /**
-     * NFCタグを登録中かどうか
-     */
+    /** NFCタグを登録中かどうか */
     private boolean isRegistering;
-    /**
-     * 保存済みかどうか
-     */
+    /** 保存済みかどうか */
     private boolean isSaved;
-    /**
-     * 保存中かどうか
-     */
+    /** 保存中かどうか */
     private boolean isSaving;
-    /**
-     * 現在地を取得中かどうか
-     */
+    /** 現在地を取得中かどうか */
     private boolean isFetchingLocation;
-    /**
-     * 再読み込み中かどうか
-     */
+    /** 再読み込み中かどうか */
     private boolean isRefreshing;
+    /** 自動保存タスクが実行中かどうか */
+    private boolean isAutoSaveRunning;
 
-    /**
-     * ベースフォルダ
-     */
+    /** ベースフォルダ */
     private File baseDir;
-    /**
-     * マスタフォルダ
-     */
+    /** マスタフォルダ */
     private File masterDir;
-    /**
-     * リスト格納用フォルダ
-     */
+    /** リスト格納用フォルダ */
     private File listDir;
-    /**
-     * 保存用フォルダ
-     */
+    /** 保存用フォルダ */
     private File saveDir;
-    /**
-     * 保存先のファイル
-     */
+    /** 保存先のファイル */
     private File destFile;
 
-    /**
-     * キーボード(バーコードリーダ)から入力された内容
-     */
+    /** キーボード(バーコードリーダ)から入力された内容 */
     private StringBuilder inputBuffer;
-    /**
-     * 追加待ちのNFCタグ
-     */
+    /** 追加待ちのNFCタグ */
     private String readNfcId;
-    /**
-     * 現在扱っている出席データ
-     */
+    /** 現在扱っている出席データ */
     private Attendance currentAttendance;
-    /**
-     * リストから追加する際に選択されたシート
-     */
+    /** リストから追加する際に選択されたシート */
     private StudentSheet selectedSheet;
-    /**
-     * 学生マスタ
-     */
+    /** 学生マスタ */
     private StudentMaster master;
-    /**
-     * 出席データを送信するキュー
-     */
+    /** 出席データを送信するキュー */
     private SendAttendanceQueue attendanceQueue;
 
-    /**
-     * 出席データの一覧を表示するビュー
-     */
+    /** 出席データの一覧を表示するビュー */
     private ListView attendanceListView;
-    /**
-     * 出席データの一覧を表示するアダプタ
-     */
+    /** 出席データの一覧を表示するアダプタ */
     private AttendanceListAdapter mAttendanceListAdapter;
-    /**
-     * 読み取り開始ボタン
-     */
+    /** 読み取り開始ボタン */
     private Button readStartButton;
-    /**
-     * 送信停止ボタン
-     */
+    /** 送信停止ボタン */
     private Button sendPauseButton;
-    /**
-     * 科目名用のTextView
-     */
+    /** 科目名用のTextView */
     private TextView textViewForSubject;
-    /**
-     * 授業時間用のTextView
-     */
+    /** 授業時間用のTextView */
     private TextView textViewForTime;
-    /**
-     * 出席人数表示用のTextView
-     */
+    /** 出席人数表示用のTextView */
     private TextView textViewForCount;
-    /**
-     * 科目名用のEditText
-     */
+    /** 科目名用のEditText */
     private EditText editTextForSubject;
-    /**
-     * 授業時間用のEditText
-     */
+    /** 授業時間用のEditText */
     private EditText editTextForTime;
-    /**
-     * 検索時の学籍番号用のEditText
-     */
+    /** 検索時の学籍番号用のEditText */
     private EditText editTextForStudentNoForSearch;
-    /**
-     * 手動登録時の学籍番号用のEditText
-     */
+    /** 手動登録時の学籍番号用のEditText */
     private EditText editTextForStudentNoForManual;
-    /**
-     * 所属用のEditText
-     */
+    /** 所属用のEditText */
     private EditText editTextForClassName;
-    /**
-     * 氏名用のEditText
-     */
+    /** 氏名用のEditText */
     private EditText editTextForStudentName;
-    /**
-     * カナ用のEditText
-     */
+    /** カナ用のEditText */
     private EditText editTextForStudentRuby;
-    /**
-     * NFCタグ登録時の学籍番号用のEditText
-     */
+    /** NFCタグ登録時の学籍番号用のEditText */
     private EditText editTextForStudentNoForRegister;
-    /**
-     * 集計表示用のTableLayout
-     */
+    /** 集計表示用のTableLayout */
     private TableLayout tableLayoutForTotalization;
-    /**
-     * 学生リスト読み込み状況表示用のProgressDialog
-     */
+    /** 学生リスト読み込み状況表示用のProgressDialog */
     private ProgressDialog progressDialogForRefresh;
-    /**
-     * 前回表示時のprogressDialogForRefreshのMaxの値
-     */
+    /** 前回表示時のprogressDialogForRefreshのMaxの値 */
     private int prevMax;
 
-    /**
-     * 設定内容の読み取り/変更に使用
-     */
+    /** 設定内容の読み取り/変更に使用 */
     private PreferenceUtil mPreferenceUtil;
 
-    /**
-     * サーバのインスタンス
-     */
+    /** サーバのインスタンス */
     private Server mServer;
 
-    /**
-     * NFCタグの読み取りに使用
-     */
+    /** NFCタグの読み取りに使用 */
     private NfcAdapter mNfcAdapter;
-    /**
-     * NFCタグの読み取りに使用
-     */
+    /** NFCタグの読み取りに使用 */
     private PendingIntent mPendingIntent;
 
-    /**
-     * スリープ時にWi-Fiを維持するために使用
-     */
+    /** スリープ時にWi-Fiを維持するために使用 */
     private WakeLock mWakeLock;
-    /**
-     * スリープ時にWi-Fiを維持するために使用
-     */
+    /** スリープ時にWi-Fiを維持するために使用 */
     private WifiLock mWifiLock;
 
-    /**
-     * 位置情報を取得するマネージャ
-     */
+    /** 位置情報を取得するマネージャ */
     private LocationManager mLocationManager;
-    /**
-     * 位置情報を取得した際のリスナ
-     */
+    /** 位置情報を取得した際のリスナ */
     private LocationListener mLocationListener;
-    /**
-     * 取得した位置情報
-     */
+    /** 取得した位置情報 */
     private AttendanceLocation mAttendanceLocation;
 
     // 配列の宣言
-    /**
-     * 対応するインテントの種類
-     */
+    /** 対応するインテントの種類 */
     private IntentFilter[] filters;
-    /**
-     * 対応させるタグの一覧
-     */
+    /** 対応させるタグの一覧 */
     private String[][] techs;
 
     @Override
@@ -365,6 +259,7 @@ public class DisasterModeActivity extends Activity {
         isSaving = false;
         isFetchingLocation = false;
         isRefreshing = false;
+        isAutoSaveRunning = false;
 
         mPreferenceUtil = new PreferenceUtil(DisasterModeActivity.this);
 
@@ -763,8 +658,9 @@ public class DisasterModeActivity extends Activity {
                 isReading = false;
             }
 
-            if (mPreferenceUtil.isAutoSaveEnabled()) {
+            if (mPreferenceUtil.isAutoSaveEnabled() && !isAutoSaveRunning) {
                 mHandler.postDelayed(autoSaveTask, mPreferenceUtil.getAutoSaveInterval(3) * 60000);
+                isAutoSaveRunning = true;
             }
 
             if (mPreferenceUtil.isSendServerEnabled()) {
@@ -805,6 +701,9 @@ public class DisasterModeActivity extends Activity {
         super.onPause();
 
         if (mNfcAdapter != null) {
+            if (!mNfcAdapter.isEnabled()) {
+                Toast.makeText(DisasterModeActivity.this, R.string.error_nfc_read_failed, Toast.LENGTH_SHORT).show();
+            }
             mNfcAdapter.disableForegroundDispatch(DisasterModeActivity.this);
         }
         attendanceQueue.pause();
@@ -825,6 +724,7 @@ public class DisasterModeActivity extends Activity {
         stopUpdateLocation();
 
         mHandler.removeCallbacks(autoSaveTask);
+        isAutoSaveRunning = false;
     }
 
     @Override
@@ -1167,7 +1067,7 @@ public class DisasterModeActivity extends Activity {
                                 updateStatus(currentAttendance, Attendance.ATTENDANCE);
                             }
                             else {
-                                Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_read, Toast.LENGTH_SHORT).show();
                             }
                             position = mAttendanceListAdapter.getPosition(currentAttendance);
                         }
@@ -1209,7 +1109,7 @@ public class DisasterModeActivity extends Activity {
                             if (!isReading) {
                                 isReading = true;
                             }
-                            onStudentNoReaded(studentNo);
+                            onStudentNoRead(studentNo);
                             isReading = prevReading;
                         }
                     }
@@ -1247,7 +1147,7 @@ public class DisasterModeActivity extends Activity {
                                 updateStatus(currentAttendance, Attendance.ATTENDANCE);
                             }
                             else {
-                                Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_read, Toast.LENGTH_SHORT).show();
                             }
                             position = mAttendanceListAdapter.getPosition(currentAttendance);
                         }
@@ -1719,7 +1619,7 @@ public class DisasterModeActivity extends Activity {
         String action = intent.getAction();
         if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
             // NFCタグの読み取りで発生したインテントである場合
-            onNfcTagReaded(intent);
+            onNfcTagRead(intent);
         }
     }
 
@@ -1865,7 +1765,7 @@ public class DisasterModeActivity extends Activity {
         }
         inputBuffer.append(c);
         if (inputBuffer.length() == 6) {
-            onStudentNoReaded(inputBuffer.toString());
+            onStudentNoRead(inputBuffer.toString());
         }
     }
 
@@ -1873,7 +1773,7 @@ public class DisasterModeActivity extends Activity {
      * 学籍番号を読み取った際に呼び出される
      * @param studentNo 学籍番号
      */
-    private void onStudentNoReaded(String studentNo) {
+    private void onStudentNoRead(String studentNo) {
         if (!isRegistering) {
             // 通常時
             if (isReading && !isSaving && !isRefreshing) {
@@ -1885,7 +1785,7 @@ public class DisasterModeActivity extends Activity {
                         updateStatus(currentAttendance, Attendance.ATTENDANCE);
                     }
                     else {
-                        Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_read, Toast.LENGTH_SHORT).show();
                     }
                     position = mAttendanceListAdapter.getPosition(currentAttendance);
                 }
@@ -1922,13 +1822,13 @@ public class DisasterModeActivity extends Activity {
      * NFCタグを読み取った際に呼び出される
      * @param inIntent NFCタグを読み取った際に発生したインテント
      */
-    private void onNfcTagReaded(Intent inIntent) {
-        StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
-        while (rawId.length() < 16) {
-            rawId.append("0");
-        }
-        String id = rawId.toString();
+    private void onNfcTagRead(Intent inIntent) {
         if (isReading && !isSaving && !isRefreshing) {
+            StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
+            while (rawId.length() < 16) {
+                rawId.append("0");
+            }
+            String id = rawId.toString();
             Student mStudent = master.getStudentByNfcId(id);
             if (mStudent != null) {
                 int position;
@@ -1939,7 +1839,7 @@ public class DisasterModeActivity extends Activity {
                         updateStatus(currentAttendance, Attendance.ATTENDANCE);
                     }
                     else {
-                        Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_read, Toast.LENGTH_SHORT).show();
                     }
                     position = mAttendanceListAdapter.getPosition(currentAttendance);
                 }
@@ -2009,7 +1909,7 @@ public class DisasterModeActivity extends Activity {
                         updateStatus(currentAttendance, Attendance.ATTENDANCE);
                     }
                     else {
-                        Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(DisasterModeActivity.this, R.string.error_student_already_read, Toast.LENGTH_SHORT).show();
                     }
                     position = mAttendanceListAdapter.getPosition(currentAttendance);
                 }
@@ -2034,9 +1934,7 @@ public class DisasterModeActivity extends Activity {
         }
     }
 
-    /**
-     * 学生マスタを読み込み直す
-     */
+    /** 学生マスタを読み込み直す */
     private void refreshStudentMaster() {
         new Thread(new Runnable() {
             @Override
@@ -2055,9 +1953,7 @@ public class DisasterModeActivity extends Activity {
         }).start();
     }
 
-    /**
-     * 位置情報の取得を開始する
-     */
+    /** 位置情報の取得を開始する */
     private void startUpdateLocation() {
         if (mAttendanceLocation == null) {
             showDialog(DisasterModeActivity.DIALOG_FETCHING_LOCATION);
@@ -2077,9 +1973,7 @@ public class DisasterModeActivity extends Activity {
         }
     }
 
-    /**
-     * 位置情報の取得を停止する
-     */
+    /** 位置情報の取得を停止する */
     private void stopUpdateLocation() {
         isFetchingLocation = false;
         mLocationManager.removeUpdates(mLocationListener);

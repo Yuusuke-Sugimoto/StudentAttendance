@@ -5,4 +5,4 @@
           android:layout_height="wrap_content"
           android:inputType="text"
           android:maxLines="1"
-          android:hint="@string/dialog_edit_class_name_hint" />
+          android:hint="@string/dialog_class_name_hint" />

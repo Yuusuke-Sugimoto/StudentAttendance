@@ -25,33 +25,21 @@ import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
  */
 public class SplashActivity extends Activity {
     // 定数の宣言
-    /**
-     * 使用する文字コード
-     */
+    /** 使用する文字コード */
     private static final String CHARACTER_CODE = "Shift_JIS";
 
     // 変数の宣言
-    /**
-     * 他スレッドからのUIの更新に使用
-     */
+    /** 他スレッドからのUIの更新に使用 */
     private Handler mHandler;
 
-    /**
-     * ベースフォルダ
-     */
+    /** ベースフォルダ */
     private File baseDir;
-    /**
-     * マスタフォルダ
-     */
+    /** マスタフォルダ */
     private File masterDir;
 
-    /**
-     * 学生マスタ読み込み状況表示用のProgressBar
-     */
+    /** 学生マスタ読み込み状況表示用のProgressBar */
     private ProgressBar progressBarForRefresh;
-    /**
-     * 学生マスタ読み込み状況表示用のTextView
-     */
+    /** 学生マスタ読み込み状況表示用のTextView */
     private TextView textViewForRefresh;
 
     public void onCreate(Bundle savedInstanceState) {
@@ -121,17 +109,19 @@ public class SplashActivity extends Activity {
                             mHandler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Intent mIntent;
-                                    PreferenceUtil mPreferenceUtil = new PreferenceUtil(SplashActivity.this);
-                                    if (!mPreferenceUtil.isDisasterModeEnabled()) {
-                                        mIntent = new Intent(SplashActivity.this, StudentAttendanceActivity.class);
-                                    }
-                                    else {
-                                        mIntent = new Intent(SplashActivity.this, DisasterModeActivity.class);
-                                    }
-                                    startActivity(mIntent);
+                                    if (!isFinishing()) {
+                                        Intent mIntent;
+                                        PreferenceUtil mPreferenceUtil = new PreferenceUtil(SplashActivity.this);
+                                        if (!mPreferenceUtil.isDisasterModeEnabled()) {
+                                            mIntent = new Intent(SplashActivity.this, StudentAttendanceActivity.class);
+                                        }
+                                        else {
+                                            mIntent = new Intent(SplashActivity.this, DisasterModeActivity.class);
+                                        }
+                                        startActivity(mIntent);
 
-                                    finish();
+                                        finish();
+                                    }
                                 }
                             }, 1000);
                         }

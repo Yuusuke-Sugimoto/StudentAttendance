@@ -9,39 +9,25 @@ import java.util.ArrayList;
  */
 public class Student implements Serializable {
     // 定数の宣言
-    /**
-     * シリアルバージョンUID
-     */
+    /** シリアルバージョンUID */
     private static final long serialVersionUID = -2959850874518622078L;
 
     // 変数の宣言
-    /**
-     * 学籍番号
-     */
+    /** 学籍番号 */
     private String studentNo;
-    /**
-     * 所属
-     */
+    /** 所属 */
     private String className;
-    /**
-     * 氏名
-     */
+    /** 氏名 */
     private String studentName;
-    /**
-     * カナ
-     */
+    /** カナ */
     private String studentRuby;
 
     // コレクションの宣言
-    /**
-     * NFCタグのIDのリスト
-     */
+    /** NFCタグのIDのリスト */
     private ArrayList<String> nfcIds;
 
     // コンストラクタ
-    /**
-     * 学籍番号およびNFCタグのIDが未設定のインスタンスを生成する
-     */
+    /** 学籍番号およびNFCタグのIDが未設定のインスタンスを生成する */
     public Student() {
         this("");
     }
@@ -81,7 +67,7 @@ public class Student implements Serializable {
         }
     }
     /**
-     * 引数で渡された学生データのコピーを生成する
+     * コピーコンストラクタ
      * @param inStudent コピーする学生データ
      */
     public Student(Student inStudent) {
@@ -89,7 +75,10 @@ public class Student implements Serializable {
         className = inStudent.className;
         studentName = inStudent.studentName;
         studentRuby = inStudent.studentRuby;
-        nfcIds = new ArrayList<String>(inStudent.nfcIds);
+        nfcIds = new ArrayList<String>();
+        for (String nfcId : inStudent.nfcIds) {
+            nfcIds.add(nfcId);
+        }
     }
 
     @Override

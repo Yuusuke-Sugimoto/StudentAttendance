@@ -42,22 +42,14 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
     private static final int DIALOG_LONG_PASSWORD          = 4;
 
     // 変数の宣言
-    /**
-     * 旧パスワード用のEditText
-     */
+    /** 旧パスワード用のEditText */
     private EditText editTextForOldPassword;
-    /**
-     * 新パスワード用のEditText
-     */
+    /** 新パスワード用のEditText */
     private EditText editTextForNewPassword;
-    /**
-     * 新パスワード(確認)用のEditText
-     */
+    /** 新パスワード(確認)用のEditText */
     private EditText editTextForNewPasswordConf;
 
-    /**
-     * 設定内容の読み取り/変更に使用
-     */
+    /** 設定内容の読み取り/変更に使用 */
     private PreferenceUtil mPreferenceUtil;
 
     @Override
@@ -370,9 +362,7 @@ public class SettingActivity extends PreferenceActivity implements OnSharedPrefe
         updateUi();
     }
 
-    /**
-     * 各項目の表示を更新する
-     */
+    /** 各項目の表示を更新する */
     private void updateUi() {
         ListPreference behaviorStudentNoPref = (ListPreference)findPreference("setting_behavior_student_no");
         behaviorStudentNoPref.setSummary(behaviorStudentNoPref.getEntry());

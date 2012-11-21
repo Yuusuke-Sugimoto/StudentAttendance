@@ -14,24 +14,16 @@ import java.util.Comparator;
  */
 public class StudentMaster {
     // 変数の宣言
-    /**
-     * 学生マスタ格納フォルダ
-     */
+    /** 学生マスタ格納フォルダ */
     private File masterDir;
-    /**
-     * 読み込みに使用する文字コード
-     */
+    /** 読み込みに使用する文字コード */
     private String characterCode;
 
-    /**
-     * 学生マスタ読み込み時の各動作に対応するリスナ
-     */
+    /** 学生マスタ読み込み時の各動作に対応するリスナ */
     private OnRefreshListener listener;
 
     // コレクションの宣言
-    /**
-     * 学生マスタ格納フォルダから読み取った全てのシートを格納するリスト
-     */
+    /** 学生マスタ格納フォルダから読み取った全てのシートを格納するリスト */
     private ArrayList<StudentSheet> studentSheets;
 
     // コンストラクタ
@@ -90,7 +82,7 @@ public class StudentMaster {
     /**
      * 指定された所属の添字を取得する
      * @param className 所属名
-     * @return 指定された所属の添字
+     * @return 指定された所属の添字 該当する所属がなければ-1
      */
     public int getIndexByClassName(String className) {
         int index = -1;
@@ -121,16 +113,16 @@ public class StudentMaster {
     /**
      * 指定された所属に属する学生数を取得する
      * @param className 所属名
-     * @return 指定された所属に属する学生数
+     * @return 指定された所属に属する学生数 該当する所属がなければ0
      */
     public int getNumOfStudents(String className) {
         int retInt = 0;
 
         boolean isExisted = false;
         for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
-            StudentSheet mSheet = studentSheets.get(i);
-            if (mSheet.getClassName().equals(className)) {
-                retInt = mSheet.size();
+            StudentSheet sheet = studentSheets.get(i);
+            if (sheet.getClassName().equals(className)) {
+                retInt = sheet.size();
                 isExisted = true;
             }
         }
@@ -148,9 +140,9 @@ public class StudentMaster {
 
         boolean isExisted = false;
         for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
-            StudentSheet mSheet = studentSheets.get(i);
-            if (mSheet.hasStudentNo(studentNo)) {
-                retStudent = new Student(mSheet.getByStudentNo(studentNo));
+            StudentSheet sheet = studentSheets.get(i);
+            if (sheet.hasStudentNo(studentNo)) {
+                retStudent = new Student(sheet.getByStudentNo(studentNo));
                 isExisted = true;
             }
         }
@@ -168,9 +160,9 @@ public class StudentMaster {
 
         boolean isExisted = false;
         for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
-            StudentSheet mSheet = studentSheets.get(i);
-            if (mSheet.hasNfcId(id)) {
-                retStudent = new Student(mSheet.getByNfcId(id));
+            StudentSheet sheet = studentSheets.get(i);
+            if (sheet.hasNfcId(id)) {
+                retStudent = new Student(sheet.getByNfcId(id));
                 isExisted = true;
             }
         }
@@ -192,11 +184,11 @@ public class StudentMaster {
 
         boolean isExisted = false;
         for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
-            StudentSheet mSheet = studentSheets.get(i);
-            if (mSheet.hasStudentNo(studentNo)) {
-                Student mStudent = mSheet.getByStudentNo(studentNo);
+            StudentSheet sheet = studentSheets.get(i);
+            if (sheet.hasStudentNo(studentNo)) {
+                Student mStudent = sheet.getByStudentNo(studentNo);
                 mStudent.addNfcId(id);
-                mSheet.saveCsvFile(mSheet.getBaseFile(), characterCode);
+                sheet.saveCsvFile(sheet.getBaseFile(), characterCode);
                 retStudent = new Student(mStudent);
                 isExisted = true;
             }
@@ -219,11 +211,11 @@ public class StudentMaster {
 
         boolean isExisted = false;
         for (int i = 0; !isExisted && i < studentSheets.size(); i++) {
-            StudentSheet mSheet = studentSheets.get(i);
-            if (mSheet.hasStudentNo(studentNo)) {
-                Student mStudent = mSheet.getByStudentNo(studentNo);
+            StudentSheet sheet = studentSheets.get(i);
+            if (sheet.hasStudentNo(studentNo)) {
+                Student mStudent = sheet.getByStudentNo(studentNo);
                 mStudent.removeNfcId(id);
-                mSheet.saveCsvFile(mSheet.getBaseFile(), characterCode);
+                sheet.saveCsvFile(sheet.getBaseFile(), characterCode);
                 retStudent = new Student(mStudent);
                 isExisted = true;
             }
@@ -235,8 +227,6 @@ public class StudentMaster {
     /**
      * 学生マスタを読み込み直す<br>
      * 読み込みは同じスレッドで行うため、読み込む数が多い場合は別スレッドで行うこと。
-     * @throws IOException
-     * @throws FileNotFoundException
      * @throws UnsupportedEncodingException
      */
     public void refresh() throws UnsupportedEncodingException {
@@ -309,9 +299,7 @@ public class StudentMaster {
          */
         void onOpenFinish(String fileName);
 
-        /**
-         * 学生マスタの読み込みが終了した際に呼び出される
-         */
+        /** 学生マスタの読み込みが終了した際に呼び出される */
         void onRefreshFinish();
 
         /**

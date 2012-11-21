@@ -65,132 +65,74 @@ public class StudentListMakerActivity extends Activity {
     private static final int DIALOG_INPUT_STUDENT_INFO            = 13;
     private static final int DIALOG_ASK_OVERWRITE                 = 14;
     private static final int DIALOG_REFRESHING_MASTER_FILE        = 15;
-    /**
-     * 使用する文字コード
-     */
+    /** 使用する文字コード */
     private static final String CHARACTER_CODE = "Shift_JIS";
 
     // 変数の宣言
-    /**
-     * アプリケーションクラス
-     */
+    /** アプリケーションクラス */
     private CustomApplication application;
 
-    /**
-     * 他スレッドからのUIの更新に使用
-     */
+    /** 他スレッドからのUIの更新に使用 */
     private Handler mHandler;
 
-    /**
-     * 保存済みかどうか
-     */
+    /** 保存済みかどうか */
     private boolean isSaved;
-    /**
-     * 保存中かどうか
-     */
+    /** 保存中かどうか */
     private boolean isSaving;
-    /**
-     * 再読み込み中かどうか
-     */
+    /** 再読み込み中かどうか */
     private boolean isRefreshing;
 
-    /**
-     * ベースフォルダ
-     */
+    /** ベースフォルダ */
     private File baseDir;
-    /**
-     * マスタフォルダ
-     */
+    /** マスタフォルダ */
     private File masterDir;
-    /**
-     * 保存先のファイル
-     */
+    /** 保存先のファイル */
     private File destFile;
 
-    /**
-     * キーボード(バーコードリーダ)から入力された内容
-     */
+    /** キーボード(バーコードリーダ)から入力された内容 */
     private StringBuilder inputBuffer;
-    /**
-     * 追加待ちの学籍番号
-     */
+    /** 追加待ちの学籍番号 */
     private String readStudentNo;
-    /**
-     * 現在扱っている学生データ
-     */
+    /** 現在扱っている学生データ */
     private Student currentStudent;
-    /**
-     * 現在編集しているシート
-     */
+    /** 現在編集しているシート */
     private StudentSheet mStudentSheet;
-    /**
-     * リストから追加する際に選択されたシート
-     */
+    /** リストから追加する際に選択されたシート */
     private StudentSheet selectedSheet;
-    /**
-     * 学生マスタ
-     */
+    /** 学生マスタ */
     private StudentMaster master;
 
-    /**
-     * 学生の一覧を表示するビュー
-     */
+    /** 学生の一覧を表示するビュー */
     private ListView studentListView;
-    /**
-     * 学生の一覧を表示するアダプタ
-     */
+    /** 学生の一覧を表示するアダプタ */
     private StudentListAdapter mStudentListAdapter;
-    /**
-     * 所属用のEditText
-     */
+    /** 所属用のEditText */
     private EditText editTextForClassName;
-    /**
-     * 検索時の学籍番号用のEditText
-     */
+    /** 検索時の学籍番号用のEditText */
     private EditText editTextForStudentNoForSearch;
-    /**
-     * 手動登録時の学籍番号用のEditText
-     */
+    /** 手動登録時の学籍番号用のEditText */
     private EditText editTextForStudentNoForManual;
-    /**
-     * 氏名用のEditText
-     */
+    /** 氏名用のEditText */
     private EditText editTextForStudentName;
-    /**
-     * カナ用のEditText
-     */
+    /** カナ用のEditText */
     private EditText editTextForStudentRuby;
-    /**
-     * 学生リスト読み込み状況表示用のProgressDialog
-     */
+    /** 学生リスト読み込み状況表示用のProgressDialog */
     private ProgressDialog progressDialogForRefresh;
-    /**
-     * 前回表示時のprogressDialogForRefreshのMaxの値
-     */
+    /** 前回表示時のprogressDialogForRefreshのMaxの値 */
     private int prevMax;
 
-    /**
-     * 設定内容の読み取り/変更に使用
-     */
+    /** 設定内容の読み取り/変更に使用 */
     private PreferenceUtil mPreferenceUtil;
 
-    /**
-     * NFCタグの読み取りに使用
-     */
+    /** NFCタグの読み取りに使用 */
     private NfcAdapter mNfcAdapter;
-    /**
-     * NFCタグの読み取りに使用
-     */
+    /** NFCタグの読み取りに使用 */
     private PendingIntent mPendingIntent;
 
     // 配列の宣言
-    /**
-     * 対応するインテントの種類
-     */
+    /** 対応するインテントの種類 */
     private IntentFilter[] filters;
-    /**
-     * 対応させるタグの一覧
-     */
+    /** 対応させるタグの一覧 */
     private String[][] techs;
 
     @Override
@@ -380,6 +322,9 @@ public class StudentListMakerActivity extends Activity {
         super.onPause();
 
         if (mNfcAdapter != null) {
+            if (!mNfcAdapter.isEnabled()) {
+                Toast.makeText(StudentListMakerActivity.this, R.string.error_nfc_read_failed, Toast.LENGTH_SHORT).show();
+            }
             mNfcAdapter.disableForegroundDispatch(StudentListMakerActivity.this);
         }
     }
@@ -779,16 +724,16 @@ public class StudentListMakerActivity extends Activity {
             case StudentListMakerActivity.DIALOG_STUDENT_LIST: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(StudentListMakerActivity.this);
                 builder.setTitle(selectedSheet.getClassName());
-                final ArrayList<Student> mSheet = selectedSheet.getStudentList();
-                String[] students = new String[mSheet.size()];
-                for (int i = 0; i < mSheet.size(); i++) {
-                    Student mStudent = mSheet.get(i);
+                final ArrayList<Student> sheet = selectedSheet.getStudentList();
+                String[] students = new String[sheet.size()];
+                for (int i = 0; i < sheet.size(); i++) {
+                    Student mStudent = sheet.get(i);
                     students[i] = mStudent.getStudentNo() + " " + mStudent.getStudentName();
                 }
                 builder.setItems(students, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        currentStudent = mSheet.get(which);
+                        currentStudent = sheet.get(which);
                         int position;
                         if (!mStudentSheet.hasStudentNo(currentStudent.getStudentNo())) {
                             addStudent(currentStudent);
@@ -797,7 +742,7 @@ public class StudentListMakerActivity extends Activity {
                         }
                         else {
                             position = mStudentListAdapter.getPosition(currentStudent);
-                            Toast.makeText(StudentListMakerActivity.this, R.string.error_student_already_readed, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(StudentListMakerActivity.this, R.string.error_student_already_read, Toast.LENGTH_SHORT).show();
                         }
                         studentListView.performItemClick(studentListView, position, studentListView.getItemIdAtPosition(position));
                         studentListView.setSelection(position);
@@ -827,7 +772,7 @@ public class StudentListMakerActivity extends Activity {
                     public void onClick(DialogInterface dialog, int which) {
                         String studentNo = editTextForStudentNoForSearch.getText().toString().toUpperCase();
                         if (studentNo.length() != 0) {
-                            onStudentNoReaded(studentNo);
+                            onStudentNoRead(studentNo);
                         }
                     }
                 });
@@ -1025,7 +970,7 @@ public class StudentListMakerActivity extends Activity {
         String action = intent.getAction();
         if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
             // NFCタグの読み取りで発生したインテントである場合
-            onNfcTagReaded(intent);
+            onNfcTagRead(intent);
         }
     }
 
@@ -1095,7 +1040,7 @@ public class StudentListMakerActivity extends Activity {
         }
         inputBuffer.append(c);
         if (inputBuffer.length() == 6) {
-            onStudentNoReaded(inputBuffer.toString());
+            onStudentNoRead(inputBuffer.toString());
         }
     }
 
@@ -1103,7 +1048,7 @@ public class StudentListMakerActivity extends Activity {
      * 学籍番号を読み取った際に呼び出される
      * @param studentNo 学籍番号
      */
-    private void onStudentNoReaded(String studentNo) {
+    private void onStudentNoRead(String studentNo) {
         if (!isSaving && !isRefreshing) {
             if (mStudentSheet.hasStudentNo(studentNo)) {
                 // 学籍番号に対応するデータが存在する場合はその行を選択する
@@ -1128,13 +1073,13 @@ public class StudentListMakerActivity extends Activity {
      * NFCタグを読み取った際に呼び出される
      * @param inIntent NFCタグを読み取った際に発生したインテント
      */
-    private void onNfcTagReaded(Intent inIntent) {
-        StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
-        while (rawId.length() < 16) {
-            rawId.append("0");
-        }
-        String id = rawId.toString();
+    private void onNfcTagRead(Intent inIntent) {
         if (!isSaving && !isRefreshing) {
+            StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
+            while (rawId.length() < 16) {
+                rawId.append("0");
+            }
+            String id = rawId.toString();
             if (currentStudent.getStudentNo().length() != 0) {
                 if (!currentStudent.hasNfcId(id)) {
                     // 登録されていないNFCタグであれば読み取り済みかどうかを調べ、
@@ -1158,9 +1103,7 @@ public class StudentListMakerActivity extends Activity {
         }
     }
 
-    /**
-     * 新規シートを作成する
-     */
+    /** 新規シートを作成する */
     private void makeNewSheet() {
         mStudentSheet = new StudentSheet();
         mStudentListAdapter = new StudentListAdapter(StudentListMakerActivity.this, 0);
@@ -1177,9 +1120,7 @@ public class StudentListMakerActivity extends Activity {
         mStudentListAdapter.add(inStudent);
     }
 
-    /**
-     * 学生マスタを読み込み直す
-     */
+    /** 学生マスタを読み込み直す */
     private void refreshStudentMaster() {
         new Thread(new Runnable() {
             @Override

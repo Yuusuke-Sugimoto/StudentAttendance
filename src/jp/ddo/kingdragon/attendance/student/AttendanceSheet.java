@@ -29,41 +29,29 @@ import jp.ddo.kingdragon.attendance.R;
  */
 public class AttendanceSheet implements Serializable {
     // 定数の宣言
-    /**
-     * シリアルバージョンUID
-     */
+    /** シリアルバージョンUID */
     private static final long serialVersionUID = 3500974580905601302L;
 
     // 変数の宣言
-    /**
-     * 科目
-     */
+    /** 科目 */
     private String subject;
-    /**
-     * 授業時間
-     */
+    /** 授業時間 */
     private String time;
 
     // コレクションの宣言
-    /**
-     * 現在管理している出席データを学籍番号をキーとして格納したリスト
-     */
-    private LinkedHashMap<String, Attendance> attendancesStudentNo;
+    /** 現在管理している出席データを学籍番号をキーとして格納したリスト */
+    private LinkedHashMap<String, Attendance> attendancesStudentByNo;
 
-    /**
-     * 学生数を所属別にまとめたリスト
-     */
+    /** 学生数を所属別にまとめたリスト */
     private LinkedHashMap<String, StudentCounter> studentCounters;
 
     // コンストラクタ
-    /**
-     * 空のシートを生成する
-     */
+    /** 空のシートを生成する */
     public AttendanceSheet() {
         subject = "";
         time = "";
 
-        attendancesStudentNo = new LinkedHashMap<String, Attendance>();
+        attendancesStudentByNo = new LinkedHashMap<String, Attendance>();
         studentCounters = new LinkedHashMap<String, StudentCounter>();
     }
     /**
@@ -261,54 +249,42 @@ public class AttendanceSheet implements Serializable {
         return retInt;
     }
 
-    /**
-     * 出席者数をインクリメントする
-     */
+    /** 出席者数をインクリメントする */
     protected void incNumOfAttendance(String className) {
         if (!studentCounters.containsKey(className)) {
             studentCounters.put(className, new StudentCounter(1));
         }
         studentCounters.get(className).incNumOfAttendance();
     }
-    /**
-     * 出席者数をデクリメントする
-     */
+    /** 出席者数をデクリメントする */
     protected void decNumOfAttendance(String className) {
         if (studentCounters.containsKey(className)) {
             studentCounters.get(className).decNumOfAttendance();
         }
     }
 
-    /**
-     * 遅刻者数をインクリメントする
-     */
+    /** 遅刻者数をインクリメントする */
     protected void incNumOfLateness(String className) {
         if (!studentCounters.containsKey(className)) {
             studentCounters.put(className, new StudentCounter(1));
         }
         studentCounters.get(className).incNumOfLateness();
     }
-    /**
-     * 遅刻者数をデクリメントする
-     */
+    /** 遅刻者数をデクリメントする */
     protected void decNumOfLateness(String className) {
         if (studentCounters.containsKey(className)) {
             studentCounters.get(className).decNumOfLateness();
         }
     }
 
-    /**
-     * 早退者数をインクリメントする
-     */
+    /** 早退者数をインクリメントする */
     protected void incNumOfLeaveEarly(String className) {
         if (!studentCounters.containsKey(className)) {
             studentCounters.put(className, new StudentCounter(1));
         }
         studentCounters.get(className).incNumOfLeaveEarly();
     }
-    /**
-     * 早退者数をデクリメントする
-     */
+    /** 早退者数をデクリメントする */
     protected void decNumOfLeaveEarly(String className) {
         if (studentCounters.containsKey(className)) {
             studentCounters.get(className).decNumOfLeaveEarly();
@@ -320,7 +296,7 @@ public class AttendanceSheet implements Serializable {
      * @param inAttendance 出席データ
      */
     public void add(Attendance inAttendance) {
-        attendancesStudentNo.put(inAttendance.getStudentNo(), inAttendance);
+        attendancesStudentByNo.put(inAttendance.getStudentNo(), inAttendance);
         inAttendance.setParentSheet(AttendanceSheet.this);
 
         String className = inAttendance.getClassName();
@@ -355,7 +331,7 @@ public class AttendanceSheet implements Serializable {
      * @return 出席データ
      */
     public Attendance getByStudentNo(String studentNo) {
-        return attendancesStudentNo.get(studentNo);
+        return attendancesStudentByNo.get(studentNo);
     }
 
     /**
@@ -363,7 +339,7 @@ public class AttendanceSheet implements Serializable {
      * @return 現在の出席データの数
      */
     public int size() {
-        return attendancesStudentNo.size();
+        return attendancesStudentByNo.size();
     }
 
     /**
@@ -372,7 +348,7 @@ public class AttendanceSheet implements Serializable {
      * @return 存在するならばtrue 存在しなければfalse
      */
     public boolean hasStudentNo(String studentNo) {
-        return attendancesStudentNo.containsKey(studentNo);
+        return attendancesStudentByNo.containsKey(studentNo);
     }
 
     /**
@@ -381,7 +357,7 @@ public class AttendanceSheet implements Serializable {
      * @return 存在するならばtrue 存在しなければfalse
      */
     public boolean hasAttendance(Attendance inAttendance) {
-        return attendancesStudentNo.containsValue(inAttendance);
+        return attendancesStudentByNo.containsValue(inAttendance);
     }
 
     /**
@@ -389,7 +365,7 @@ public class AttendanceSheet implements Serializable {
      * @return 出席データの表示用のリスト
      */
     public ArrayList<Attendance> getAttendanceList() {
-        return new ArrayList<Attendance>(attendancesStudentNo.values());
+        return new ArrayList<Attendance>(attendancesStudentByNo.values());
     }
 
     /**
@@ -438,7 +414,7 @@ public class AttendanceSheet implements Serializable {
                             boolean isAccuracyEnabled) throws UnsupportedEncodingException, FileNotFoundException, IOException {
         CSVWriter writer = new CSVWriter(new OutputStreamWriter(new FileOutputStream(csvFile), encode));
         writer.writeNext(new String[] {"科目", "授業時間", "受講者数"});
-        writer.writeNext(new String[] {subject, time, String.valueOf(attendancesStudentNo.size())});
+        writer.writeNext(new String[] {subject, time, String.valueOf(attendancesStudentByNo.size())});
         ArrayList<String> labels = new ArrayList<String>();
         labels.add("出席番号");
         labels.add("所属");
@@ -457,7 +433,7 @@ public class AttendanceSheet implements Serializable {
             labels.add("精度");
         }
         writer.writeNext(labels.toArray(new String[labels.size()]));
-        for (Attendance mAttendance : attendancesStudentNo.values()) {
+        for (Attendance mAttendance : attendancesStudentByNo.values()) {
             writer.writeNext(mAttendance.getAttendanceData(isLatitudeEnabled, isLongitudeEnabled, isAccuracyEnabled));
         }
         writer.flush();

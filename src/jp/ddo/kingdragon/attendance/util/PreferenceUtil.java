@@ -43,9 +43,7 @@ public class PreferenceUtil {
     public static final String DEFAULT_SERVER_ADDRESS     = "http://192.168.11.2:8080/ams/ams8.jsp";
 
     // 変数の宣言
-    /**
-     * SharedPreferences取得用のコンテキスト
-     */
+    /** SharedPreferences取得用のコンテキスト */
     private Context mContext;
 
     // コンストラクタ
@@ -119,9 +117,7 @@ public class PreferenceUtil {
     public int getLocationInterval(int defValue) {
         return Integer.parseInt(getString("setting_location_interval", String.valueOf(defValue)));
     }
-    /**
-     * 位置情報の更新間隔を削除する
-     */
+    /** 位置情報の更新間隔を削除する */
     public void removeLocationInterval() {
         remove("setting_location_interval");
     }
@@ -181,9 +177,7 @@ public class PreferenceUtil {
     public String getAttendanceName(String defValue) {
         return getString("setting_attendance_name", defValue);
     }
-    /**
-     * 出席データの保存名を削除する
-     */
+    /** 出席データの保存名を削除する */
     public void removeAttendanceName() {
         remove("setting_attendance_name");
     }
@@ -211,9 +205,7 @@ public class PreferenceUtil {
     public int getAutoSaveInterval(int defValue) {
         return Integer.parseInt(getString("setting_auto_save_interval", String.valueOf(defValue)));
     }
-    /**
-     * 位置情報の更新間隔を削除する
-     */
+    /** 自動保存の間隔を削除する */
     public void removeAutoSaveInterval() {
         remove("setting_auto_save_interval");
     }
@@ -241,9 +233,7 @@ public class PreferenceUtil {
     public String getPassword(String defValue) {
         return getString("setting_password", defValue);
     }
-    /**
-     * パスワードを削除する
-     */
+    /** パスワードを削除する */
     public void removePassword() {
         remove("setting_password");
     }
@@ -264,9 +254,7 @@ public class PreferenceUtil {
     public String getServerAddress(String defValue) {
         return getString("setting_server_address", defValue);
     }
-    /**
-     * サーバのアドレスを削除する
-     */
+    /** サーバのアドレスを削除する */
     public void removeServerAddress() {
         remove("setting_server_address");
     }

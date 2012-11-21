@@ -21,9 +21,7 @@ import jp.ddo.kingdragon.attendance.student.AttendanceSheet;
  */
 public class SearchStudentServlet extends HttpServlet {
     // 定数の宣言
-    /**
-     * シリアルバージョンUID
-     */
+    /** シリアルバージョンUID */
     private static final long serialVersionUID = -7540049868673003013L;
 
     @Override

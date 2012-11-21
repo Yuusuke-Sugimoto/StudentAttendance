@@ -45,7 +45,7 @@ import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
 import jp.ddo.kingdragon.attendance.util.Util;
 
 /**
- * メイン画面
+ * カメラ画面
  * @author 杉本祐介
  */
 public class CameraActivity extends Activity implements SurfaceHolder.Callback, Camera.PictureCallback,
@@ -59,94 +59,52 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
     public static final String MEDIA_PATH   = "MediaPath";
 
     // 変数の宣言
-    /**
-     * 撮影中かどうか
-     */
+    /** 撮影中かどうか */
     private volatile boolean isCapturing;
-    /**
-     * オートフォーカス中かどうか
-     */
+    /** オートフォーカス中かどうか */
     private boolean isFocusing;
-    /**
-     * オートフォーカス済みかどうか
-     */
+    /** オートフォーカス済みかどうか */
     private boolean isFocused;
-    /**
-     * カメラが起動したかどうか
-     */
+    /** カメラが起動したかどうか */
     private boolean isCameraLaunched;
 
-    /**
-     * ベースフォルダ
-     */
+    /** ベースフォルダ */
     private File baseDir;
-    /**
-     * メディアフォルダ
-     */
+    /** メディアフォルダ */
     private File mediaDir;
 
-    /**
-     * 撮影ボタン
-     */
+    /** 撮影ボタン */
     private ImageButton captureButton;
-    /**
-     * プレビュー部分
-     */
+    /** プレビュー部分 */
     private SurfaceView preview;
-    /**
-     * カメラのインスタンス
-     */
+    /** カメラのインスタンス */
     private Camera mCamera;
-    /**
-     * カメラのパラメータ
-     */
+    /** カメラのパラメータ */
     private Camera.Parameters params;
-    /**
-     * 動画の撮影に使用
-     */
+    /** 動画の撮影に使用 */
     private MediaRecorder recorder;
-    /**
-     * 表示中の画面の向き
-     */
+    /** 表示中の画面の向き */
     private int rotation;
-    /**
-     * 撮影した動画ファイル
-     */
+    /** 撮影した動画ファイル */
     private File destMovieFile;
-    /**
-     * 撮影モード
-     */
+    /** 撮影モード */
     private int captureMode;
 
-    /**
-     * 設定内容の読み取り/変更に使用
-     */
+    /** 設定内容の読み取り/変更に使用 */
     private PreferenceUtil mPreferenceUtil;
 
-    /**
-     * センサマネージャ
-     */
+    /** センサマネージャ */
     private SensorManager mSensorManager;
-    /**
-     * 加速度センサ
-     */
+    /** 加速度センサ */
     private Sensor mAccelerometer;
-    /**
-     * 地磁気センサ
-     */
+    /** 地磁気センサ */
     private Sensor mMagneticField;
 
-    /**
-     * 地磁気センサによって読み取られた値が格納される
-     */
+    /** 地磁気センサによって読み取られた値が格納される */
     private float[] magneticValues;
-    /**
-     * 加速度センサによって読み取られた値が格納される
-     */
+    /** 加速度センサによって読み取られた値が格納される */
     private float[] accelValues;
-    /**
-     * 現在の各方向の傾きが格納される
-     */
+    /** 現在の各方向の傾きが格納される */
     private int[] degrees;
 
     @Override
@@ -647,9 +605,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         rotation = inRotation;
     }
 
-    /**
-     * MediaRecorderを初期化する
-     */
+    /** MediaRecorderを初期化する */
     private void initRecorder() {
         /**
          * 動画を撮影する
@@ -711,9 +667,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         }
     }
 
-    /**
-     * 動画撮影完了時に呼び出される
-     */
+    /** 動画撮影完了時に呼び出される */
     private void onMovieTaken(File movieFile) {
         // 生成したファイル名で新規ファイルを登録
         String[] splittedName = movieFile.getName().split("\\.");
