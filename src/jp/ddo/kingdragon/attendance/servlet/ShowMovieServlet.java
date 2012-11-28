@@ -18,7 +18,7 @@ public class ShowMovieServlet extends HttpServlet {
     private static final long serialVersionUID = 3532519062726411993L;
 
     @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String moviePath = request.getParameter("path");
 
         response.setContentType("text/html");
@@ -27,8 +27,8 @@ public class ShowMovieServlet extends HttpServlet {
         pw.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">");
         pw.println("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"ja\">");
         pw.println("<head>");
-        pw.println("<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />");
-        pw.println("<meta http-equiv=\"content-style-type\" content=\"text/css\" />");
+        pw.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />");
+        pw.println("<meta http-equiv=\"Content-Style-Type\" content=\"text/css\" />");
         pw.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />");
         pw.println("");
         pw.println("<title>動画再生画面</title>");
@@ -59,6 +59,7 @@ public class ShowMovieServlet extends HttpServlet {
         pw.println("</p>");
         pw.println("</body>");
         pw.println("</html>");
+        pw.flush();
         pw.close();
     }
 }

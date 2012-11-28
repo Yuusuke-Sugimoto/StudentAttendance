@@ -329,7 +329,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             }
         }
 
-        MediaScannerConnection.scanFile(CameraActivity.this, new String[] {destFile.getAbsolutePath()},
+        MediaScannerConnection.scanFile(getApplicationContext(), new String[] {destFile.getAbsolutePath()},
                                         new String[] {"image/jpeg"}, null);
 
         Intent mIntent = new Intent();
@@ -676,7 +676,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
             ext = "3gpp";
         }
 
-        MediaScannerConnection.scanFile(CameraActivity.this, new String[] {movieFile.getAbsolutePath()},
+        MediaScannerConnection.scanFile(getApplicationContext(), new String[] {movieFile.getAbsolutePath()},
                                         new String[] {"video/" + ext}, null);
 
         Intent mIntent = new Intent();

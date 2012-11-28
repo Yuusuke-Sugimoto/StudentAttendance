@@ -51,9 +51,15 @@ import java.util.Date;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.server.session.HashSessionManager;
+import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 import jp.ddo.kingdragon.attendance.filechoose.FileChooseActivity;
+import jp.ddo.kingdragon.attendance.servlet.GetStudentListServlet;
+import jp.ddo.kingdragon.attendance.servlet.IndexServlet;
+import jp.ddo.kingdragon.attendance.servlet.LoginCheckServlet;
+import jp.ddo.kingdragon.attendance.servlet.LogoutServlet;
 import jp.ddo.kingdragon.attendance.servlet.SearchStudentServlet;
 import jp.ddo.kingdragon.attendance.servlet.ShowMovieServlet;
 import jp.ddo.kingdragon.attendance.servlet.StudentListServlet;
@@ -485,14 +491,14 @@ public class DisasterModeActivity extends Activity {
         mServer = new Server(DisasterModeActivity.PORT_NUMBER);
         HandlerList mHandlerList = new HandlerList();
 
-        ResourceHandler mResourceHandler = new ResourceHandler();
-        mResourceHandler.setResourceBase(webDir.getAbsolutePath());
-        mHandlerList.addHandler(mResourceHandler);
-
         ServletContextHandler mServletContextHandler = new ServletContextHandler();
+        mServletContextHandler.addServlet(IndexServlet.class, "");
         mServletContextHandler.addServlet(SearchStudentServlet.class, "/SearchStudent");
         mServletContextHandler.addServlet(StudentListServlet.class, "/StudentList");
         mServletContextHandler.addServlet(ShowMovieServlet.class, "/ShowMovie");
+        mServletContextHandler.addServlet(GetStudentListServlet.class, "/GetStudentList");
+        mServletContextHandler.addServlet(LoginCheckServlet.class, "/LoginCheck");
+        mServletContextHandler.addServlet(LogoutServlet.class, "/Logout");
 //        File[] dexFiles = servletDir.listFiles(new FilenameFilter() {
 //            @Override
 //            public boolean accept(File dir, String filename) {
@@ -525,7 +531,14 @@ public class DisasterModeActivity extends Activity {
 //        }
         mHandlerList.addHandler(mServletContextHandler);
 
-        mServer.setHandler(mHandlerList);
+        ResourceHandler mResourceHandler = new ResourceHandler();
+        mResourceHandler.setResourceBase(webDir.getAbsolutePath());
+        mHandlerList.addHandler(mResourceHandler);
+
+        SessionHandler mSessionHandler = new SessionHandler();
+        mSessionHandler.setSessionManager(new HashSessionManager());
+        mSessionHandler.setHandler(mHandlerList);
+        mServer.setHandler(mSessionHandler);
 
         new Thread(new Runnable() {
             @Override
