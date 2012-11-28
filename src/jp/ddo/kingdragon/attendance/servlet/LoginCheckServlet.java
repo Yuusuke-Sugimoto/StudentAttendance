@@ -20,7 +20,7 @@ import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
 public class LoginCheckServlet extends HttpServlet {
     // 定数の宣言
     /** シリアルバージョンUID */
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 8997007372198004252L;
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

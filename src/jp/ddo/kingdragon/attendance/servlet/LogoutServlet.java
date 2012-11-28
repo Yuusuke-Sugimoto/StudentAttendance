@@ -15,7 +15,7 @@ import javax.servlet.http.HttpSession;
 public class LogoutServlet extends HttpServlet {
     // 定数の宣言
     /** シリアルバージョンUID */
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -6013398913270670830L;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

@@ -20,7 +20,7 @@ import jp.ddo.kingdragon.attendance.student.AttendanceSheet;
 public class GetStudentListServlet extends HttpServlet {
     // 定数の宣言
     /** シリアルバージョンUID */
-    private static final long serialVersionUID = 823662399690987801L;
+    private static final long serialVersionUID = -5994569700577761416L;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

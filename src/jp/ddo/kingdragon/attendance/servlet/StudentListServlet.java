@@ -16,7 +16,7 @@ import javax.servlet.http.HttpSession;
 public class StudentListServlet extends HttpServlet {
     // 定数の宣言
     /** シリアルバージョンUID */
-    private static final long serialVersionUID = 823662399690987801L;
+    private static final long serialVersionUID = 2461373901899466187L;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
