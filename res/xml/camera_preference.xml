@@ -21,13 +21,4 @@
                             android:summary="@string/setting_use_tap_autofocus_summary"
                             android:order="3" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/setting_movie_title">
-        <ListPreference android:title="@string/setting_movie_quality_title"
-                        android:key="setting_movie_quality"
-                        android:defaultValue="0"
-                        android:summary="@string/setting_movie_quality_low"
-                        android:dialogTitle="@string/setting_movie_quality_title"
-                        android:entries="@array/setting_movie_quality_labels"
-                        android:entryValues="@array/setting_movie_quality_values" />
-    </PreferenceCategory>
 </PreferenceScreen>

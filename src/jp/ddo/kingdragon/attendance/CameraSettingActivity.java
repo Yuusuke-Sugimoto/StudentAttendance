@@ -89,9 +89,6 @@ public class CameraSettingActivity extends PreferenceActivity implements OnShare
         ListPreference pictureSizePref = (ListPreference)findPreference("setting_picture_size");
         pictureSizePref.setSummary(pictureSizePref.getEntry() + "\n" + getString(R.string.setting_picture_size_summary));
 
-        ListPreference movieQualityPref = (ListPreference)findPreference("setting_movie_quality");
-        movieQualityPref.setSummary(movieQualityPref.getEntry());
-
         mHandler.post(new Runnable() {
             @Override
             public void run() {

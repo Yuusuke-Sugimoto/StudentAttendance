@@ -26,14 +26,11 @@ public class PreferenceUtil {
     public static final int ROTATION_LANDSCAPE    = 3;
     public static final int ROTATION_NR_LANDSCAPE = 4;
     // 画像のサイズ
-    public static final int DEFAULT_SIZE_WIDTH  = 2048;
-    public static final int DEFAULT_SIZE_HEIGHT = 1536;
+    public static final int DEFAULT_SIZE_WIDTH  = 800;
+    public static final int DEFAULT_SIZE_HEIGHT = 600;
     // 使用可能な画像サイズの添字
     public static final int WIDTH  = 0;
     public static final int HEIGHT = 1;
-    // 動画の画質
-    public static final int QUALITY_LOW  = 0;
-    public static final int QUALITY_HIGH = 1;
     // デフォルト値
     public static final int    DEFAULT_LOCATION_INTERVAL  = 5;
     public static final String DEFAULT_ATTENDANCE_DIR     = Environment.getExternalStorageDirectory().getAbsolutePath() + "/StudentAttendance/AttendanceData";
@@ -397,15 +394,6 @@ public class PreferenceUtil {
         }
 
         return previewSizes;
-    }
-
-    /**
-     * "撮影する動画の画質"の設定値を取得する
-     * @param defValue デフォルト値
-     * @return "撮影する動画の画質"の設定値 未設定ならばデフォルト値
-     */
-    public int getMovieQuality(int defValue) {
-        return Integer.parseInt(getString("setting_movie_quality", String.valueOf(defValue)));
     }
 
     /**

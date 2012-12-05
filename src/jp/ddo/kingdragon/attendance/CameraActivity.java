@@ -625,15 +625,14 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
         recorder.setVideoSource(MediaRecorder.VideoSource.DEFAULT);
         recorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
 
-        int movieQuality = CamcorderProfile.QUALITY_LOW;
-        if (mPreferenceUtil.getMovieQuality(PreferenceUtil.QUALITY_LOW) == PreferenceUtil.QUALITY_HIGH) {
-            movieQuality = CamcorderProfile.QUALITY_HIGH;
-        }
-        CamcorderProfile profile = CamcorderProfile.get(movieQuality);
-        if (movieQuality == CamcorderProfile.QUALITY_LOW) {
-            profile.videoCodec = MediaRecorder.VideoEncoder.H264;
-            profile.audioCodec = MediaRecorder.AudioEncoder.AAC;
-        }
+        CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+        profile.videoCodec = MediaRecorder.VideoEncoder.H264;
+        profile.audioCodec = MediaRecorder.AudioEncoder.AAC;
+        profile.videoBitRate = 1024000;
+        profile.audioBitRate = 96000;
+        profile.audioSampleRate = 48000;
+        profile.fileFormat   = MediaRecorder.OutputFormat.MPEG_4;
+
         Camera.Size preSize = params.getPreviewSize();
         profile.videoFrameWidth  = preSize.width;
         profile.videoFrameHeight = preSize.height;
@@ -641,11 +640,7 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
 
         // ファイル名を生成
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        String ext = "mp4";
-        if (profile.fileFormat == MediaRecorder.OutputFormat.THREE_GPP) {
-            ext = "3gp";
-        }
-        String fileName = "SA_" + dateFormat.format(new Date()) + "." + ext;
+        String fileName = "SA_" + dateFormat.format(new Date()) + ".mp4";
         destMovieFile = new File(mediaDir, fileName);
         recorder.setOutputFile(destMovieFile.getAbsolutePath());
 
@@ -670,14 +665,8 @@ public class CameraActivity extends Activity implements SurfaceHolder.Callback, 
     /** 動画撮影完了時に呼び出される */
     private void onMovieTaken(File movieFile) {
         // 生成したファイル名で新規ファイルを登録
-        String[] splittedName = movieFile.getName().split("\\.");
-        String ext = splittedName[splittedName.length - 1];
-        if (ext.equals("3gp")) {
-            ext = "3gpp";
-        }
-
         MediaScannerConnection.scanFile(getApplicationContext(), new String[] {movieFile.getAbsolutePath()},
-                                        new String[] {"video/" + ext}, null);
+                                        new String[] {"video/mp4"}, null);
 
         Intent mIntent = new Intent();
         mIntent.putExtra(CameraActivity.MEDIA_PATH, mediaDir.getName() + "/" + destMovieFile.getName());

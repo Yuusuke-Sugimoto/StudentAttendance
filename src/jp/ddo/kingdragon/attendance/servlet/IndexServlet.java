@@ -57,7 +57,7 @@ public class IndexServlet extends HttpServlet {
         pw.println("<head>");
         pw.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />");
         pw.println("<meta http-equiv=\"Content-Style-Type\" content=\"text/css\" />");
-        pw.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />");
+        pw.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"css/style.css\" />");
         pw.println("");
         pw.println("<title>災害モード用ページ</title>");
         pw.println("</head>");
@@ -71,7 +71,7 @@ public class IndexServlet extends HttpServlet {
             pw.println("<p>" + errorMessage + "</p>");
         }
 
-        pw.println("<form action=\"SearchStudent\" method=\"GET\">");
+        pw.println("<form action=\"StudentList\" method=\"GET\">");
         pw.println("<table>");
         pw.println("<tr>");
         pw.println("<td colspan=\"2\">学生を検索する</td>");

@@ -60,7 +60,6 @@ import jp.ddo.kingdragon.attendance.servlet.GetStudentListServlet;
 import jp.ddo.kingdragon.attendance.servlet.IndexServlet;
 import jp.ddo.kingdragon.attendance.servlet.LoginCheckServlet;
 import jp.ddo.kingdragon.attendance.servlet.LogoutServlet;
-import jp.ddo.kingdragon.attendance.servlet.SearchStudentServlet;
 import jp.ddo.kingdragon.attendance.servlet.ShowMovieServlet;
 import jp.ddo.kingdragon.attendance.servlet.StudentListServlet;
 import jp.ddo.kingdragon.attendance.student.Attendance;
@@ -493,7 +492,6 @@ public class DisasterModeActivity extends Activity {
 
         ServletContextHandler mServletContextHandler = new ServletContextHandler();
         mServletContextHandler.addServlet(IndexServlet.class, "");
-        mServletContextHandler.addServlet(SearchStudentServlet.class, "/SearchStudent");
         mServletContextHandler.addServlet(StudentListServlet.class, "/StudentList");
         mServletContextHandler.addServlet(ShowMovieServlet.class, "/ShowMovie");
         mServletContextHandler.addServlet(GetStudentListServlet.class, "/GetStudentList");
