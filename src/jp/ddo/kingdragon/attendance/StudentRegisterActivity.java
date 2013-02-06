@@ -1095,11 +1095,7 @@ public class StudentRegisterActivity extends Activity {
      */
     private void onNfcTagRead(Intent inIntent) {
         if (!isSaving && !isRefreshing) {
-            StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
-            while (rawId.length() < 16) {
-                rawId.append("0");
-            }
-            readNfcId = rawId.toString();
+            readNfcId = Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID));
             if (currentStudent.getStudentNo().length() != 0) {
                 Student mStudent = getStudentByNfcId(readNfcId);
                 if (mStudent == null) {

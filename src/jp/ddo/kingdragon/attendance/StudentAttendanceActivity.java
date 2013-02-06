@@ -1615,11 +1615,7 @@ public class StudentAttendanceActivity extends Activity {
      */
     private void onNfcTagRead(Intent inIntent) {
         if (isReading && !isSaving && !isRefreshing) {
-            StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
-            while (rawId.length() < 16) {
-                rawId.append("0");
-            }
-            String id = rawId.toString();
+            String id = Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID));
             Student mStudent = master.getStudentByNfcId(id);
             if (mStudent != null) {
                 int position;

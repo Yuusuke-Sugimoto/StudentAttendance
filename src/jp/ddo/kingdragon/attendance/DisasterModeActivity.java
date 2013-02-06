@@ -74,7 +74,7 @@ import jp.ddo.kingdragon.attendance.util.PreferenceUtil;
 import jp.ddo.kingdragon.attendance.util.Util;
 
 /**
- * 災害モード
+ * 安否確認画面
  * @author 杉本祐介
  */
 public class DisasterModeActivity extends Activity {
@@ -1835,11 +1835,7 @@ public class DisasterModeActivity extends Activity {
      */
     private void onNfcTagRead(Intent inIntent) {
         if (isReading && !isSaving && !isRefreshing) {
-            StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
-            while (rawId.length() < 16) {
-                rawId.append("0");
-            }
-            String id = rawId.toString();
+            String id = Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID));
             Student mStudent = master.getStudentByNfcId(id);
             if (mStudent != null) {
                 int position;

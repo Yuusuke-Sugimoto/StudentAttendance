@@ -59,10 +59,10 @@ public class IndexServlet extends HttpServlet {
         pw.println("<meta http-equiv=\"Content-Style-Type\" content=\"text/css\" />");
         pw.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"css/style.css\" />");
         pw.println("");
-        pw.println("<title>災害モード用ページ</title>");
+        pw.println("<title>安否確認用ページ</title>");
         pw.println("</head>");
         pw.println("<body>");
-        pw.println("<p>災害モード用ページ</p>");
+        pw.println("<p>安否確認用ページ</p>");
 
         if (logout) {
             pw.println("<p>ログアウトしました。</p>");

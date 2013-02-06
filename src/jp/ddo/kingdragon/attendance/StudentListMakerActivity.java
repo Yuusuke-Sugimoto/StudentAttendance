@@ -1075,11 +1075,7 @@ public class StudentListMakerActivity extends Activity {
      */
     private void onNfcTagRead(Intent inIntent) {
         if (!isSaving && !isRefreshing) {
-            StringBuilder rawId = new StringBuilder(Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID)));
-            while (rawId.length() < 16) {
-                rawId.append("0");
-            }
-            String id = rawId.toString();
+            String id = Util.byteArrayToHexString(inIntent.getByteArrayExtra(NfcAdapter.EXTRA_ID));
             if (currentStudent.getStudentNo().length() != 0) {
                 if (!currentStudent.hasNfcId(id)) {
                     // 登録されていないNFCタグであれば読み取り済みかどうかを調べ、

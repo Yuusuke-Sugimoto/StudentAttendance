@@ -6,7 +6,7 @@
     <string name="attendance_read_start_label">読み取り開始</string>
     <string name="attendance_read_finish_label">読み取り終了</string>
 
-    <string name="disaster_title">災害モード</string>
+    <string name="disaster_title">安否確認画面</string>
     <string name="disaster_send_resume_label">送信再開</string>
     <string name="disaster_send_pause_label">送信停止</string>
 
